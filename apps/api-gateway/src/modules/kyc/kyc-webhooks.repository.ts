@@ -1,0 +1,159 @@
+import { Inject, Injectable } from '@nestjs/common';
+import type { KycWebhookRecord } from '@treasuryos/types';
+
+import { DatabaseService } from '../database/database.service.js';
+import type { PoolClient } from 'pg';
+
+function toIso(value: unknown) {
+  if (!value) {
+    return undefined;
+  }
+  if (value instanceof Date) {
+    return value.toISOString();
+  }
+  const parsed = new Date(String(value));
+  return Number.isNaN(parsed.getTime()) ? undefined : parsed.toISOString();
+}
+
+function mapKycWebhookRow(row: Record<string, unknown>): KycWebhookRecord {
+  return {
+    id: String(row.id),
+    entityId: row.entity_id ? String(row.entity_id) : undefined,
+    provider: String(row.provider) as KycWebhookRecord['provider'],
+    payloadType: String(row.payload_type),
+    verified: Boolean(row.verified),
+    createdAt: toIso(row.created_at) ?? new Date().toISOString(),
+    applicantId: row.applicant_id ? String(row.applicant_id) : undefined,
+    correlationId: row.correlation_id ? String(row.correlation_id) : undefined,
+    digestAlg: row.digest_alg ? String(row.digest_alg) : undefined,
+    eventCreatedAt: toIso(row.event_created_at),
+    externalUserId: row.external_user_id ? String(row.external_user_id) : undefined,
+    payloadDigest: row.payload_digest ? String(row.payload_digest) : undefined,
+    reviewAnswer: row.review_answer ? (String(row.review_answer) as 'GREEN' | 'RED') : undefined,
+    reviewStatus: row.review_status ? String(row.review_status) : undefined,
+  };
+}
+
+@Injectable()
+export class KycWebhooksRepository {
+  constructor(@Inject(DatabaseService) private readonly database: DatabaseService) {}
+
+  async findByDigest(digest: string, client?: PoolClient): Promise<KycWebhookRecord | undefined> {
+    const executor = client ?? this.database.pool;
+    const result = await executor.query(
+      `
+        select
+          id,
+          entity_id,
+          provider,
+          payload_type,
+          verified,
+          created_at,
+          applicant_id,
+          correlation_id,
+          digest_alg,
+          event_created_at,
+          external_user_id,
+          payload_digest,
+          review_answer,
+          review_status
+        from provider_webhooks
+        where payload_digest = $1
+        limit 1
+      `,
+      [digest],
+    );
+
+    return result.rows[0] ? mapKycWebhookRow(result.rows[0] as Record<string, unknown>) : undefined;
+  }
+
+  async findByCorrelationIdAndType(
+    correlationId: string,
+    payloadType: string,
+    client?: PoolClient
+  ): Promise<KycWebhookRecord | undefined> {
+    const executor = client ?? this.database.pool;
+    const result = await executor.query(
+      `
+        select
+          id,
+          entity_id,
+          provider,
+          payload_type,
+          verified,
+          created_at,
+          applicant_id,
+          correlation_id,
+          digest_alg,
+          event_created_at,
+          external_user_id,
+          payload_digest,
+          review_answer,
+          review_status
+        from provider_webhooks
+        where correlation_id = $1 and payload_type = $2
+        limit 1
+      `,
+      [correlationId, payloadType],
+    );
+
+    return result.rows[0] ? mapKycWebhookRow(result.rows[0] as Record<string, unknown>) : undefined;
+  }
+
+  async save(webhook: KycWebhookRecord, client?: PoolClient): Promise<KycWebhookRecord> {
+    const executor = client ?? this.database.pool;
+    await executor.query(
+      `
+        insert into provider_webhooks (
+          id,
+          entity_id,
+          provider,
+          payload_type,
+          verified,
+          digest_alg,
+          created_at,
+          applicant_id,
+          correlation_id,
+          event_created_at,
+          external_user_id,
+          payload_digest,
+          review_answer,
+          review_status
+        )
+        values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+        on conflict (id) do update
+        set
+          entity_id = excluded.entity_id,
+          provider = excluded.provider,
+          payload_type = excluded.payload_type,
+          verified = excluded.verified,
+          digest_alg = excluded.digest_alg,
+          applicant_id = excluded.applicant_id,
+          correlation_id = excluded.correlation_id,
+          event_created_at = excluded.event_created_at,
+          external_user_id = excluded.external_user_id,
+          payload_digest = excluded.payload_digest,
+          review_answer = excluded.review_answer,
+          review_status = excluded.review_status
+      `,
+      [
+        webhook.id,
+        webhook.entityId ?? null,
+        webhook.provider,
+        webhook.payloadType,
+        webhook.verified,
+        webhook.digestAlg ?? null,
+        webhook.createdAt,
+        webhook.applicantId ?? null,
+        webhook.correlationId ?? null,
+        webhook.eventCreatedAt ?? null,
+        webhook.externalUserId ?? null,
+        webhook.payloadDigest ?? null,
+        webhook.reviewAnswer ?? null,
+        webhook.reviewStatus ?? null,
+      ],
+    );
+
+    return webhook;
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "name": "@treasuryos/api-gateway",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node ../../node_modules/tsx/dist/cli.mjs watch src/main.ts",
+    "build": "node ../../node_modules/typescript/bin/tsc -p tsconfig.json",
+    "typecheck": "node ../../node_modules/typescript/bin/tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@aws-sdk/client-kms": "^3.1019.0",
+    "@nestjs/common": "latest",
+    "@nestjs/core": "latest",
+    "@nestjs/platform-express": "latest",
+    "@nestjs/throttler": "^6.5.0",
+    "@solana/keychain-aws-kms": "^0.6.1",
+    "@sqds/multisig": "^2.1.4",
+    "@treasuryos/compliance-rules": "0.1.0",
+    "@treasuryos/sdk": "0.1.0",
+    "@treasuryos/types": "0.1.0",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.15.1",
+    "helmet": "^8.1.0",
+    "pg": "^8.20.0",
+    "reflect-metadata": "latest",
+    "rxjs": "latest",
+    "zod": "latest"
+  }
+}

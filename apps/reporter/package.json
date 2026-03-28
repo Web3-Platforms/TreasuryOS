@@ -1,0 +1,20 @@
+{
+  "name": "@treasuryos/reporter",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node ../../node_modules/tsx/dist/cli.mjs watch src/main.ts",
+    "build": "node ../../node_modules/typescript/bin/tsc -p tsconfig.json",
+    "typecheck": "node ../../node_modules/typescript/bin/tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@nestjs/common": "latest",
+    "@nestjs/core": "latest",
+    "@nestjs/platform-express": "latest",
+    "@treasuryos/types": "0.1.0",
+    "reflect-metadata": "latest",
+    "rxjs": "latest",
+    "zod": "latest"
+  }
+}

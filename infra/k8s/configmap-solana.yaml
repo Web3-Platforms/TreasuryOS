@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: solana-rpc-config
+data:
+  PRIMARY_RPC: "https://rpc.helius.xyz/?api-key=${HELIUS_API_KEY}"
+  FALLBACK_RPC: "https://api.devnet.solana.com"
+  COMMITMENT: "confirmed"
+  NETWORK: "devnet"
