@@ -1,0 +1,19 @@
+- `[/]` Set up `database.module.ts` and `database.service.ts`
+- `[ ]` Implement Authentication Repositories
+  - `[ ]` `users.repository.ts`
+  - `[ ]` `sessions.repository.ts`
+- `[ ]` Implement Audit Repository
+  - `[ ]` `audit.repository.ts`
+- `[ ]` Implement Entities and KYC Repositories
+  - `[ ]` `entities.repository.ts`
+  - `[ ]` `kyc-webhooks.repository.ts`
+- `[ ]` Implement Wallets Repository
+  - `[ ]` `wallets.repository.ts`
+- `[ ]` Implement Transaction Cases Repository
+  - `[x]` Modify `ReportsModule` to provide `ReportsRepository` and use `DatabaseModule`.
+- `[x]` Update `ReportsService.listReports` to query `ReportsRepository`.
+- `[x]` Update `ReportsService.generateMonthlyReport` and `buildMonthlyReport` to compute metrics directly from the specific module repositories or DB queries.
+- `[x]` Update `ReportsService.getReportsDirPath` to use `this.env.PILOT_REPORTS_DIR`.
+- `[x]` Ensure correct validation of paths avoiding relative directory traversal exploits.
+- `[ ]` Remove `pilot-store.module.ts` and `pilot-store.service.ts` entirely
+- `[ ]` Verify with TypeScript Compiler
