@@ -1,0 +1,33 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "strict": true,
+    "noEmitOnError": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "lib": [
+      "ES2022"
+    ],
+    "types": [
+      "node"
+    ],
+    "sourceMap": true,
+    "declaration": true,
+    "baseUrl": ".",
+    "paths": {
+      "@treasuryos/types": [
+        "packages/types/src/index.ts"
+      ],
+      "@treasuryos/compliance-rules": [
+        "packages/compliance-rules/src/index.ts"
+      ],
+      "@treasuryos/sdk": [
+        "packages/sdk/src/index.ts"
+      ]
+    }
+  }
+}

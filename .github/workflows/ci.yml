@@ -1,0 +1,110 @@
+name: TreasuryOS CI
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+
+env:
+  NODE_ENV: test
+  AUTH_TOKEN_SECRET: ci-secret-that-is-long-enough-for-phase-zero
+  AUTH_TOKEN_TTL_MINUTES: "120"
+  PILOT_DATA_FILE: data/pilot-store.json
+  PILOT_REPORTS_DIR: data/reports
+  PILOT_INSTITUTION_ID: pilot-eu-casp
+  PILOT_INSTITUTION_NAME: TreasuryOS Pilot Institution
+  PILOT_CUSTOMER_PROFILE: eu-regulated-casp
+  DEFAULT_ADMIN_EMAIL: admin@treasuryos.local
+  DEFAULT_ADMIN_PASSWORD: change-me-admin
+  DEFAULT_COMPLIANCE_EMAIL: compliance@treasuryos.local
+  DEFAULT_COMPLIANCE_PASSWORD: change-me-compliance
+  DEFAULT_AUDITOR_EMAIL: auditor@treasuryos.local
+  DEFAULT_AUDITOR_PASSWORD: change-me-auditor
+  DATABASE_URL: postgresql://postgres:postgres@localhost:5432/treasury_os
+  REDIS_URL: redis://localhost:6379
+  REDIS_QUEUE_NAME: treasuryos:ci-events
+  SUMSUB_LEVEL_NAME: basic-kyc-level
+  SOLANA_RPC_URL: https://api.devnet.solana.com
+  PROGRAM_ID_WALLET_WHITELIST: FXFMG4hzBcuRu33mVXyTHESH7FnsmUD6Fajr17FugbRt
+  AUTHORITY_KEYPAIR_PATH: /tmp/ci-solana-id.json
+  SOLANA_SYNC_ENABLED: "false"
+  NEXT_PUBLIC_API_BASE_URL: http://localhost:3001
+
+jobs:
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm install
+      - run: npm run typecheck
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm install
+      - run: npm run build
+
+  tests:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: treasury_os
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d treasury_os"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm install
+      - run: npm run db:migrate
+      - run: npm test
+
+  migrations:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: treasury_os
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d treasury_os"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: sudo apt-get update
+      - run: sudo apt-get install -y postgresql-client
+      - run: npm install
+      - run: npm run db:migrate
+      - run: npm run db:migrate:check

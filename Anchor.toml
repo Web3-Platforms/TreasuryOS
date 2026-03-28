@@ -1,0 +1,18 @@
+[toolchain]
+anchor_version = "0.32.1"
+
+[features]
+seeds = true
+skip-lint = false
+
+[programs.localnet]
+compliance_registry = "ASG5VS1jFQSsLfyuACNvfK2oFsoBd4TQjJBK1uvznorm"
+wallet_whitelist = "3ZaNXXp99xnWYYcaCJMJWnBfMxj2K4QpHkADV8D7321c"
+tx_monitor = "4cfb2JR1aEHziz1rGfWAvDry2hj2kScqGLQSbU9VrfWx"
+
+[provider]
+cluster = "Localnet"
+wallet = "~/.config/solana/id.json"
+
+[scripts]
+test = "anchor test"

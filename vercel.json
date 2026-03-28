@@ -1,0 +1,22 @@
+{
+  "buildCommand": "npm run build -w @treasuryos/dashboard",
+  "installCommand": "npm install",
+  "framework": "nextjs",
+  "outputDirectory": "apps/dashboard/.next",
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "${API_BASE_URL}/:path*"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Frame-Options", "value": "DENY" },
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
+      ]
+    }
+  ]
+}

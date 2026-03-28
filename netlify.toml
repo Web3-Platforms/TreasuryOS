@@ -1,0 +1,24 @@
+[build]
+  base = "."
+  command = "npm install && npm run build -w @treasuryos/dashboard"
+  publish = "apps/dashboard/.next"
+
+[build.environment]
+  NODE_VERSION = "22"
+  NPM_FLAGS = "--legacy-peer-deps"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+[[redirects]]
+  from = "/api/*"
+  to = "${API_BASE_URL}/:splat"
+  status = 200
+  force = true

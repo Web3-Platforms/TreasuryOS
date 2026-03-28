@@ -1,0 +1,45 @@
+{
+  "name": "treasury-os",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "npm@10.9.2",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=22.0.0",
+    "npm": ">=10.0.0"
+  },
+  "overrides": {
+    "path-to-regexp": "8.4.0"
+  },
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "db:migrate": "node ./node_modules/tsx/dist/cli.mjs scripts/db-migrate.ts",
+    "db:migrate:check": "node ./node_modules/tsx/dist/cli.mjs scripts/db-migrate.ts --check",
+    "dev:api": "npm run dev -w @treasuryos/api-gateway",
+    "dev:kyc": "npm run dev -w @treasuryos/kyc-service",
+    "dev:bank": "npm run dev -w @treasuryos/bank-adapter",
+    "dev:reporter": "npm run dev -w @treasuryos/reporter",
+    "dev:dashboard": "npm run dev -w @treasuryos/dashboard",
+    "seed:registry": "node ./node_modules/tsx/dist/cli.mjs scripts/seed-registry.ts",
+    "test": "node ./node_modules/tsx/dist/cli.mjs --tsconfig tsconfig.test.json --test tests/**/*.test.ts",
+    "format": "node ./node_modules/prettier/bin/prettier.cjs --write ."
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^25.5.0",
+    "@types/pg": "^8.20.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "prettier": "latest",
+    "tsx": "latest",
+    "typescript": "latest"
+  },
+  "dependencies": {
+    "path-to-regexp": "8.4.0"
+  }
+}
