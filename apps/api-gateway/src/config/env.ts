@@ -87,9 +87,11 @@ const envSchema = z.object({
 
   NEXT_PUBLIC_API_BASE_URL: z.string().url().optional(),
 
-  // ── Supabase Storage ─────────────────────────────────────────────────────
-  // Required for compliance document storage. Obtain from:
-  //   Supabase Dashboard → Settings → API
+  // ── Supabase ───────────────────────────────────────────────────────────────
+  // Storage: for compliance document storage.
+  // Auth: SUPABASE_JWT_SECRET is used to validate Supabase-issued JWTs.
+  //   Obtain from: Supabase Dashboard → Settings → API → JWT Secret
+  SUPABASE_JWT_SECRET: z.string().min(32).optional(),
   SUPABASE_URL: z.string().url().optional(),
   SUPABASE_SERVICE_KEY: z.string().optional(),
   SUPABASE_STORAGE_BUCKET: z.string().optional(),

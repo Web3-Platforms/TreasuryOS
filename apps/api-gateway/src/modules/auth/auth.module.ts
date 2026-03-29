@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
+import { PassportModule } from '@nestjs/passport';
 
 import { AuditModule } from '../audit/audit.module.js';
 import { DatabaseModule } from '../database/database.module.js';
@@ -11,9 +12,16 @@ import { AuthTokenService } from './auth-token.service.js';
 import { RolesGuard } from './roles.guard.js';
 import { UsersRepository } from './users.repository.js';
 import { SessionsRepository } from './sessions.repository.js';
+import { SupabaseStrategy } from './strategies/supabase.strategy.js';
+import { JwtAuthGuard } from './guards/jwt-auth.guard.js';
 
 @Module({
-  imports: [DatabaseModule, AuditModule, PlatformModule],
+  imports: [
+    DatabaseModule,
+    AuditModule,
+    PlatformModule,
+    PassportModule.register({ defaultStrategy: 'supabase' }),
+  ],
   controllers: [AuthController],
   providers: [
     AuthService,
@@ -22,15 +30,17 @@ import { SessionsRepository } from './sessions.repository.js';
     SessionsRepository,
     AuthenticationGuard,
     RolesGuard,
+    SupabaseStrategy,
+    JwtAuthGuard,
     {
       provide: APP_GUARD,
-      useExisting: AuthenticationGuard,
+      useExisting: JwtAuthGuard,
     },
     {
       provide: APP_GUARD,
       useExisting: RolesGuard,
     },
   ],
-  exports: [AuthService, AuthTokenService],
+  exports: [AuthService, AuthTokenService, PassportModule, JwtAuthGuard],
 })
 export class AuthModule {}
