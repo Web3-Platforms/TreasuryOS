@@ -8,6 +8,9 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, '../../../../');
 
 const envSchema = z.object({
+  NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
+  // Railway injects PORT; we check PORT first, then fall back to KYC_SERVICE_PORT.
+  PORT: z.coerce.number().int().min(1).max(65535).optional(),
   KYC_SERVICE_PORT: z.coerce.number().int().min(1).max(65535).default(3002),
   SUMSUB_APP_TOKEN: z.string().optional(),
   SUMSUB_SECRET_KEY: z.string().optional(),
@@ -18,7 +21,10 @@ const envSchema = z.object({
   PROGRAM_ID_COMPLIANCE_REGISTRY: z.string().min(32),
 });
 
-export type KycServiceEnv = z.infer<typeof envSchema>;
+export type KycServiceEnv = Omit<z.infer<typeof envSchema>, 'PORT'> & {
+  /** Resolved listen port: Railway PORT → KYC_SERVICE_PORT → 3002 */
+  LISTEN_PORT: number;
+};
 
 function loadDotEnvFile(filePath: string) {
   if (!fs.existsSync(filePath)) {
@@ -49,8 +55,19 @@ function loadDotEnvFile(filePath: string) {
 }
 
 export function loadKycServiceEnv(env: NodeJS.ProcessEnv = process.env): KycServiceEnv {
-  return envSchema.parse({
-    ...loadDotEnvFile(path.join(repoRoot, '.env')),
+  // In production, env vars are injected by Railway — skip .env file loading
+  const fileEnv = env.NODE_ENV === 'production' ? {} : loadDotEnvFile(path.join(repoRoot, '.env'));
+
+  const parsed = envSchema.parse({
+    ...fileEnv,
     ...env,
   });
+
+  const { PORT, ...rest } = parsed;
+
+  return {
+    ...rest,
+    // Railway injects PORT; prefer it over KYC_SERVICE_PORT
+    LISTEN_PORT: PORT ?? parsed.KYC_SERVICE_PORT,
+  };
 }

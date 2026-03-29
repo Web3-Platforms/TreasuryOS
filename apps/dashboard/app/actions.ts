@@ -13,7 +13,15 @@ export async function loginAction(formData: FormData) {
     return { error: 'Email and password are required.' };
   }
 
-  const apiBaseUrl = process.env.API_BASE_URL || 'http://localhost:3001/api';
+  const apiBaseUrl = process.env.API_BASE_URL;
+
+  if (!apiBaseUrl) {
+    return {
+      error:
+        'Server misconfiguration: API_BASE_URL is not set. ' +
+        'Add it to your Vercel project environment variables or .env.local for local development.',
+    };
+  }
 
   try {
     const res = await fetch(`${apiBaseUrl}/auth/login`, {
