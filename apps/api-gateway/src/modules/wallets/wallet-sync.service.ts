@@ -64,6 +64,9 @@ export class WalletSyncService {
         authoritySigner = this.kmsService.getSigner();
         if (!authoritySigner) throw new Error('KMS Signer not initialized');
       } else {
+        if (!this.env.AUTHORITY_KEYPAIR_PATH) {
+          throw new Error('AUTHORITY_KEYPAIR_PATH is required when SOLANA_SIGNING_MODE is filesystem');
+        }
         const authorityKeypair = loadAuthorityKeypair(this.env.AUTHORITY_KEYPAIR_PATH);
         authorityPubkey = authorityKeypair.publicKey;
         authoritySigner = authorityKeypair;
