@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.railway.com/railway.json",
   "build": {
-    "builder": "RAILPACK",
+    "builder": "NIXPACKS",
     "buildCommand": "npm ci && npm run build -w @treasuryos/api-gateway"
   },
   "deploy": {
