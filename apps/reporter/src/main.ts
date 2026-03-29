@@ -14,6 +14,9 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, '../../../');
 
 const envSchema = z.object({
+  NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
+  // Railway injects PORT; we check PORT first, then fall back to REPORTER_PORT.
+  PORT: z.coerce.number().int().min(1).max(65535).optional(),
   REPORTER_PORT: z.coerce.number().int().min(1).max(65535).default(3004),
 });
 
@@ -47,16 +50,23 @@ function loadDotEnvFile(filePath: string) {
 }
 
 async function bootstrap() {
-  const env = envSchema.parse({
-    ...loadDotEnvFile(path.join(repoRoot, '.env')),
+  // In production, env vars are injected by Railway — skip .env file loading
+  const fileEnv = process.env.NODE_ENV === 'production' ? {} : loadDotEnvFile(path.join(repoRoot, '.env'));
+
+  const parsed = envSchema.parse({
+    ...fileEnv,
     ...process.env,
   });
+
+  // Railway injects PORT; prefer it over REPORTER_PORT
+  const listenPort = parsed.PORT ?? parsed.REPORTER_PORT;
+
   const app = await NestFactory.create(AppModule);
 
   app.setGlobalPrefix('api');
-  await app.listen(env.REPORTER_PORT);
+  await app.listen(listenPort);
 
-  Logger.log(`Reporter listening on http://localhost:${env.REPORTER_PORT}/api/health`, 'Bootstrap');
+  Logger.log(`Reporter listening on http://localhost:${listenPort}/api/health [${parsed.NODE_ENV}]`, 'Bootstrap');
 }
 
 bootstrap().catch((error: unknown) => {
