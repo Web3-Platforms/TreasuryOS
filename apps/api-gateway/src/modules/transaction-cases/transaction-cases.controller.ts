@@ -8,11 +8,11 @@ import {
   Post,
   Query,
   Req,
-  UnauthorizedException,
 } from '@nestjs/common';
 import { UserRole } from '@treasuryos/types';
 
 import type { ApiRequest } from '../../common/http-request.js';
+import { extractActor } from '../../common/http-request.js';
 import { Roles } from '../auth/roles.decorator.js';
 import { TransactionCasesService } from './transaction-cases.service.js';
 import { ScreenTransactionDto } from './dto/screen-transaction.dto.js';
@@ -45,38 +45,30 @@ export class TransactionCasesController {
   @HttpCode(200)
   @Roles(UserRole.Admin, UserRole.ComplianceOfficer)
   screenTransaction(@Body() body: ScreenTransactionDto, @Req() request: ApiRequest) {
-    return this.transactionCasesService.screenTransaction(body, this.extractActor(request));
+    return this.transactionCasesService.screenTransaction(body, extractActor(request));
   }
 
   @Post(':caseId/review')
   @Roles(UserRole.Admin, UserRole.ComplianceOfficer)
   markUnderReview(@Param('caseId') caseId: string, @Body() body: ReviewTransitionDto, @Req() request: ApiRequest) {
-    return this.transactionCasesService.markUnderReview(caseId, body, this.extractActor(request));
+    return this.transactionCasesService.markUnderReview(caseId, body, extractActor(request));
   }
 
   @Post(':caseId/approve')
   @Roles(UserRole.Admin, UserRole.ComplianceOfficer)
   approveCase(@Param('caseId') caseId: string, @Body() body: DecisionTransitionDto, @Req() request: ApiRequest) {
-    return this.transactionCasesService.approveCase(caseId, body, this.extractActor(request));
+    return this.transactionCasesService.approveCase(caseId, body, extractActor(request));
   }
 
   @Post(':caseId/reject')
   @Roles(UserRole.Admin, UserRole.ComplianceOfficer)
   rejectCase(@Param('caseId') caseId: string, @Body() body: DecisionTransitionDto, @Req() request: ApiRequest) {
-    return this.transactionCasesService.rejectCase(caseId, body, this.extractActor(request));
+    return this.transactionCasesService.rejectCase(caseId, body, extractActor(request));
   }
 
   @Post(':caseId/escalate')
   @Roles(UserRole.Admin, UserRole.ComplianceOfficer)
   escalateCase(@Param('caseId') caseId: string, @Body() body: DecisionTransitionDto, @Req() request: ApiRequest) {
-    return this.transactionCasesService.escalateCase(caseId, body, this.extractActor(request));
-  }
-
-  private extractActor(request: ApiRequest) {
-    if (!request.currentUser) {
-      throw new UnauthorizedException('Authenticated user missing from request');
-    }
-
-    return request.currentUser;
+    return this.transactionCasesService.escalateCase(caseId, body, extractActor(request));
   }
 }

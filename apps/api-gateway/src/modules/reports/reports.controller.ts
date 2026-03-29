@@ -8,12 +8,12 @@ import {
   Query,
   Req,
   Res,
-  UnauthorizedException,
 } from '@nestjs/common';
 import { UserRole } from '@treasuryos/types';
 import type { Response } from 'express';
 
 import type { ApiRequest } from '../../common/http-request.js';
+import { extractActor } from '../../common/http-request.js';
 import { Roles } from '../auth/roles.decorator.js';
 import { ReportsService } from './reports.service.js';
 
@@ -38,7 +38,7 @@ export class ReportsController {
   @Post()
   @Roles(UserRole.Admin, UserRole.ComplianceOfficer)
   generateMonthlyReport(@Body() body: unknown, @Req() request: ApiRequest) {
-    return this.reportsService.generateMonthlyReport(body, this.extractActor(request));
+    return this.reportsService.generateMonthlyReport(body, extractActor(request));
   }
 
   @Get(':reportId/download')
@@ -48,13 +48,5 @@ export class ReportsController {
     response.setHeader('content-type', artifact.mimeType);
     response.setHeader('content-disposition', `attachment; filename="${artifact.downloadName}"`);
     response.send(artifact.contents);
-  }
-
-  private extractActor(request: ApiRequest) {
-    if (!request.currentUser) {
-      throw new UnauthorizedException('Authenticated user missing from request');
-    }
-
-    return request.currentUser;
   }
 }
