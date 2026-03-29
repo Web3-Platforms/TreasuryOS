@@ -1,4 +1,4 @@
-import { createClient } from '../utils/supabase/server.js';
+import { cookies } from 'next/headers';
 
 /**
  * Server-side API client for the dashboard.
@@ -26,9 +26,8 @@ export async function fetchApi<T = unknown>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {
-  const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  const token = session?.access_token;
+  const cookieStore = await cookies();
+  const token = cookieStore.get('treasuryos_access_token')?.value;
 
   const headers = new Headers(options.headers || {});
   headers.set('Content-Type', 'application/json');
