@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: treasuryos
+      POSTGRES_PASSWORD: treasuryos_password
+      POSTGRES_DB: treasuryos
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U treasuryos"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: api-gateway-runner
+    environment:
+      - DATABASE_URL=postgres://treasuryos:treasuryos_password@db:5432/treasuryos
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=staging_super_secret_key_12345
+      - PORT=3001
+      - API_BASE_URL=http://api-gateway:3001/api
+    ports:
+      - "3001:3001"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: dashboard-runner
+    environment:
+      - NODE_ENV=production
+      - API_BASE_URL=http://api-gateway:3001/api
+      - NEXT_PUBLIC_API_URL=http://localhost:3001/api
+      - JWT_SECRET=staging_super_secret_key_12345
+      - PORT=3000
+    ports:
+      - "3000:3000"
+    depends_on:
+      api-gateway:
+        condition: service_started
+
+volumes:
+  postgres_data:
+  redis_data:

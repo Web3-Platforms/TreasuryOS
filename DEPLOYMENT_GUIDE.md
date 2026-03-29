@@ -9,10 +9,10 @@
 
 TreasuryOS is a monorepo with two deployable services:
 
-| Service | Technology | Port | Purpose |
-|---------|-----------|------|---------|
-| **Dashboard** | Next.js 14 (App Router) | 3000 | Compliance Officer Console |
-| **API Gateway** | NestJS 10 | 3001 | REST API backend |
+| Service         | Technology              | Port | Purpose                    |
+| --------------- | ----------------------- | ---- | -------------------------- |
+| **Dashboard**   | Next.js 14 (App Router) | 3000 | Compliance Officer Console |
+| **API Gateway** | NestJS 10               | 3001 | REST API backend           |
 
 **Infrastructure Dependencies**:
 - PostgreSQL 15 (persistence)

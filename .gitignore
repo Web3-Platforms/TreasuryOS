@@ -12,7 +12,6 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 .turbo/
-package-lock.json (if using yarn, though we use npm)
 
 # --- Frontend (Next.js) ---
 .next/
@@ -42,6 +41,14 @@ Thumbs.db
 data/*.json
 data/reports/
 pilot-store.json
+
+# --- Binary Assets (Excluded from Git) ---
+*.png
+*.pdf
+*.dmg
+*.pkg
+*.zip
+*.tar.gz
 
 # --- Custom ---
 temp/

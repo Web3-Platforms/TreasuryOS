@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server';
 
 const publicRoutes = ['/login', '/_next', '/favicon.ico'];
 
-export function middleware(request: NextRequest) {
+export default function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Ignore public static Next.js paths
