@@ -3,6 +3,12 @@
   "installCommand": "npm install",
   "framework": "nextjs",
   "outputDirectory": "apps/dashboard/.next",
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://api.treasuryos.aicustombot.net/api/:path*"
+    }
+  ],
   "headers": [
     {
       "source": "/(.*)",
