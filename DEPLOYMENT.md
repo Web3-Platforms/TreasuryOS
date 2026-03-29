@@ -53,18 +53,19 @@ The Dashboard **never** talks to the database directly. All data flows through t
 
 1. Go to [railway.app](https://railway.app) → **New Project → Deploy from GitHub repo**.
 2. Select this repository.
-3. Railway detects `railway.json` automatically and uses Nixpacks to build.
+3. Railway detects `railway.json` automatically and uses Railpacks to build.
 
 The `railway.json` at the repo root configures:
 
 ```json
 {
+  "$schema": "https://schema.railway.com/railway.json",
   "build": {
-    "builder": "NIXPACKS",
-    "buildCommand": "npm run build -w apps/api-gateway"
+    "builder": "RAILPACK",
+    "buildCommand": "npm ci && npm run build -w @treasuryos/api-gateway"
   },
   "deploy": {
-    "startCommand": "npm run start:prod -w apps/api-gateway",
+    "startCommand": "node apps/api-gateway/dist/main.js",
     "healthcheckPath": "/api/health",
     "healthcheckTimeout": 30,
     "restartPolicyType": "ON_FAILURE",
