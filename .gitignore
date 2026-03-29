@@ -54,3 +54,4 @@ pilot-store.json
 temp/
 /tmp/
 *.log
+tsconfig.tsbuildinfo

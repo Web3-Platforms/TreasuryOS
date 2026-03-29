@@ -1,7 +1,6 @@
-import { Body, Controller, Get, HttpCode, Inject, Post, Req, UnauthorizedException } from '@nestjs/common';
+import { Body, Controller, HttpCode, Inject, Post, Req } from '@nestjs/common';
 
 import type { ApiRequest } from '../../common/http-request.js';
-import { extractActor } from '../../common/http-request.js';
 import { Public } from './public.decorator.js';
 import { AuthService } from './auth.service.js';
 import { LoginDto } from './dto/login.dto.js';
@@ -17,44 +16,10 @@ export class AuthController {
     return this.authService.login(body, this.extractContext(request));
   }
 
-  @Get('me')
-  getCurrentSession(@Req() request: ApiRequest) {
-    return this.authService.getCurrentSession(this.requireSessionId(request), extractActor(request));
-  }
-
-  @Get('sessions')
-  getSessions(@Req() request: ApiRequest) {
-    return this.authService.listUserSessions(extractActor(request));
-  }
-
-  @Post('refresh')
-  @HttpCode(200)
-  refresh(@Req() request: ApiRequest) {
-    return this.authService.refresh(
-      this.requireSessionId(request),
-      extractActor(request),
-      this.extractContext(request),
-    );
-  }
-
-  @Post('logout')
-  @HttpCode(200)
-  logout(@Req() request: ApiRequest) {
-    return this.authService.logout(this.requireSessionId(request), extractActor(request));
-  }
-
   private extractContext(request: ApiRequest) {
     return {
       ipAddress: request.ip ?? request.socket.remoteAddress,
       userAgent: request.headers['user-agent'],
     };
-  }
-
-  private requireSessionId(request: ApiRequest) {
-    if (!request.authSessionId) {
-      throw new UnauthorizedException('Authenticated session missing from request');
-    }
-
-    return request.authSessionId;
   }
 }
