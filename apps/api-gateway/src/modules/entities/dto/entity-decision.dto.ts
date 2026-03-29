@@ -1,7 +1,3 @@
-import { IsOptional, MaxLength } from 'class-validator';
+import { DecisionDto } from '../../../common/decision.dto.js';
 
-export class EntityDecisionDto {
-  @IsOptional()
-  @MaxLength(4000)
-  notes?: string;
-}
+export class EntityDecisionDto extends DecisionDto {}

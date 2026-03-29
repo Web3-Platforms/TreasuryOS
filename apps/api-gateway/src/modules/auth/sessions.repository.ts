@@ -2,17 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import type { SessionRecord } from '@treasuryos/types';
 
 import { DatabaseService } from '../database/database.service.js';
-
-function toIso(value: unknown) {
-  if (!value) {
-    return undefined;
-  }
-  if (value instanceof Date) {
-    return value.toISOString();
-  }
-  const parsed = new Date(String(value));
-  return Number.isNaN(parsed.getTime()) ? undefined : parsed.toISOString();
-}
+import { toIso } from '../../common/db-utils.js';
 
 function mapSessionRow(row: Record<string, unknown>): SessionRecord {
   return {

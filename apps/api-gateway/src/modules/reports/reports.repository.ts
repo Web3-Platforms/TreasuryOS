@@ -2,35 +2,8 @@ import { Inject, Injectable } from '@nestjs/common';
 import type { ReportRecord, ReportJobStatus } from '@treasuryos/types';
 
 import { DatabaseService } from '../database/database.service.js';
+import { toIso, asJsonRecord } from '../../common/db-utils.js';
 import type { PoolClient } from 'pg';
-
-function toIso(value: unknown) {
-  if (!value) {
-    return undefined;
-  }
-  if (value instanceof Date) {
-    return value.toISOString();
-  }
-  const parsed = new Date(String(value));
-  return Number.isNaN(parsed.getTime()) ? undefined : parsed.toISOString();
-}
-
-function asJsonRecord(value: unknown): Record<string, unknown> | undefined {
-  if (!value) {
-    return undefined;
-  }
-  if (typeof value === 'string') {
-    try {
-      return JSON.parse(value) as Record<string, unknown>;
-    } catch {
-      return undefined;
-    }
-  }
-  if (typeof value === 'object') {
-    return value as Record<string, unknown>;
-  }
-  return undefined;
-}
 
 function mapReportRow(row: Record<string, unknown>): ReportRecord {
   return {

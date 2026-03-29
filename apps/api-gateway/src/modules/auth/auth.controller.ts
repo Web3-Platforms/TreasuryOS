@@ -1,6 +1,7 @@
 import { Body, Controller, Get, HttpCode, Inject, Post, Req, UnauthorizedException } from '@nestjs/common';
 
 import type { ApiRequest } from '../../common/http-request.js';
+import { extractActor } from '../../common/http-request.js';
 import { Public } from './public.decorator.js';
 import { AuthService } from './auth.service.js';
 import { LoginDto } from './dto/login.dto.js';
@@ -18,12 +19,12 @@ export class AuthController {
 
   @Get('me')
   getCurrentSession(@Req() request: ApiRequest) {
-    return this.authService.getCurrentSession(this.requireSessionId(request), this.requireActor(request));
+    return this.authService.getCurrentSession(this.requireSessionId(request), extractActor(request));
   }
 
   @Get('sessions')
   getSessions(@Req() request: ApiRequest) {
-    return this.authService.listUserSessions(this.requireActor(request));
+    return this.authService.listUserSessions(extractActor(request));
   }
 
   @Post('refresh')
@@ -31,7 +32,7 @@ export class AuthController {
   refresh(@Req() request: ApiRequest) {
     return this.authService.refresh(
       this.requireSessionId(request),
-      this.requireActor(request),
+      extractActor(request),
       this.extractContext(request),
     );
   }
@@ -39,7 +40,7 @@ export class AuthController {
   @Post('logout')
   @HttpCode(200)
   logout(@Req() request: ApiRequest) {
-    return this.authService.logout(this.requireSessionId(request), this.requireActor(request));
+    return this.authService.logout(this.requireSessionId(request), extractActor(request));
   }
 
   private extractContext(request: ApiRequest) {
@@ -47,14 +48,6 @@ export class AuthController {
       ipAddress: request.ip ?? request.socket.remoteAddress,
       userAgent: request.headers['user-agent'],
     };
-  }
-
-  private requireActor(request: ApiRequest) {
-    if (!request.currentUser) {
-      throw new UnauthorizedException('Authenticated user missing from request');
-    }
-
-    return request.currentUser;
   }
 
   private requireSessionId(request: ApiRequest) {
