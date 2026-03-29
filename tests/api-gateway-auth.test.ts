@@ -11,17 +11,19 @@ import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 
 import { NestFactory } from '@nestjs/core';
+import jwt from 'jsonwebtoken';
 import { Keypair } from '@solana/web3.js';
 import { ChainSyncStatus, UserRole } from '@treasuryos/types';
 import { Pool } from 'pg';
 
 import { AppModule } from '../apps/api-gateway/src/app.module.js';
 import { AuthService } from '../apps/api-gateway/src/modules/auth/auth.service.js';
-import { AuthTokenService } from '../apps/api-gateway/src/modules/auth/auth-token.service.js';
 import { WalletSyncService } from '../apps/api-gateway/src/modules/wallets/wallet-sync.service.js';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 let databaseMigrated = false;
+
+const TEST_SUPABASE_JWT_SECRET = 'test-supabase-jwt-secret-that-is-32-chars!!';
 
 function withApiEnv(overrides: Record<string, string> = {}) {
   const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'treasuryos-auth-'));
@@ -56,6 +58,7 @@ function withApiEnv(overrides: Record<string, string> = {}) {
     AUTHORITY_KEYPAIR_PATH: path.join(tempRoot, 'id.json'),
     SOLANA_SYNC_ENABLED: 'false',
     NEXT_PUBLIC_API_BASE_URL: 'http://localhost:3001',
+    SUPABASE_JWT_SECRET: TEST_SUPABASE_JWT_SECRET,
     ...overrides,
   });
 
@@ -88,6 +91,10 @@ async function bootstrapApiApp() {
   };
 }
 
+/**
+ * Validates credentials via the login endpoint and returns a Supabase-compatible
+ * JWT signed with the test secret for use in subsequent API calls.
+ */
 async function login(baseUrl: string, email: string, password: string) {
   const response = await fetch(`${baseUrl}/auth/login`, {
     method: 'POST',
@@ -98,7 +105,16 @@ async function login(baseUrl: string, email: string, password: string) {
   });
 
   assert.equal(response.status, 200);
-  return response.json();
+  const data = await response.json();
+
+  // Generate a Supabase-compatible JWT signed with the test secret
+  const accessToken = jwt.sign(
+    { sub: data.user.id, email: data.user.email },
+    TEST_SUPABASE_JWT_SECRET,
+    { expiresIn: '1h' },
+  );
+
+  return { ...data, accessToken };
 }
 
 function signSumsubWebhook(body: string, secret: string) {
@@ -129,7 +145,6 @@ async function resetDatabase() {
     await pool.query(
       `
         truncate table
-          auth_sessions,
           audit_events,
           provider_webhooks,
           report_jobs,
@@ -145,34 +160,7 @@ async function resetDatabase() {
   }
 }
 
-test('auth token service signs and verifies access tokens', () => {
-  const fixture = withApiEnv();
-  try {
-    const tokenService = new AuthTokenService();
-    const expiresAt = new Date(Date.now() + 60_000);
-    const token = tokenService.signToken(
-      {
-        id: 'user_admin',
-        email: 'admin@treasuryos.local',
-        roles: [UserRole.Admin],
-      },
-      'session_1',
-      'token_1',
-      expiresAt,
-    );
-
-    const payload = tokenService.verifyToken(token);
-    assert.equal(payload.sub, 'user_admin');
-    assert.equal(payload.sid, 'session_1');
-    assert.equal(payload.jti, 'token_1');
-    assert.equal(payload.email, 'admin@treasuryos.local');
-    assert.throws(() => tokenService.verifyToken(`${token}broken`), /Invalid token format|Invalid token signature/);
-  } finally {
-    fixture.restore();
-  }
-});
-
-test('auth service seeds users and handles login refresh logout lifecycle', async () => {
+test('auth service validates credentials and returns user info', async () => {
   const fixture = withApiEnv();
   let app: Awaited<ReturnType<typeof bootstrapApiApp>>['app'] | undefined;
   try {
@@ -193,29 +181,12 @@ test('auth service seeds users and handles login refresh logout lifecycle', asyn
       },
     );
 
-    assert.ok(loginResponse.accessToken);
     assert.equal(loginResponse.user.email, 'admin@treasuryos.local');
-    assert.equal(loginResponse.session.ipAddress, '127.0.0.1');
+    assert.deepEqual(loginResponse.user.roles, [UserRole.Admin]);
 
-    const current = await authService.getCurrentSession(loginResponse.session.id, loginResponse.user);
-    assert.equal(current.session.id, loginResponse.session.id);
-
-    const refreshed = await authService.refresh(loginResponse.session.id, loginResponse.user, {
-      ipAddress: '127.0.0.1',
-      userAgent: 'node-test-refreshed',
-    });
-    assert.notEqual(refreshed.accessToken, loginResponse.accessToken);
-    assert.equal(refreshed.session.id, loginResponse.session.id);
-    assert.equal(refreshed.session.userAgent, 'node-test-refreshed');
-
-    const activeSessions = await authService.listUserSessions(loginResponse.user);
-    assert.equal(activeSessions.sessions.length, 1);
-
-    const logout = await authService.logout(loginResponse.session.id, loginResponse.user);
-    assert.equal(logout.success, true);
     await assert.rejects(
-      authService.getCurrentSession(loginResponse.session.id, loginResponse.user),
-      /Session revoked/,
+      authService.login({ email: 'admin@treasuryos.local', password: 'wrong-password' }, {}),
+      /Invalid credentials/,
     );
   } finally {
     if (app) {
