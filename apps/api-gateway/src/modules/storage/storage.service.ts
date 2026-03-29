@@ -73,7 +73,7 @@ export class StorageService implements OnModuleInit {
 
     return {
       key,
-      bucket: this.bucket!,
+      bucket: this.bucket,
       url: `${this.supabaseUrl}/storage/v1/object/public/${this.bucket}/${key}`,
     };
   }
@@ -131,7 +131,7 @@ export class StorageService implements OnModuleInit {
         method,
         headers: {
           Authorization: `Bearer ${this.serviceKey}`,
-          apikey: this.serviceKey!,
+          apikey: this.serviceKey as string,
           ...(body ? { 'Content-Length': Buffer.byteLength(body) } : {}),
           ...extraHeaders,
         },

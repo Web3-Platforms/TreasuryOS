@@ -137,24 +137,22 @@ export class RedisQueueService {
 
       socket.setEncoding('utf8');
 
-      socket.on('connect', () => {
+      const onReady = () => {
         if (password) {
-          // AUTH reply comes first, then we send the real command
+          // Send AUTH first; the actual command is sent after the AUTH reply is received.
           socket.write(encodeCommand(['AUTH', password]));
         } else {
           socket.write(encodeCommand(parts));
         }
-      });
+      };
 
-      socket.on('secureConnect', () => {
-        // For TLS sockets the 'connect' event fires before the handshake
-        // completes, so we rely on 'secureConnect' instead.
-        if (password) {
-          socket.write(encodeCommand(['AUTH', password]));
-        } else {
-          socket.write(encodeCommand(parts));
-        }
-      });
+      if (useTls) {
+        // For TLS sockets, 'secureConnect' fires after the handshake completes.
+        // 'connect' fires before the handshake and must NOT be used for writes.
+        (socket as tls.TLSSocket).on('secureConnect', onReady);
+      } else {
+        socket.on('connect', onReady);
+      }
 
       socket.on('data', (chunk) => {
         buffer += chunk;
