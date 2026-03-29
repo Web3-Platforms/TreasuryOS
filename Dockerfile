@@ -40,22 +40,3 @@ COPY --from=builder /app/apps/api-gateway/package.json ./apps/api-gateway/packag
 EXPOSE 3001
 # The api-gateway main.js will require things relative to apps/api-gateway/dist
 CMD ["node", "apps/api-gateway/dist/main.js"]
-
-# ====================
-# Runner for Dashboard (Next.js Standalone)
-# ====================
-FROM base AS dashboard-runner
-WORKDIR /app
-ENV NODE_ENV=production
-ENV PORT=3000
-
-# Next.js standalone output contains a minimized replica of the node_modules and workspaces needed to run the app
-COPY --from=builder /app/apps/dashboard/public ./apps/dashboard/public
-# Copy the standalone output - it creates a folder structure mirroring the monorepo root
-COPY --from=builder /app/apps/dashboard/.next/standalone ./
-COPY --from=builder /app/apps/dashboard/.next/static ./apps/dashboard/.next/static
-
-EXPOSE 3000
-
-# Since it mirrors the monorepo, the server.js is located in apps/dashboard/server.js
-CMD ["node", "apps/dashboard/server.js"]
