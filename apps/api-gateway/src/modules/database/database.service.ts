@@ -16,12 +16,23 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     ssl: this.shouldUseSsl()
       ? { rejectUnauthorized: false }
       : false,
+
+    // ── Neon / PgBouncer-safe pool settings ──────────────────
+    // Neon free tier: 5 concurrent connections through the pooler.
+    // Keep this low so serverless instances don't exhaust the limit.
+    max: this.env.NODE_ENV === 'production' ? 5 : 10,
+    idleTimeoutMillis: 20_000,
+    connectionTimeoutMillis: 10_000,
+
+    // Prevent runaway queries from holding connections indefinitely.
+    statement_timeout: 30_000,
   });
 
   private shouldUseSsl(): boolean {
     if (this.env.DATABASE_SSL) {
       return true;
     }
+    // Auto-detect: Neon URLs typically include sslmode=require
     return this.env.DATABASE_URL.includes('sslmode=require');
   }
 

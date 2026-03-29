@@ -1,0 +1,33 @@
+name: TreasuryOS CD — Migrations
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'infra/db/migrations/**'
+
+jobs:
+  migrate-neon:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - run: npm install
+
+      - name: Run migrations against Neon
+        env:
+          DATABASE_URL: ${{ secrets.NEON_DATABASE_URL }}
+        run: npm run db:migrate
+
+      - name: Verify no pending migrations
+        env:
+          DATABASE_URL: ${{ secrets.NEON_DATABASE_URL }}
+        run: npm run db:migrate:check

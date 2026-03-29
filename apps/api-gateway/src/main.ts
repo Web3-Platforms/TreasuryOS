@@ -9,11 +9,6 @@ import { loadApiGatewayEnv } from './config/env.js';
 
 async function bootstrap() {
   const env = loadApiGatewayEnv();
-  // Railway (and other PaaS providers) inject PORT at runtime and expect the
-  // server to bind to it.  Fall back to the configured API_GATEWAY_PORT for
-  // local development and Docker Compose.
-  const port = process.env.PORT ? Number(process.env.PORT) : env.API_GATEWAY_PORT;
-
   const app = await NestFactory.create(AppModule, {
     bufferLogs: true,
     rawBody: true,
@@ -26,22 +21,34 @@ async function bootstrap() {
     transform: true,
   }));
 
+  // ── CORS ─────────────────────────────────────────────────
+  // In production, restrict to FRONTEND_URL (the Vercel deployment).
+  // In development, allow localhost origins for convenience.
+  const allowedOrigins: string[] = [];
+
+  if (env.NODE_ENV === 'production') {
+    if (env.FRONTEND_URL) {
+      allowedOrigins.push(env.FRONTEND_URL);
+    }
+  } else {
+    allowedOrigins.push('http://localhost:3000', 'http://localhost:3001');
+    if (env.FRONTEND_URL) {
+      allowedOrigins.push(env.FRONTEND_URL);
+    }
+  }
+
   app.enableCors({
-    origin: [
-      'http://localhost:3000',
-      'http://localhost:3001',
-      process.env.FRONTEND_URL,
-    ].filter(Boolean) as string[],
+    origin: allowedOrigins,
     credentials: true,
   });
-  app.setGlobalPrefix('api');
 
+  app.setGlobalPrefix('api');
   app.enableShutdownHooks();
 
-  await app.listen(port);
+  await app.listen(env.LISTEN_PORT);
 
   Logger.log(
-    `API gateway listening on http://localhost:${port}/api/health`,
+    `API gateway listening on http://0.0.0.0:${env.LISTEN_PORT}/api/health [${env.NODE_ENV}]`,
     'Bootstrap',
   );
 }

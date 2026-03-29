@@ -1,93 +1,64 @@
-import net from 'node:net';
-import tls from 'node:tls';
-
 import { Injectable, Logger } from '@nestjs/common';
 
 import { loadApiGatewayEnv } from '../../config/env.js';
 
-function encodeCommand(parts: string[]) {
-  return `*${parts.length}\r\n${parts
-    .map((part) => `$${Buffer.byteLength(part)}\r\n${part}\r\n`)
-    .join('')}`;
-}
-
 /**
- * Parses a single RESP (Redis Serialization Protocol) reply from the buffer.
- * Returns null when the buffer contains an incomplete response.
- */
-function parseReply(data: string) {
-  if (data.length < 3) {
-    return null;
-  }
-
-  const lineEnd = data.indexOf('\r\n');
-
-  if (lineEnd === -1) {
-    return null;
-  }
-
-  const prefix = data[0];
-  const value = data.slice(1, lineEnd);
-
-  if (prefix === '+') {
-    return value;
-  }
-
-  if (prefix === ':') {
-    return Number(value);
-  }
-
-  if (prefix === '-') {
-    throw new Error(value);
-  }
-
-  throw new Error(`Unsupported Redis response prefix: ${prefix}`);
-}
-
-/**
- * Lightweight Redis queue client supporting plain TCP, TLS, and password auth.
+ * Lightweight Redis queue client.
  *
- * Compatible with:
- *  - Local Redis:  redis://localhost:6379
- *  - Upstash:      rediss://default:<token>@<host>.upstash.io:6380
- *  - Any password-protected Redis: redis://:password@host:port
+ * Cloud (Upstash):  Uses the Upstash REST API via fetch() — no TCP sockets,
+ *                   works in serverless and Docker without TLS complications.
+ * Local dev:        Falls back to raw TCP when UPSTASH vars are not set.
  */
 @Injectable()
 export class RedisQueueService {
   private readonly env = loadApiGatewayEnv();
   private readonly logger = new Logger(RedisQueueService.name);
-  private readonly redisUrl = new URL(this.env.REDIS_URL);
   private warnedOnUnavailable = false;
 
-  async ping() {
+  /** True when Upstash REST credentials are configured */
+  private get useUpstashRest(): boolean {
+    return Boolean(this.env.UPSTASH_REDIS_REST_URL && this.env.UPSTASH_REDIS_REST_TOKEN);
+  }
+
+  async ping(): Promise<boolean> {
     if (!this.env.REDIS_QUEUE_ENABLED) {
       return false;
     }
 
     try {
-      const reply = await this.sendCommand(['PING']);
+      if (this.useUpstashRest) {
+        const result = await this.upstashCommand(['PING']);
+        this.warnedOnUnavailable = false;
+        return result === 'PONG';
+      }
+
+      const result = await this.tcpCommand(['PING']);
       this.warnedOnUnavailable = false;
-      return reply === 'PONG';
+      return result === 'PONG';
     } catch (error) {
       this.warnUnavailable(error);
       return false;
     }
   }
 
-  async enqueue(queueName: string, payload: Record<string, unknown>) {
+  async enqueue(queueName: string, payload: Record<string, unknown>): Promise<number | null> {
     if (!this.env.REDIS_QUEUE_ENABLED) {
       return null;
     }
 
+    const message = JSON.stringify({
+      ...payload,
+      queuedAt: new Date().toISOString(),
+    });
+
     try {
-      const reply = await this.sendCommand([
-        'LPUSH',
-        queueName,
-        JSON.stringify({
-          ...payload,
-          queuedAt: new Date().toISOString(),
-        }),
-      ]);
+      let reply: unknown;
+
+      if (this.useUpstashRest) {
+        reply = await this.upstashCommand(['LPUSH', queueName, message]);
+      } else {
+        reply = await this.tcpCommand(['LPUSH', queueName, message]);
+      }
 
       this.warnedOnUnavailable = false;
       return typeof reply === 'number' ? reply : null;
@@ -97,11 +68,70 @@ export class RedisQueueService {
     }
   }
 
-  private warnUnavailable(error: unknown, queueName?: string) {
-    if (this.warnedOnUnavailable) {
-      return;
+  // ── Upstash REST transport ─────────────────────────────────
+
+  private async upstashCommand(args: string[]): Promise<unknown> {
+    const url = this.env.UPSTASH_REDIS_REST_URL!;
+    const token = this.env.UPSTASH_REDIS_REST_TOKEN!;
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(args),
+    });
+
+    if (!response.ok) {
+      const text = await response.text().catch(() => 'unknown');
+      throw new Error(`Upstash REST ${response.status}: ${text}`);
     }
 
+    const data = (await response.json()) as { result: unknown };
+    return data.result;
+  }
+
+  // ── Local TCP fallback (same as original, no auth/TLS) ─────
+
+  private tcpCommand(parts: string[]): Promise<string | number | null> {
+    // Lazy-import net to avoid bundling issues in serverless
+    return import('node:net').then(
+      ({ createConnection }) =>
+        new Promise<string | number | null>((resolve, reject) => {
+          const redisUrl = new URL(this.env.REDIS_URL);
+          const port = redisUrl.port ? Number(redisUrl.port) : 6379;
+          const host = redisUrl.hostname || '127.0.0.1';
+
+          const socket = createConnection({ host, port });
+          let buffer = '';
+
+          socket.setEncoding('utf8');
+
+          socket.on('connect', () => {
+            socket.write(encodeRespCommand(parts));
+          });
+
+          socket.on('data', (chunk) => {
+            buffer += chunk;
+            try {
+              const parsed = parseRespReply(buffer);
+              if (parsed === null) return;
+              socket.end();
+              resolve(parsed);
+            } catch (error) {
+              socket.destroy();
+              reject(error);
+            }
+          });
+
+          socket.on('error', (error) => reject(error));
+        }),
+    );
+  }
+
+  private warnUnavailable(error: unknown, queueName?: string) {
+    if (this.warnedOnUnavailable) return;
     this.warnedOnUnavailable = true;
     this.logger.warn(
       queueName
@@ -109,80 +139,24 @@ export class RedisQueueService {
         : `Redis queue is unavailable: ${error instanceof Error ? error.message : String(error)}`,
     );
   }
+}
 
-  /**
-   * Sends a RESP command to Redis over a fresh TCP or TLS connection.
-   *
-   * Supports Upstash's rediss:// scheme (TLS) and password authentication.
-   * The connection is closed after each command to stay stateless and safe
-   * for serverless environments (Vercel / Railway).
-   */
-  private sendCommand(parts: string[]) {
-    const port = this.redisUrl.port ? Number(this.redisUrl.port) : 6379;
-    const host = this.redisUrl.hostname || '127.0.0.1';
-    const useTls = this.redisUrl.protocol === 'rediss:';
-    // Upstash uses `rediss://default:<TOKEN>@host` — password is in the URL
-    const password = this.redisUrl.password
-      ? decodeURIComponent(this.redisUrl.password)
-      : null;
+// ── RESP protocol helpers (local dev only) ─────────────────
 
-    return new Promise<string | number | null>((resolve, reject) => {
-      const socket: net.Socket = useTls
-        ? tls.connect({ host, port, rejectUnauthorized: true })
-        : net.createConnection({ host, port });
+function encodeRespCommand(parts: string[]) {
+  return `*${parts.length}\r\n${parts
+    .map((part) => `$${Buffer.byteLength(part)}\r\n${part}\r\n`)
+    .join('')}`;
+}
 
-      let buffer = '';
-      // Track whether we are still waiting for the AUTH reply before the real command
-      let awaitingAuth = !!password;
-
-      socket.setEncoding('utf8');
-
-      const onReady = () => {
-        if (password) {
-          // Send AUTH first; the actual command is sent after the AUTH reply is received.
-          socket.write(encodeCommand(['AUTH', password]));
-        } else {
-          socket.write(encodeCommand(parts));
-        }
-      };
-
-      if (useTls) {
-        // For TLS sockets, 'secureConnect' fires after the handshake completes.
-        // 'connect' fires before the handshake and must NOT be used for writes.
-        (socket as tls.TLSSocket).on('secureConnect', onReady);
-      } else {
-        socket.on('connect', onReady);
-      }
-
-      socket.on('data', (chunk) => {
-        buffer += chunk;
-
-        try {
-          const parsed = parseReply(buffer);
-
-          if (parsed === null) {
-            return;
-          }
-
-          if (awaitingAuth) {
-            // AUTH reply received — clear buffer and send the actual command
-            awaitingAuth = false;
-            buffer = '';
-            socket.write(encodeCommand(parts));
-            return;
-          }
-
-          socket.end();
-          resolve(parsed);
-        } catch (error) {
-          socket.destroy();
-          reject(error);
-        }
-      });
-
-      socket.on('error', (error) => {
-        reject(error);
-      });
-    });
-  }
+function parseRespReply(data: string): string | number | null {
+  if (data.length < 3) return null;
+  const lineEnd = data.indexOf('\r\n');
+  if (lineEnd === -1) return null;
+  const prefix = data[0];
+  const value = data.slice(1, lineEnd);
+  if (prefix === '+') return value;
+  if (prefix === ':') return Number(value);
+  if (prefix === '-') throw new Error(value);
+  throw new Error(`Unsupported Redis response prefix: ${prefix}`);
 }

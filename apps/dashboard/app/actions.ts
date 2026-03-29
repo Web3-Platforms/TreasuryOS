@@ -13,10 +13,10 @@ export async function loginAction(formData: FormData) {
     return { error: 'Email and password are required.' };
   }
 
-  const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:3001/api';
+  const apiBaseUrl = process.env.API_BASE_URL || 'http://localhost:3001/api';
 
   try {
-    const res = await fetch(`${API_BASE_URL}/auth/login`, {
+    const res = await fetch(`${apiBaseUrl}/auth/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
