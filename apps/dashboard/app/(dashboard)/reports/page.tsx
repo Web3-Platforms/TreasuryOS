@@ -2,6 +2,7 @@ import { fetchApi } from '@/lib/api-client';
 import type { ReportRecord } from '@treasuryos/types';
 import { CreateReportForm } from '@/components/create-report-form';
 import { ReportJobStatus } from '@treasuryos/types';
+import { AppShell } from '@/components/app-shell';
 
 export default async function ReportsPage() {
   const { reports } = await fetchApi<{ reports: ReportRecord[] }>('reports', {
@@ -9,14 +10,15 @@ export default async function ReportsPage() {
   });
 
   return (
-    <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '2rem' }}>
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-        <div>
-          <h1 style={{ fontSize: '2rem', fontWeight: 600, margin: 0 }}>Compliance Reports</h1>
-          <p style={{ color: '#888', marginTop: '0.5rem' }}>Generate and download monthly operational summaries.</p>
-        </div>
-        <CreateReportForm />
-      </header>
+    <AppShell>
+      <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '2rem' }}>
+        <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+          <div>
+            <h1 style={{ fontSize: '2rem', fontWeight: 600, margin: 0 }}>Compliance Reports</h1>
+            <p style={{ color: '#888', marginTop: '0.5rem' }}>Generate and download monthly operational summaries.</p>
+          </div>
+          <CreateReportForm />
+        </header>
 
       <div style={{ border: '1px solid #333', borderRadius: '8px', overflow: 'hidden' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
@@ -75,6 +77,7 @@ export default async function ReportsPage() {
           </tbody>
         </table>
       </div>
-    </div>
+      </div>
+    </AppShell>
   );
 }

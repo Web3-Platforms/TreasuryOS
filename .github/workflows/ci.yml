@@ -25,6 +25,7 @@ env:
   DATABASE_URL: postgresql://postgres:postgres@localhost:5432/treasury_os
   REDIS_URL: redis://localhost:6379
   REDIS_QUEUE_NAME: treasuryos:ci-events
+  REDIS_QUEUE_ENABLED: "false"
   SUMSUB_LEVEL_NAME: basic-kyc-level
   SOLANA_RPC_URL: https://api.devnet.solana.com
   PROGRAM_ID_WALLET_WHITELIST: FXFMG4hzBcuRu33mVXyTHESH7FnsmUD6Fajr17FugbRt
@@ -68,6 +69,15 @@ jobs:
           - 5432:5432
         options: >-
           --health-cmd "pg_isready -U postgres -d treasury_os"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
