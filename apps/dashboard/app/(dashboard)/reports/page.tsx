@@ -5,9 +5,15 @@ import { ReportJobStatus } from '@treasuryos/types';
 import { AppShell } from '@/components/app-shell';
 
 export default async function ReportsPage() {
-  const { reports } = await fetchApi<{ reports: ReportRecord[] }>('reports', {
-    next: { revalidate: 0 },
-  });
+  let reports: ReportRecord[] = [];
+  try {
+    const data = await fetchApi<{ reports: ReportRecord[] }>('reports', {
+      next: { revalidate: 0 },
+    });
+    reports = data.reports ?? [];
+  } catch (error) {
+    console.error('Failed to load reports:', error);
+  }
 
   return (
     <AppShell>
