@@ -11,10 +11,10 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   app.setGlobalPrefix('api');
-  await app.listen(env.KYC_SERVICE_PORT);
+  await app.listen(env.LISTEN_PORT);
 
   Logger.log(
-    `KYC service listening on http://localhost:${env.KYC_SERVICE_PORT}/api/health`,
+    `KYC service listening on http://localhost:${env.LISTEN_PORT}/api/health [${env.NODE_ENV}]`,
     'Bootstrap',
   );
 }
