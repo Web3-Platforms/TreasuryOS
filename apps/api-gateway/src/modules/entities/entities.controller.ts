@@ -7,11 +7,11 @@ import {
   Patch,
   Post,
   Req,
-  UnauthorizedException,
 } from '@nestjs/common';
-import { UserRole, type AuthenticatedUser } from '@treasuryos/types';
+import { UserRole } from '@treasuryos/types';
 
 import type { ApiRequest } from '../../common/http-request.js';
+import { extractActor } from '../../common/http-request.js';
 import { Roles } from '../auth/roles.decorator.js';
 import { EntitiesService } from './entities.service.js';
 import { CreateEntityDto } from './dto/create-entity.dto.js';
@@ -39,38 +39,30 @@ export class EntitiesController {
   @Post()
   @Roles(UserRole.Admin, UserRole.ComplianceOfficer)
   createEntity(@Body() body: CreateEntityDto, @Req() request: ApiRequest) {
-    return this.entitiesService.createEntity(body, this.requireActor(request));
+    return this.entitiesService.createEntity(body, extractActor(request));
   }
 
   @Patch(':entityId')
   @Roles(UserRole.Admin, UserRole.ComplianceOfficer)
   updateDraft(@Param('entityId') entityId: string, @Body() body: UpdateDraftDto, @Req() request: ApiRequest) {
-    return this.entitiesService.updateDraft(entityId, body, this.requireActor(request));
+    return this.entitiesService.updateDraft(entityId, body, extractActor(request));
   }
 
   @Post(':entityId/submit')
   @Roles(UserRole.Admin, UserRole.ComplianceOfficer)
   submitEntity(@Param('entityId') entityId: string, @Req() request: ApiRequest) {
-    return this.entitiesService.submitEntity(entityId, this.requireActor(request));
+    return this.entitiesService.submitEntity(entityId, extractActor(request));
   }
 
   @Post(':entityId/approve')
   @Roles(UserRole.Admin, UserRole.ComplianceOfficer)
   approveEntity(@Param('entityId') entityId: string, @Body() body: EntityDecisionDto, @Req() request: ApiRequest) {
-    return this.entitiesService.approveEntity(entityId, body, this.requireActor(request));
+    return this.entitiesService.approveEntity(entityId, body, extractActor(request));
   }
 
   @Post(':entityId/reject')
   @Roles(UserRole.Admin, UserRole.ComplianceOfficer)
   rejectEntity(@Param('entityId') entityId: string, @Body() body: EntityDecisionDto, @Req() request: ApiRequest) {
-    return this.entitiesService.rejectEntity(entityId, body, this.requireActor(request));
-  }
-
-  private requireActor(request: ApiRequest): AuthenticatedUser {
-    if (!request.currentUser) {
-      throw new UnauthorizedException('Authenticated user missing from request');
-    }
-
-    return request.currentUser;
+    return this.entitiesService.rejectEntity(entityId, body, extractActor(request));
   }
 }

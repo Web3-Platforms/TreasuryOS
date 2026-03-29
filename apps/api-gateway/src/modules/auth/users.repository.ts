@@ -2,24 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import type { UserRecord, UserRole, UserStatus } from '@treasuryos/types';
 
 import { DatabaseService } from '../database/database.service.js';
-
-function toIso(value: unknown) {
-  if (!value) {
-    return undefined;
-  }
-  if (value instanceof Date) {
-    return value.toISOString();
-  }
-  const parsed = new Date(String(value));
-  return Number.isNaN(parsed.getTime()) ? undefined : parsed.toISOString();
-}
-
-function asStringArray(value: unknown) {
-  if (!Array.isArray(value)) {
-    return [];
-  }
-  return value.map((entry) => String(entry));
-}
+import { toIso, asStringArray } from '../../common/db-utils.js';
 
 function mapUserRow(row: Record<string, unknown>): UserRecord {
   const roles = asStringArray(row.roles);

@@ -2,25 +2,8 @@ import { Inject, Injectable } from '@nestjs/common';
 import type { ReviewedTransaction } from '@treasuryos/types';
 
 import { DatabaseService } from '../database/database.service.js';
+import { toIso, asStringArray } from '../../common/db-utils.js';
 import type { PoolClient } from 'pg';
-
-function toIso(value: unknown) {
-  if (!value) {
-    return undefined;
-  }
-  if (value instanceof Date) {
-    return value.toISOString();
-  }
-  const parsed = new Date(String(value));
-  return Number.isNaN(parsed.getTime()) ? undefined : parsed.toISOString();
-}
-
-function asStringArray(value: unknown) {
-  if (!Array.isArray(value)) {
-    return [];
-  }
-  return value.map((entry) => String(entry));
-}
 
 function mapTransactionCaseRow(row: Record<string, unknown>): ReviewedTransaction {
   return {
