@@ -1,4 +1,5 @@
 import net from 'node:net';
+import tls from 'node:tls';
 
 import { Injectable, Logger } from '@nestjs/common';
 
@@ -10,6 +11,10 @@ function encodeCommand(parts: string[]) {
     .join('')}`;
 }
 
+/**
+ * Parses a single RESP (Redis Serialization Protocol) reply from the buffer.
+ * Returns null when the buffer contains an incomplete response.
+ */
 function parseReply(data: string) {
   if (data.length < 3) {
     return null;
@@ -39,12 +44,19 @@ function parseReply(data: string) {
   throw new Error(`Unsupported Redis response prefix: ${prefix}`);
 }
 
+/**
+ * Lightweight Redis queue client supporting plain TCP, TLS, and password auth.
+ *
+ * Compatible with:
+ *  - Local Redis:  redis://localhost:6379
+ *  - Upstash:      rediss://default:<token>@<host>.upstash.io:6380
+ *  - Any password-protected Redis: redis://:password@host:port
+ */
 @Injectable()
 export class RedisQueueService {
   private readonly env = loadApiGatewayEnv();
   private readonly logger = new Logger(RedisQueueService.name);
   private readonly redisUrl = new URL(this.env.REDIS_URL);
-  private warnedOnAuth = false;
   private warnedOnUnavailable = false;
 
   async ping() {
@@ -98,28 +110,49 @@ export class RedisQueueService {
     );
   }
 
+  /**
+   * Sends a RESP command to Redis over a fresh TCP or TLS connection.
+   *
+   * Supports Upstash's rediss:// scheme (TLS) and password authentication.
+   * The connection is closed after each command to stay stateless and safe
+   * for serverless environments (Vercel / Railway).
+   */
   private sendCommand(parts: string[]) {
-    if (this.redisUrl.username || this.redisUrl.password) {
-      if (!this.warnedOnAuth) {
-        this.logger.warn('Redis URL authentication is not supported by the lightweight queue client yet.');
-        this.warnedOnAuth = true;
-      }
-
-      return Promise.resolve(null);
-    }
-
     const port = this.redisUrl.port ? Number(this.redisUrl.port) : 6379;
     const host = this.redisUrl.hostname || '127.0.0.1';
+    const useTls = this.redisUrl.protocol === 'rediss:';
+    // Upstash uses `rediss://default:<TOKEN>@host` — password is in the URL
+    const password = this.redisUrl.password
+      ? decodeURIComponent(this.redisUrl.password)
+      : null;
 
     return new Promise<string | number | null>((resolve, reject) => {
-      const socket = net.createConnection({ host, port });
+      const socket: net.Socket = useTls
+        ? tls.connect({ host, port, rejectUnauthorized: true })
+        : net.createConnection({ host, port });
+
       let buffer = '';
+      // Track whether we are still waiting for the AUTH reply before the real command
+      let awaitingAuth = !!password;
 
       socket.setEncoding('utf8');
 
-      socket.on('connect', () => {
-        socket.write(encodeCommand(parts));
-      });
+      const onReady = () => {
+        if (password) {
+          // Send AUTH first; the actual command is sent after the AUTH reply is received.
+          socket.write(encodeCommand(['AUTH', password]));
+        } else {
+          socket.write(encodeCommand(parts));
+        }
+      };
+
+      if (useTls) {
+        // For TLS sockets, 'secureConnect' fires after the handshake completes.
+        // 'connect' fires before the handshake and must NOT be used for writes.
+        (socket as tls.TLSSocket).on('secureConnect', onReady);
+      } else {
+        socket.on('connect', onReady);
+      }
 
       socket.on('data', (chunk) => {
         buffer += chunk;
@@ -128,6 +161,14 @@ export class RedisQueueService {
           const parsed = parseReply(buffer);
 
           if (parsed === null) {
+            return;
+          }
+
+          if (awaitingAuth) {
+            // AUTH reply received — clear buffer and send the actual command
+            awaitingAuth = false;
+            buffer = '';
+            socket.write(encodeCommand(parts));
             return;
           }
 

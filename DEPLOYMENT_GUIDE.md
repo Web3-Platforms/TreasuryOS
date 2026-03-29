@@ -204,11 +204,145 @@ Access the dashboard at `http://localhost:3000`.
 
 ---
 
+## Platform 6: Railway (API Gateway — Recommended for Production)
+
+> **Best for**: Deploying the NestJS API Gateway with automatic scaling, managed Postgres add-on, and zero-config deployments.
+
+### Setup
+
+1. Create a new Railway project at [railway.app](https://railway.app).
+2. Click **New Service → GitHub Repo** and connect this repository.
+3. Railway will auto-detect `railway.json` and use Nixpacks to build the project.
+4. Add environment variables in the Railway service settings:
+
+```
+NODE_ENV=production
+AUTH_TOKEN_SECRET=<min-32-char-secret>
+DATABASE_URL=<neon-or-supabase-pooled-url>
+DATABASE_SSL=true
+REDIS_URL=<upstash-rediss-url>
+REDIS_QUEUE_ENABLED=true
+REDIS_QUEUE_NAME=treasuryos:events
+PROGRAM_ID_WALLET_WHITELIST=<deployed-program-id>
+AUTHORITY_KEYPAIR_PATH=/tmp/authority.json
+DEFAULT_ADMIN_EMAIL=admin@yourcompany.com
+DEFAULT_ADMIN_PASSWORD=<strong-password>
+DEFAULT_COMPLIANCE_EMAIL=compliance@yourcompany.com
+DEFAULT_COMPLIANCE_PASSWORD=<strong-password>
+DEFAULT_AUDITOR_EMAIL=auditor@yourcompany.com
+DEFAULT_AUDITOR_PASSWORD=<strong-password>
+SUPABASE_URL=https://<ref>.supabase.co
+SUPABASE_SERVICE_KEY=<service-role-key>
+SUPABASE_STORAGE_BUCKET=compliance-docs
+SQUADS_MULTISIG_ENABLED=true
+SQUADS_MULTISIG_ADDRESS=<multisig-pda>
+SOLANA_RPC_URL=https://api.mainnet-beta.solana.com
+SOLANA_SYNC_ENABLED=true
+FRONTEND_URL=https://<your-vercel-dashboard-url>
+```
+
+5. Railway automatically injects `PORT` — the API Gateway reads it at startup.
+6. After deploy, copy the public Railway URL and set it as `API_BASE_URL` in your Vercel dashboard environment.
+
+### Config File
+
+`railway.json` at the project root configures build and start commands, health-check path, and restart policy.
+
+### Notes
+
+- Set `FRONTEND_URL` to your Vercel dashboard URL for correct CORS headers.
+- Use the [Railway CLI](https://docs.railway.app/develop/cli) for local development: `railway run npm run dev:api`.
+- Railway provides a free Postgres add-on, but Neon is recommended for production (better connection pooling for serverless).
+
+---
+
+## Platform 7: Neon (Managed Postgres)
+
+> **Best for**: Serverless-compatible PostgreSQL for Vercel + Railway deployments. Scales to zero between requests.
+
+### Setup
+
+1. Create a project at [neon.tech](https://neon.tech).
+2. Go to **Connection Details** and copy the **Pooled connection string**.
+3. Set it as `DATABASE_URL` with `DATABASE_SSL=true` in all services.
+
+```
+DATABASE_URL=postgresql://[user]:[password]@[host].neon.tech/[dbname]?sslmode=require
+DATABASE_SSL=true
+```
+
+4. Run migrations against the Neon database:
+
+```bash
+DATABASE_URL="<neon-url>" npm run db:migrate
+```
+
+### Notes
+
+- Always use the **pooled** connection string (Session Pooler port 5432 or Transaction Pooler port 5432) for serverless/edge workloads.
+- Enable **SSL** (`DATABASE_SSL=true` or `?sslmode=require` in the URL).
+- Neon branches are useful for staging environments — create a branch for each PR.
+
+---
+
+## Platform 8: Upstash Redis (Managed Redis with TLS)
+
+> **Best for**: Serverless-compatible Redis for Vercel + Railway. Each command opens a fresh TLS connection — no persistent connections needed.
+
+### Setup
+
+1. Create a Redis database at [upstash.com](https://console.upstash.com).
+2. Copy the **Redis URL** (starts with `rediss://`).
+3. Set it as `REDIS_URL` in all services:
+
+```
+REDIS_URL=rediss://default:<TOKEN>@<host>.upstash.io:6380
+REDIS_QUEUE_ENABLED=true
+REDIS_QUEUE_NAME=treasuryos:events
+```
+
+### Notes
+
+- Use `rediss://` (double-s) for TLS — Upstash requires TLS for all connections.
+- The lightweight queue client in `redis-queue.service.ts` handles `rediss://` TLS and AUTH automatically.
+- Upstash's free tier provides 10,000 commands/day — sufficient for low-traffic compliance workloads.
+
+---
+
+## Platform 9: Supabase Storage
+
+> **Best for**: Storing compliance documents, KYC artifacts, and audit reports.
+
+### Setup
+
+1. Create a project at [supabase.com](https://supabase.com).
+2. Go to **Storage → Create a new bucket** and create `compliance-docs` (set to **Private**).
+3. Go to **Settings → API** and copy **Project URL** and **service_role key**.
+4. Set in the API Gateway environment:
+
+```
+SUPABASE_URL=https://<ref>.supabase.co
+SUPABASE_SERVICE_KEY=<service_role_key>
+SUPABASE_STORAGE_BUCKET=compliance-docs
+```
+
+### Notes
+
+- Use the `service_role` key **only on the server side** (API Gateway). Never expose it to the browser.
+- The `StorageService` in `apps/api-gateway/src/modules/storage/` provides `upload()`, `createSignedUrl()`, and `delete()` methods.
+- Signed URLs expire after 1 hour by default — adjust via the `expiresIn` parameter.
+
+---
+
 ## Quick Reference Table
 
 | Platform | Dashboard | API Gateway | Database | Best For |
 |----------|-----------|------------|----------|----------|
 | **Vercel** | ✅ Native | ❌ External | ❌ External | Frontend hosting |
+| **Railway** | ❌ External | ✅ Native | ⚠️ Add-on | API backend |
+| **Neon** | ❌ N/A | ❌ N/A | ✅ Managed | Serverless Postgres |
+| **Upstash** | ❌ N/A | ❌ N/A | ✅ Redis | Serverless Redis |
+| **Supabase** | ❌ N/A | ❌ N/A | ✅ Storage | Document storage |
 | **Netlify** | ✅ Plugin | ❌ External | ❌ External | Frontend hosting |
 | **Cloudflare** | ✅ Pages | ⚠️ Edge only | ❌ External | CDN/WAF layer |
 | **GCP Cloud Run** | ✅ Container | ✅ Container | ✅ Cloud SQL | Full production |
