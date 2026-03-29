@@ -92,14 +92,51 @@ export class RedisQueueService {
     return data.result;
   }
 
-  // ── Local TCP fallback (same as original, no auth/TLS) ─────
+  // ── Local TCP fallback (supports plain redis:// and TLS rediss://) ─────
 
   private tcpCommand(parts: string[]): Promise<string | number | null> {
+    const redisUrl = new URL(this.env.REDIS_URL);
+    const useTls = redisUrl.protocol === 'rediss:';
+
+    if (useTls) {
+      // Lazy-import tls for rediss:// (Upstash TLS) connections
+      return import('node:tls').then(
+        ({ connect }) =>
+          new Promise<string | number | null>((resolve, reject) => {
+            const port = redisUrl.port ? Number(redisUrl.port) : 6380;
+            const host = redisUrl.hostname || '127.0.0.1';
+
+            const socket = connect({ host, port });
+            let buffer = '';
+
+            socket.setEncoding('utf8');
+
+            socket.on('secureConnect', () => {
+              socket.write(encodeRespCommand(parts));
+            });
+
+            socket.on('data', (chunk: string) => {
+              buffer += chunk;
+              try {
+                const parsed = parseRespReply(buffer);
+                if (parsed === null) return;
+                socket.end();
+                resolve(parsed);
+              } catch (error) {
+                socket.destroy();
+                reject(error);
+              }
+            });
+
+            socket.on('error', (error: Error) => reject(error));
+          }),
+      );
+    }
+
     // Lazy-import net to avoid bundling issues in serverless
     return import('node:net').then(
       ({ createConnection }) =>
         new Promise<string | number | null>((resolve, reject) => {
-          const redisUrl = new URL(this.env.REDIS_URL);
           const port = redisUrl.port ? Number(redisUrl.port) : 6379;
           const host = redisUrl.hostname || '127.0.0.1';
 

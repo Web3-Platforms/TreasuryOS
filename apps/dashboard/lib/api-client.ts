@@ -1,10 +1,10 @@
-import { cookies } from 'next/headers';
+import { createClient } from '../utils/supabase/server.js';
 
 /**
  * Server-side API client for the dashboard.
  *
  * Uses API_BASE_URL (server-side env var, NOT NEXT_PUBLIC_) since all calls
- * happen in Server Components and Server Actions via `cookies()`.
+ * happen in Server Components and Server Actions via `createClient()`.
  *
  * - Vercel:  Set API_BASE_URL=https://your-api.up.railway.app/api
  * - Local:   Defaults to http://localhost:3001/api
@@ -15,8 +15,9 @@ export async function fetchApi<T = unknown>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {
-  const cookieStore = await cookies();
-  const token = cookieStore.get('treasuryos_access_token')?.value;
+  const supabase = await createClient();
+  const { data: { session } } = await supabase.auth.getSession();
+  const token = session?.access_token;
 
   const headers = new Headers(options.headers || {});
   headers.set('Content-Type', 'application/json');
