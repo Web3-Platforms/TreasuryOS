@@ -62,6 +62,18 @@ const envSchema = z.object({
   SQUADS_MULTISIG_ADDRESS: z.string().optional(),
   SOLANA_SYNC_ENABLED: stringBooleanSchema.default(false),
   NEXT_PUBLIC_API_BASE_URL: z.string().url().optional(),
+
+  // ── Supabase Storage ─────────────────────────────────────────────────────
+  // Required for compliance document storage. Obtain from:
+  //   Supabase Dashboard → Settings → API
+  SUPABASE_URL: z.string().url().optional(),
+  SUPABASE_SERVICE_KEY: z.string().optional(),
+  SUPABASE_STORAGE_BUCKET: z.string().optional(),
+
+  // ── Railway ───────────────────────────────────────────────────────────────
+  // Railway injects RAILWAY_ENVIRONMENT and PORT automatically.
+  // These are read-only and do not need to be set manually.
+  RAILWAY_ENVIRONMENT: z.string().optional(),
 });
 
 export type ApiGatewayEnv = Omit<

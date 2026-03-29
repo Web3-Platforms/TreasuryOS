@@ -14,6 +14,7 @@ import { TransactionCasesModule } from './modules/transaction-cases/transaction-
 import { WalletsModule } from './modules/wallets/wallets.module.js';
 import { SecurityModule } from './modules/security/security.module.js';
 import { GovernanceModule } from './modules/governance/governance.module.js';
+import { StorageModule } from './modules/storage/storage.module.js';
 import { StructuredLoggingMiddleware } from './modules/platform/structured-logging.middleware.js';
 
 @Module({
@@ -30,6 +31,7 @@ import { StructuredLoggingMiddleware } from './modules/platform/structured-loggi
     HealthModule,
     SecurityModule,
     GovernanceModule,
+    StorageModule,
     ThrottlerModule.forRoot([{
       ttl: 60000,
       limit: 100,
