@@ -1,9 +1,12 @@
+import jwt from 'jsonwebtoken';
+
 import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { z } from 'zod';
 import type { AuthenticatedUser, UserRecord } from '@treasuryos/types';
 import { UserStatus } from '@treasuryos/types';
 
 import { verifyPassword } from '../../common/passwords.js';
+import { loadApiGatewayEnv } from '../../config/env.js';
 import { AuditService } from '../audit/audit.service.js';
 import { RedisQueueService } from '../platform/redis-queue.service.js';
 import { UsersRepository } from './users.repository.js';
@@ -80,7 +83,15 @@ export class AuthService {
       },
     });
 
+    const env = loadApiGatewayEnv();
+    const accessToken = jwt.sign(
+      { sub: authenticatedUser.id, email: authenticatedUser.email },
+      env.AUTH_TOKEN_SECRET,
+      { algorithm: 'HS256', expiresIn: env.AUTH_TOKEN_TTL_MINUTES * 60 },
+    );
+
     return {
+      accessToken,
       user: authenticatedUser,
     };
   }
