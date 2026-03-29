@@ -11,7 +11,6 @@ import { AuthService } from './auth.service.js';
 import { AuthTokenService } from './auth-token.service.js';
 import { RolesGuard } from './roles.guard.js';
 import { UsersRepository } from './users.repository.js';
-import { SessionsRepository } from './sessions.repository.js';
 import { SupabaseStrategy } from './strategies/supabase.strategy.js';
 import { JwtAuthGuard } from './guards/jwt-auth.guard.js';
 
@@ -27,7 +26,6 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard.js';
     AuthService,
     AuthTokenService,
     UsersRepository,
-    SessionsRepository,
     AuthenticationGuard,
     RolesGuard,
     SupabaseStrategy,

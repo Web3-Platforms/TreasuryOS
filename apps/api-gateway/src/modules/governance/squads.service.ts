@@ -1,5 +1,5 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { Connection, PublicKey, TransactionMessage, Keypair } from '@solana/web3.js';
+import { Connection, PublicKey, TransactionMessage, TransactionInstruction, Keypair } from '@solana/web3.js';
 import * as multisig from "@sqds/multisig";
 import { loadApiGatewayEnv } from '../../config/env.js';
 import { KmsService } from '../security/kms.service.js';
@@ -95,6 +95,15 @@ export class SquadsService implements OnModuleInit {
 
     this.logger.log(`Created new Squads proposal. Index: ${transactionIndex}`);
     return transactionIndex;
+  }
+
+  /**
+   * Wraps a single instruction into a Squads Proposal targeting the
+   * SQUADS_MULTISIG_PDA configured in the environment.
+   * Use this instead of executing instructions directly via a single keypair.
+   */
+  async createTransactionProposal(instruction: TransactionInstruction): Promise<bigint> {
+    return this.proposeTransaction([instruction], this.kmsService.getSigner());
   }
 
   isEnabled(): boolean {

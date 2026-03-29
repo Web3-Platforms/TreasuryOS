@@ -6,24 +6,22 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import jwt from 'jsonwebtoken';
 
 import type { ApiRequest } from '../../common/http-request.js';
+import { loadApiGatewayEnv } from '../../config/env.js';
 import { UsersRepository } from './users.repository.js';
-import { SessionsRepository } from './sessions.repository.js';
-import { AuthTokenService } from './auth-token.service.js';
 import { IS_PUBLIC_ROUTE } from './public.decorator.js';
 
 @Injectable()
 export class AuthenticationGuard implements CanActivate {
+  private readonly env = loadApiGatewayEnv();
+
   constructor(
     @Inject(Reflector)
     private readonly reflector: Reflector,
-    @Inject(AuthTokenService)
-    private readonly tokenService: AuthTokenService,
     @Inject(UsersRepository)
     private readonly usersRepository: UsersRepository,
-    @Inject(SessionsRepository)
-    private readonly sessionsRepository: SessionsRepository,
   ) {}
 
   async canActivate(context: ExecutionContext) {
@@ -38,23 +36,29 @@ export class AuthenticationGuard implements CanActivate {
 
     const request = context.switchToHttp().getRequest<ApiRequest>();
     const token = this.extractBearerToken(request);
-    const payload = this.tokenService.verifyToken(token);
-    const user = await this.usersRepository.findById(payload.sub);
-    const session = await this.sessionsRepository.findById(payload.sid);
 
-    if (!user || !session || session.tokenId !== payload.jti) {
-      throw new UnauthorizedException('Session not found');
+    const secret = this.env.SUPABASE_JWT_SECRET;
+    if (!secret) {
+      throw new UnauthorizedException('SUPABASE_JWT_SECRET is not configured');
     }
 
-    if (session.revokedAt) {
-      throw new UnauthorizedException('Session revoked');
+    let payload: jwt.JwtPayload;
+    try {
+      payload = jwt.verify(token, secret) as jwt.JwtPayload;
+    } catch {
+      throw new UnauthorizedException('Invalid or expired token');
     }
 
-    if (new Date(session.expiresAt).getTime() <= Date.now()) {
-      throw new UnauthorizedException('Session expired');
+    if (!payload.sub || !payload.email) {
+      throw new UnauthorizedException('Invalid token payload');
     }
 
-    request.authSessionId = session.id;
+    const user = await this.usersRepository.findByEmail(payload.email as string);
+
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
     request.currentUser = {
       id: user.id,
       email: user.email,
