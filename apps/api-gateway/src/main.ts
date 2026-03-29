@@ -9,6 +9,11 @@ import { loadApiGatewayEnv } from './config/env.js';
 
 async function bootstrap() {
   const env = loadApiGatewayEnv();
+  // Railway (and other PaaS providers) inject PORT at runtime and expect the
+  // server to bind to it.  Fall back to the configured API_GATEWAY_PORT for
+  // local development and Docker Compose.
+  const port = process.env.PORT ? Number(process.env.PORT) : env.API_GATEWAY_PORT;
+
   const app = await NestFactory.create(AppModule, {
     bufferLogs: true,
     rawBody: true,
@@ -33,10 +38,10 @@ async function bootstrap() {
 
   app.enableShutdownHooks();
 
-  await app.listen(env.API_GATEWAY_PORT);
+  await app.listen(port);
 
   Logger.log(
-    `API gateway listening on http://localhost:${env.API_GATEWAY_PORT}/api/health`,
+    `API gateway listening on http://localhost:${port}/api/health`,
     'Bootstrap',
   );
 }
