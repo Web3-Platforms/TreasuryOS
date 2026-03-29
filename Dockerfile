@@ -14,7 +14,7 @@ COPY . .
 RUN npm ci
 
 # The ARG specifies which app to build. Default to something harmless if omitted.
-ARG APP_NAME=dashboard
+ARG APP_NAME=api-gateway
 RUN if [ "$APP_NAME" = "dashboard" ]; then \
       npm run build -w @treasuryos/dashboard; \
     elif [ "$APP_NAME" = "api-gateway" ]; then \

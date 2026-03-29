@@ -1,5 +1,14 @@
 import { cookies } from 'next/headers';
 
+/**
+ * Server-side API client for the dashboard.
+ *
+ * Uses API_BASE_URL (server-side env var, NOT NEXT_PUBLIC_) since all calls
+ * happen in Server Components and Server Actions via `cookies()`.
+ *
+ * - Vercel:  Set API_BASE_URL=https://your-api.up.railway.app/api
+ * - Local:   Defaults to http://localhost:3001/api
+ */
 const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:3001/api';
 
 export async function fetchApi<T = unknown>(
@@ -25,14 +34,12 @@ export async function fetchApi<T = unknown>(
 
   if (!response.ok) {
     if (response.status === 401) {
-      // Could throw a specific auth error to catch in middleware / actions
       throw new Error('Unauthorized');
     }
     const errorBody = await response.text().catch(() => 'Unknown Error');
     throw new Error(`API Error ${response.status}: ${errorBody}`);
   }
 
-  // Not all responses will be JSON (e.g. DELETE might be 204 NoContent or 200 OK with no body)
   const contentType = response.headers.get('content-type');
   if (contentType && contentType.includes('application/json')) {
     return response.json() as Promise<T>;
