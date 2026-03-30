@@ -32,10 +32,27 @@ import { StructuredLoggingMiddleware } from './modules/platform/structured-loggi
     SecurityModule,
     GovernanceModule,
     StorageModule,
-    ThrottlerModule.forRoot([{
-      ttl: 60000,
-      limit: 100,
-    }]),
+    // Named throttlers allow per-endpoint overrides via @Throttle({ <name>: {...} })
+    ThrottlerModule.forRoot([
+      {
+        // Default for authenticated API routes
+        name: 'default',
+        ttl: 60000,
+        limit: 200,
+      },
+      {
+        // Tight limit for the login endpoint (brute-force protection)
+        name: 'login',
+        ttl: 60000,
+        limit: 5,
+      },
+      {
+        // Moderate limit for large CSV report downloads
+        name: 'reports',
+        ttl: 60000,
+        limit: 20,
+      },
+    ]),
   ],
   providers: [
     {

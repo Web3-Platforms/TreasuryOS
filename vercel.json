@@ -1,6 +1,6 @@
 {
   "buildCommand": "npm run build -w @treasuryos/dashboard",
-  "installCommand": "npm install",
+  "installCommand": "npm ci",
   "framework": "nextjs",
   "outputDirectory": "apps/dashboard/.next",
   "rewrites": [
