@@ -1,7 +1,8 @@
 {
   "$schema": "https://railway.app/railway.schema.json",
   "build": {
-    "builder": "RAILPACK"
+    "builder": "RAILPACK",
+    "buildCommand": "npm ci && npm run build --workspace=@treasuryos/api-gateway"
   },
   "deploy": {
     "startCommand": "npm run start:prod --workspace=@treasuryos/api-gateway",
