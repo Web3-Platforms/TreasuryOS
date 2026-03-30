@@ -1,12 +1,12 @@
 {
   "$schema": "https://railway.app/railway.schema.json",
   "build": {
-    "builder": "NIXPACKS",
-    "buildCommand": "npm install && npm run build --workspace=apps/api-gateway"
+    "builder": "NIXPACKS"
   },
   "deploy": {
-    "startCommand": "node apps/api-gateway/dist/main.js",
+    "startCommand": "npm run start:prod --workspace=@treasuryos/api-gateway",
     "restartPolicyType": "ON_FAILURE",
-    "restartPolicyMaxRetries": 10
+    "restartPolicyMaxRetries": 10,
+    "healthcheckPath": "/api/health"
   }
 }
