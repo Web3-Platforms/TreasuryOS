@@ -8,8 +8,8 @@ COPY . .
 # 2. Install all dependencies
 RUN npm ci
 
-# 3. Build the entire monorepo so shared packages are compiled and available
-RUN npm run build
+# 3. Build only api-gateway and its dependency packages (skips dashboard and other unrelated services)
+RUN npm run build --workspace=@treasuryos/api-gateway --workspaces-dependencies
 
 # 4. Copy compiled output to where start:prod expects it
 RUN cp -r dist/apps/api-gateway/* apps/api-gateway/dist/
