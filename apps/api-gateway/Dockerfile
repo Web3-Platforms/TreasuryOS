@@ -8,15 +8,16 @@ COPY . .
 # 2. Install all dependencies
 RUN npm ci
 
-# 3. Build dependency packages first, then build api-gateway
-RUN npm run build -w packages/types -w packages/sdk -w packages/compliance-rules
-RUN npm run build -w @treasuryos/api-gateway
+# 3. Build the api-gateway
+RUN npm run build --workspace=apps/api-gateway
 
-# 4. Set production environment
+# 4. Set Production Environment
 ENV NODE_ENV=production
 
 # 5. Expose the port provided by Railway
 EXPOSE ${PORT:-3000}
 
-# 6. Start the application
-CMD ["npm", "run", "start:prod", "--workspace=apps/api-gateway"]
+# 6. DYNAMIC START COMMAND (Approach 1)
+# This completely ignores package.json. It actively searches the /app directory 
+# for the compiled main.js file and executes it with Node directly.
+CMD ["sh", "-c", "echo 'Searching for compiled entrypoint...'; ENTRYPOINT=$(find . -type f -path '*/dist/*main.js' | grep -v 'node_modules' | head -n 1); echo \"Starting app at: $ENTRYPOINT\"; node \"$ENTRYPOINT\""]
