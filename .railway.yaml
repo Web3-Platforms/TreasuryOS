@@ -1,0 +1,7 @@
+build:
+  builder: NIXPACKS
+deploy:
+  startCommand: npm run start:prod --workspace=@treasuryos/api-gateway
+  restartPolicyType: ON_FAILURE
+  restartPolicyMaxRetries: 10
+  healthcheckPath: /api/health
