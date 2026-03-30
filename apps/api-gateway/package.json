@@ -10,7 +10,7 @@
   "scripts": {
     "dev": "node ../../node_modules/tsx/dist/cli.mjs watch src/main.ts",
     "build": "node ../../node_modules/typescript/bin/tsc -p tsconfig.json",
-    "start:prod": "node apps/api-gateway/dist/main.js",
+    "start:prod": "node ../../node_modules/tsx/dist/cli.mjs src/main.ts",
     "typecheck": "node ../../node_modules/typescript/bin/tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
