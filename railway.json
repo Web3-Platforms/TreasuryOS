@@ -1,14 +1,12 @@
 {
-  "$schema": "https://schema.railway.com/railway.json",
+  "$schema": "https://railway.app/railway.schema.json",
   "build": {
-    "builder": "RAILPACK",
-    "buildCommand": "npm ci && npm run build -w @treasuryos/api-gateway"
+    "builder": "NIXPACKS",
+    "buildCommand": "npm install && npm run build --workspace=apps/api-gateway"
   },
   "deploy": {
-    "startCommand": "node apps/api-gateway/dist/main.js",
-    "healthcheckPath": "/api/health",
-    "healthcheckTimeout": 30,
+    "startCommand": "npm run start:prod --workspace=apps/api-gateway",
     "restartPolicyType": "ON_FAILURE",
-    "restartPolicyMaxRetries": 3
+    "restartPolicyMaxRetries": 10
   }
 }
