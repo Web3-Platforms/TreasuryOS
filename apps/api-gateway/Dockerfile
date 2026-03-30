@@ -16,8 +16,7 @@ RUN npm run build --workspace=apps/api-gateway
 # Railway forces 'npm run start:prod', which expects the files to be in the local dist folder.
 # We copy the compiled files from the root dist folder to exactly where npm is looking for them.
 RUN mkdir -p apps/api-gateway/dist && \
-    cp -r dist/apps/api-gateway/* apps/api-gateway/dist/ 2>/dev/null || \
-    cp -r dist/* apps/api-gateway/dist/ 2>/dev/null || true
+    cp -r /app/dist/apps/api-gateway/* /app/apps/api-gateway/dist/
 
 # 5. Set Production Environment
 ENV NODE_ENV=production
