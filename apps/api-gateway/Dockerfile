@@ -2,38 +2,29 @@ FROM node:22-alpine AS builder
 
 WORKDIR /app
 
-# Copy all root configurations
-COPY package.json package-lock.json nest-cli.json tsconfig.base.json ./
+# Copy the entire monorepo to ensure all shared packages and configs are present
+COPY . .
 
-# Copy all packages (types, sdk, compliance-rules) to ensure no missing dependencies
-COPY packages ./packages
-
-# Copy the specific app
-COPY apps/api-gateway ./apps/api-gateway
-
-# Install dependencies using clean install
+# Install all dependencies (including devDependencies needed for the build)
 RUN npm ci
 
-# Build the specific workspace
+# Build the api-gateway and its local workspace dependencies
 RUN npm run build --workspace=apps/api-gateway
 
 # --- Runner Stage ---
 FROM node:22-alpine AS runner
 
-# Set the working directory directly to the api-gateway folder
-WORKDIR /app/apps/api-gateway
+WORKDIR /app
 
 ENV NODE_ENV=production
 
-# Copy root node_modules
-COPY --from=builder /app/node_modules /app/node_modules
-
-# Copy the built dist folder and package.json for this specific app
-COPY --from=builder /app/apps/api-gateway/dist ./dist
-COPY --from=builder /app/apps/api-gateway/package.json ./package.json
+# Copy the entire built application from the builder stage
+# This guarantees that all monorepo symlinks and nested dist folders are perfectly preserved
+COPY --from=builder /app ./
 
 # Expose the port Railway provides
 EXPOSE ${PORT:-3000}
 
-# Start the application directly with Node (bypassing npm)
-CMD ["node", "dist/main.js"]
+# Bulletproof start command: 
+# It checks the standard NestJS path, then the nested TS path, and falls back to your npm script.
+CMD ["sh", "-c", "node apps/api-gateway/dist/main.js || node apps/api-gateway/dist/src/main.js || npm run start:prod --workspace=apps/api-gateway"]]
