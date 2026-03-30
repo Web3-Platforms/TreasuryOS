@@ -27,7 +27,8 @@ COPY --from=builder /app/package-lock.json ./
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/packages ./packages
 COPY --from=builder /app/apps/api-gateway/package.json ./apps/api-gateway/
-COPY --from=builder /app/apps/api-gateway/dist ./apps/api-gateway/dist
+# Copy compiled app code from monorepo dist structure
+COPY --from=builder /app/apps/api-gateway/dist/apps/api-gateway/src ./apps/api-gateway/dist
 
 # Run the compiled JavaScript instead of attempting to run TypeScript
 CMD ["node", "apps/api-gateway/dist/main.js"]
