@@ -1,0 +1,53 @@
+import { type AuthenticatedUser, type ReviewedTransaction } from '@treasuryos/types';
+import { AuditService } from '../audit/audit.service.js';
+import { DatabaseService } from '../database/database.service.js';
+import { EntitiesRepository } from '../entities/entities.repository.js';
+import { WalletsRepository } from '../wallets/wallets.repository.js';
+import { TransactionCasesRepository } from './transaction-cases.repository.js';
+import { RedisQueueService } from '../platform/redis-queue.service.js';
+import { ScreenTransactionDto } from './dto/screen-transaction.dto.js';
+import { DecisionTransitionDto } from './dto/decision-transition.dto.js';
+import { ListCasesQueryDto } from './dto/list-cases-query.dto.js';
+import { ReviewTransitionDto } from './dto/review-transition.dto.js';
+export declare class TransactionCasesService {
+    private readonly transactionCasesRepository;
+    private readonly entitiesRepository;
+    private readonly walletsRepository;
+    private readonly database;
+    private readonly auditService;
+    private readonly queueService;
+    private readonly env;
+    constructor(transactionCasesRepository: TransactionCasesRepository, entitiesRepository: EntitiesRepository, walletsRepository: WalletsRepository, database: DatabaseService, auditService: AuditService, queueService: RedisQueueService);
+    listCases(query: ListCasesQueryDto): Promise<ReviewedTransaction[]>;
+    getCase(caseId: string): Promise<ReviewedTransaction>;
+    screenTransaction(input: ScreenTransactionDto, actor: AuthenticatedUser): Promise<{
+        caseOpened: boolean;
+        entityId: string;
+        riskLevel: import("@treasuryos/types").RiskLevel;
+        screeningDecision: string;
+        transactionReference: string;
+        triggeredRules: string[];
+        walletId: string;
+        case?: undefined;
+    } | {
+        case: ReviewedTransaction;
+        caseOpened: boolean;
+        screeningDecision: string;
+        triggeredRules: string[];
+        entityId?: undefined;
+        riskLevel?: undefined;
+        transactionReference?: undefined;
+        walletId?: undefined;
+    }>;
+    markUnderReview(caseId: string, input: ReviewTransitionDto, actor: AuthenticatedUser): Promise<ReviewedTransaction>;
+    approveCase(caseId: string, input: DecisionTransitionDto, actor: AuthenticatedUser): Promise<ReviewedTransaction>;
+    rejectCase(caseId: string, input: DecisionTransitionDto, actor: AuthenticatedUser): Promise<ReviewedTransaction>;
+    escalateCase(caseId: string, input: DecisionTransitionDto, actor: AuthenticatedUser): Promise<ReviewedTransaction>;
+    private applyDecision;
+    private ensureValidAddress;
+    private resolveWalletForScreening;
+    private ensureWalletReady;
+    private requireEntity;
+    private requireCase;
+    private requireCaseFromStore;
+}

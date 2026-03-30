@@ -1,0 +1,30 @@
+import { type AuthenticatedUser, type WalletRecord } from '@treasuryos/types';
+import { AuditService } from '../audit/audit.service.js';
+import { DatabaseService } from '../database/database.service.js';
+import { EntitiesRepository } from '../entities/entities.repository.js';
+import { WalletsRepository } from './wallets.repository.js';
+import { RedisQueueService } from '../platform/redis-queue.service.js';
+import { WalletSyncService } from './wallet-sync.service.js';
+import { RequestWalletDto } from './dto/request-wallet.dto.js';
+import { WalletDecisionDto } from './dto/wallet-decision.dto.js';
+export declare class WalletsService {
+    private readonly walletsRepository;
+    private readonly entitiesRepository;
+    private readonly database;
+    private readonly auditService;
+    private readonly queueService;
+    private readonly walletSyncService;
+    private readonly env;
+    constructor(walletsRepository: WalletsRepository, entitiesRepository: EntitiesRepository, database: DatabaseService, auditService: AuditService, queueService: RedisQueueService, walletSyncService: WalletSyncService);
+    listWallets(query: unknown): Promise<WalletRecord[]>;
+    getWallet(walletId: string): Promise<WalletRecord>;
+    requestWallet(input: RequestWalletDto, actor: AuthenticatedUser): Promise<WalletRecord>;
+    markUnderReview(walletId: string, input: WalletDecisionDto, actor: AuthenticatedUser): Promise<WalletRecord>;
+    approveWallet(walletId: string, input: WalletDecisionDto, actor: AuthenticatedUser): Promise<WalletRecord>;
+    rejectWallet(walletId: string, input: WalletDecisionDto, actor: AuthenticatedUser): Promise<WalletRecord>;
+    private createPreview;
+    private requireEntity;
+    private requireEntityFromStore;
+    private requireWallet;
+    private requireWalletFromStore;
+}
