@@ -36,6 +36,17 @@ function loadDotEnvFile(filePath) {
     return values;
 }
 async function bootstrap() {
+    // Global error handlers for uncaught exceptions
+    process.on('uncaughtException', (err) => {
+        const logger = new Logger('UncaughtException');
+        logger.error('Fatal error', err.stack);
+        process.exit(1);
+    });
+    process.on('unhandledRejection', (reason) => {
+        const logger = new Logger('UnhandledRejection');
+        logger.error('Unhandled rejection', reason instanceof Error ? reason.stack : String(reason));
+        process.exit(1);
+    });
     // In production, env vars are injected by Railway — skip .env file loading
     const fileEnv = process.env.NODE_ENV === 'production' ? {} : loadDotEnvFile(path.join(repoRoot, '.env'));
     const parsed = envSchema.parse({
@@ -47,7 +58,7 @@ async function bootstrap() {
     const app = await NestFactory.create(AppModule);
     app.setGlobalPrefix('api');
     await app.listen(listenPort);
-    Logger.log(`Reporter listening on http://localhost:${listenPort}/api/health [${parsed.NODE_ENV}]`, 'Bootstrap');
+    Logger.log(`[Bootstrap] Reporter listening on http://localhost:${listenPort}/api/health [${parsed.NODE_ENV}]`, 'Bootstrap');
 }
 bootstrap().catch((error) => {
     const logger = new Logger('Bootstrap');

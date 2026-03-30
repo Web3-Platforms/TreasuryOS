@@ -50,6 +50,19 @@ function loadDotEnvFile(filePath: string) {
 }
 
 async function bootstrap() {
+  // Global error handlers for uncaught exceptions
+  process.on('uncaughtException', (err: Error) => {
+    const logger = new Logger('UncaughtException');
+    logger.error('Fatal error', err.stack);
+    process.exit(1);
+  });
+
+  process.on('unhandledRejection', (reason: unknown) => {
+    const logger = new Logger('UnhandledRejection');
+    logger.error('Unhandled rejection', reason instanceof Error ? reason.stack : String(reason));
+    process.exit(1);
+  });
+
   // In production, env vars are injected by Railway — skip .env file loading
   const fileEnv = process.env.NODE_ENV === 'production' ? {} : loadDotEnvFile(path.join(repoRoot, '.env'));
 
@@ -67,7 +80,7 @@ async function bootstrap() {
   await app.listen(listenPort);
 
   Logger.log(
-    `Bank adapter listening on http://localhost:${listenPort}/api/health [${parsed.NODE_ENV}]`,
+    `[Bootstrap] Bank adapter listening on http://localhost:${listenPort}/api/health [${parsed.NODE_ENV}]`,
     'Bootstrap',
   );
 }
