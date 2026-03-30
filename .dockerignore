@@ -1,0 +1,52 @@
+# Exclude the git history and this file
+.git
+.dockerignore
+
+# --- Security / Environment ---
+.env
+.env.*
+**/*.id.json
+**/*-keypair.json
+
+# --- Dependencies & Build Artifacts ---
+node_modules/
+build/
+.turbo/
+.next/
+out/
+.vercel/
+target/
+.anchor/
+
+# Note: Explicitly NOT ignoring `dist/` here so Railway's builder
+# receives the pre-built `dist/` directory, while it remains safely
+# ignored in `.gitignore` to protect platform security and keep git clean.
+
+# --- Logs & Temp ---
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+*.log
+temp/
+/tmp/
+test-ledger/
+
+# --- IDEs / System ---
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# --- Data & Binary Assets ---
+data/*.json
+data/reports/
+pilot-store.json
+*.png
+*.pdf
+*.dmg
+*.pkg
+*.zip
+*.tar.gz
