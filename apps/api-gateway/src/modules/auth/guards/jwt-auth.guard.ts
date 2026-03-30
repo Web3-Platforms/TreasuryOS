@@ -12,13 +12,17 @@ export class JwtAuthGuard extends AuthGuard('supabase') {
   async canActivate(context: ExecutionContext) {
     // Check if route is marked as public
     // Support both getAllAndOverride (v10+) and get (older versions)
-    const isPublic = (
-      (this.reflector as any).getAllAndOverride?.<boolean>(IS_PUBLIC_ROUTE, [
+    let isPublic = false;
+
+    const reflectorAny = this.reflector as any;
+    if (reflectorAny.getAllAndOverride) {
+      isPublic = reflectorAny.getAllAndOverride(IS_PUBLIC_ROUTE, [
         context.getHandler(),
         context.getClass(),
-      ]) ??
-      (this.reflector as any).get?.<boolean>(IS_PUBLIC_ROUTE, context.getHandler())
-    );
+      ]);
+    } else if (reflectorAny.get) {
+      isPublic = reflectorAny.get(IS_PUBLIC_ROUTE, context.getHandler());
+    }
 
     if (isPublic) {
       return true;
