@@ -11,13 +11,17 @@ RUN npm ci
 # 3. Build the api-gateway
 RUN npm run build --workspace=apps/api-gateway
 
-# 4. Set Production Environment
+# 4. DEBUG: Print out the location of the compiled files so we can see them in Railway logs
+RUN echo "=== LOCATING COMPILED FILES ===" && \
+    find . -type f -name "main.js" -not -path "*/node_modules/*"
+
+# 5. Set Production Environment
 ENV NODE_ENV=production
 
-# 5. Expose the port provided by Railway
+# 6. Expose the port provided by Railway
 EXPOSE ${PORT:-3000}
 
-# 6. DYNAMIC START COMMAND (Approach 1)
-# This completely ignores package.json. It actively searches the /app directory 
-# for the compiled main.js file and executes it with Node directly.
-CMD ["sh", "-c", "echo 'Searching for compiled entrypoint...'; ENTRYPOINT=$(find . -type f -path '*/dist/*main.js' | grep -v 'node_modules' | head -n 1); echo \"Starting app at: $ENTRYPOINT\"; node \"$ENTRYPOINT\""]
+# 7. THE ULTIMATE START COMMAND
+# This completely ignores your package.json 'start:prod' script.
+# It actively searches the container for the compiled main.js file and executes it.
+CMD ["sh", "-c", "ENTRY=$(find . -type f -name 'main.js' -not -path '*/node_modules/*' | head -n 1); echo \"Starting server at: $ENTRY\"; node \"$ENTRY\""]
