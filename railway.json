@@ -5,7 +5,8 @@
     "buildCommand": "npm ci && npm run build --workspace=@treasuryos/api-gateway",
     "buildEnv": {
       "BP_DISABLE_RUST": "true",
-      "BP_DISABLE_RUST_TOOLCHAIN": "true"
+      "BP_DISABLE_RUST_TOOLCHAIN": "true",
+      "NODE_ENV": "production"
     }
   },
   "deploy": {
@@ -13,6 +14,7 @@
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10,
     "healthcheckPath": "/api/health",
-    "healthcheckTimeout": 60
+    "healthcheckTimeout": 60,
+    "environment": "production"
   }
 }

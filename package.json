@@ -29,16 +29,16 @@
     "test": "node ./node_modules/tsx/dist/cli.mjs --tsconfig tsconfig.test.json --test tests/**/*.test.ts",
     "format": "node ./node_modules/prettier/bin/prettier.cjs --write ."
   },
+  "dependencies": {
+    "path-to-regexp": "8.4.0"
+  },
   "devDependencies": {
     "@types/express": "^5.0.6",
     "@types/node": "^25.5.0",
     "@types/pg": "^8.20.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
-    "prettier": "^3.8.1"
-  },
-  "dependencies": {
-    "path-to-regexp": "8.4.0",
+    "prettier": "^3.8.1",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3"
   }
