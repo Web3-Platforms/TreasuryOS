@@ -9,16 +9,22 @@ COPY . .
 RUN npm ci
 
 # 3. Build the api-gateway
-# In a NestJS monorepo, this usually outputs to /app/dist/apps/api-gateway/
+# In a NestJS monorepo, this outputs to the root folder: /app/dist/apps/api-gateway/
 RUN npm run build --workspace=apps/api-gateway
 
-# 4. Set Production Environment
+# 4. THE MONOREPO FIX
+# Railway forces 'npm run start:prod', which expects the files to be in the local dist folder.
+# We copy the compiled files from the root dist folder to exactly where npm is looking for them.
+RUN mkdir -p apps/api-gateway/dist && \
+    cp -r dist/apps/api-gateway/* apps/api-gateway/dist/ 2>/dev/null || \
+    cp -r dist/* apps/api-gateway/dist/ 2>/dev/null || true
+
+# 5. Set Production Environment
 ENV NODE_ENV=production
 
-# 5. Expose the port provided by Railway
+# 6. Expose the port provided by Railway
 EXPOSE ${PORT:-3000}
 
-# 6. The Smart Start Command
-# This command checks the global root dist folder first, then the local dist folder.
-# This completely bypasses the broken `start:prod` npm script.
-CMD ["sh", "-c", "node dist/apps/api-gateway/main.js || node apps/api-gateway/dist/main.js || node dist/main.js"]
+# 7. Start the application
+# We now explicitly run the command Railway expects, and it will succeed because the files are in place.
+CMD ["npm", "run", "start:prod", "--workspace=apps/api-gateway"]
