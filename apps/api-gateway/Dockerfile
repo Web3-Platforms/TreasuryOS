@@ -22,7 +22,7 @@ ENV NODE_ENV=production
 # 6. Expose the port provided by Railway
 EXPOSE ${PORT:-3000}
 
-# 7. Start the api-gateway
-WORKDIR /app/apps/api-gateway
-CMD ["npm", "run", "start:prod"]
+# 7. Start directly — no npm, no workspace resolution, no package.json scripts
+CMD ["node", "dist/apps/api-gateway/main.js"]
+
 
