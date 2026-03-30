@@ -1,4 +1,6 @@
-# nixpacks.toml – explicit Node.js build config for Railway
+# nixpacks.toml – explicit Node.js build config for Railway (Nixpacks legacy)
+# Railway now uses Railpack by default; see railpack.json for the active config.
+# This file is kept as a fallback in case the NIXPACKS builder is selected.
 # Without this, Nixpacks may auto-detect Rust (from the repo-root Cargo.toml)
 # instead of Node.js, causing "npm: not found" during the build step.
 
