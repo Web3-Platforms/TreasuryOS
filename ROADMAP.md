@@ -52,6 +52,10 @@ These are the minimal changes needed for the code to build and deploy at all.
 
 ## Phase 1 — Staging Deploy (do before any real traffic)
 
+> **Staging-ready** ✅ — all code changes for Phase 1 are committed.
+> The remaining items in this section are **ops/configuration tasks only** (setting env vars, connecting services).
+> No further code changes are required to reach staging.
+
 Everything below is an ops/configuration task. Code is ready; environment variables and platform setup are not.
 
 ### 1.1 Railway — API Gateway
