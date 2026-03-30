@@ -30,6 +30,5 @@ COPY --from=builder /app/packages ./packages
 COPY --from=builder /app/apps/api-gateway/package.json ./apps/api-gateway/
 COPY --from=builder /app/apps/api-gateway/dist ./apps/api-gateway/dist
 
-# Because of monorepo path mapping, tsc outputs to a nested directory structure inside dist.
-# This points to the accurate execution path.
-CMD ["node", "apps/api-gateway/dist/apps/api-gateway/src/main.js"]
+# Because of ESM module import nuances in certain solana libraries, we execute using tsx
+CMD ["node", "node_modules/tsx/dist/cli.mjs", "apps/api-gateway/src/main.ts"]
