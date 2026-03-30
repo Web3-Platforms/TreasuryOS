@@ -9,17 +9,24 @@ export class JwtAuthGuard extends AuthGuard('supabase') {
     super();
   }
 
-  canActivate(context: ExecutionContext) {
-    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_ROUTE, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
+  async canActivate(context: ExecutionContext) {
+    // Check if route is marked as public
+    // Support both getAllAndOverride (v10+) and get (older versions)
+    const isPublic = (
+      (this.reflector as any).getAllAndOverride?.<boolean>(IS_PUBLIC_ROUTE, [
+        context.getHandler(),
+        context.getClass(),
+      ]) ??
+      (this.reflector as any).get?.<boolean>(IS_PUBLIC_ROUTE, context.getHandler())
+    );
 
     if (isPublic) {
       return true;
     }
 
-    return super.canActivate(context);
+    // Otherwise, perform JWT validation
+    const result = await super.canActivate(context);
+    return result as boolean;
   }
 
   handleRequest(err: any, user: any, info: any, context: ExecutionContext) {
