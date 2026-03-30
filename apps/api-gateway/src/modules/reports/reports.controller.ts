@@ -9,6 +9,7 @@ import {
   Req,
   Res,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { UserRole } from '@treasuryos/types';
 import type { Response } from 'express';
 
@@ -43,6 +44,7 @@ export class ReportsController {
 
   @Get(':reportId/download')
   @Roles(UserRole.Admin, UserRole.ComplianceOfficer, UserRole.Auditor)
+  @Throttle({ reports: { ttl: 60000, limit: 20 } })
   async downloadReport(@Param('reportId') reportId: string, @Res() response: Response) {
     const artifact = await this.reportsService.getReportArtifact(reportId);
     response.setHeader('content-type', artifact.mimeType);

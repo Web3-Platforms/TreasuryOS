@@ -96,6 +96,11 @@ const envSchema = z.object({
   SUPABASE_SERVICE_KEY: z.string().optional(),
   SUPABASE_STORAGE_BUCKET: z.string().optional(),
 
+  // ── Sentry ────────────────────────────────────────────────────────────────
+  // Optional: when set, enables error tracking for the API gateway.
+  // Obtain from: Sentry Dashboard → Settings → Projects → <project> → Client Keys (DSN)
+  SENTRY_DSN: z.string().url().optional(),
+
   // ── Railway ───────────────────────────────────────────────────────────────
   // Railway injects RAILWAY_ENVIRONMENT and PORT automatically.
   // These are read-only and do not need to be set manually.
