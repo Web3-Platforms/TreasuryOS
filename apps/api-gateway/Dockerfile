@@ -11,9 +11,10 @@ RUN npm ci
 # 3. Build the api-gateway
 RUN npm run build --workspace=apps/api-gateway
 
-# 4. DEBUG: Print out the location of the compiled files so we can see them in Railway logs
-RUN echo "=== LOCATING COMPILED FILES ===" && \
-    find . -type f -name "main.js" -not -path "*/node_modules/*"
+# 4. Verify compiled files exist
+RUN echo "=== COMPILED FILES ===" && \
+    find . -type f -name "main.js" -not -path "*/node_modules/*" && \
+    echo "=== DONE ==="
 
 # 5. Set Production Environment
 ENV NODE_ENV=production
@@ -21,7 +22,7 @@ ENV NODE_ENV=production
 # 6. Expose the port provided by Railway
 EXPOSE ${PORT:-3000}
 
-# 7. THE ULTIMATE START COMMAND
-# This completely ignores your package.json 'start:prod' script.
-# It actively searches the container for the compiled main.js file and executes it.
-CMD ["sh", "-c", "ENTRY=$(find . -type f -name 'main.js' -not -path '*/node_modules/*' | head -n 1); echo \"Starting server at: $ENTRY\"; node \"$ENTRY\""]
+# 7. Start the api-gateway
+WORKDIR /app/apps/api-gateway
+CMD ["npm", "run", "start:prod"]
+
