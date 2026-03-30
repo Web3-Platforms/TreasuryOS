@@ -55,3 +55,6 @@ temp/
 /tmp/
 *.log
 tsconfig.tsbuildinfo
+
+# Ignore large videos
+docs/Videos/
