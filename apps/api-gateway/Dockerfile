@@ -22,7 +22,6 @@ WORKDIR /app
 ENV NODE_ENV=production
 EXPOSE ${PORT:-3000}
 
-# Copy only the essentials from builder
 COPY --from=builder /app/package.json ./
 COPY --from=builder /app/package-lock.json ./
 COPY --from=builder /app/node_modules ./node_modules
@@ -30,5 +29,5 @@ COPY --from=builder /app/packages ./packages
 COPY --from=builder /app/apps/api-gateway/package.json ./apps/api-gateway/
 COPY --from=builder /app/apps/api-gateway/dist ./apps/api-gateway/dist
 
-# Because of ESM module import nuances in certain solana libraries, we execute using tsx
-CMD ["node", "node_modules/tsx/dist/cli.mjs", "apps/api-gateway/src/main.ts"]
+# Run the compiled JavaScript instead of attempting to run TypeScript
+CMD ["node", "apps/api-gateway/dist/main.js"]
