@@ -1,5 +1,6 @@
 import 'reflect-metadata';
 
+import * as Sentry from '@sentry/nestjs';
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import helmet from 'helmet';
@@ -9,6 +10,18 @@ import { loadApiGatewayEnv } from './config/env.js';
 
 async function bootstrap() {
   const env = loadApiGatewayEnv();
+
+  // ── Sentry ─────────────────────────────────────────────────────────────
+  // Initialised before NestFactory so bootstrap errors are also captured.
+  if (env.SENTRY_DSN) {
+    Sentry.init({
+      dsn: env.SENTRY_DSN,
+      environment: env.NODE_ENV,
+      // Capture 100 % of transactions in production; tune down after baseline
+      tracesSampleRate: env.NODE_ENV === 'production' ? 0.1 : 0,
+    });
+  }
+
   const app = await NestFactory.create(AppModule, {
     bufferLogs: true,
     rawBody: true,

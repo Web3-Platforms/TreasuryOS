@@ -142,21 +142,17 @@ After setting Railway custom domain, update:
 - `API_BASE_URL` in Vercel to `https://api.treasuryos.aicustombot.net/api`
 - `vercel.json` rewrite destination: update `https://api.treasuryos.aicustombot.net/api/:path*`
 
-### 2.2 Error Tracking
+### 2.2 Error Tracking ✅ (complete in this PR)
 
-The codebase has no error tracking. Without Sentry (or equivalent), production incidents will be invisible.
+Sentry has been added to both `api-gateway` and `dashboard`.
 
-**Action**: Add Sentry to both `api-gateway` and `dashboard`.
+- `@sentry/nestjs@10.46.0` installed in `apps/api-gateway`
+- `@sentry/nextjs@10.46.0` installed in `apps/dashboard`
+- `main.ts` initialises Sentry before `NestFactory.create()` if `SENTRY_DSN` is set
+- `next.config.mjs` wrapped with `withSentryConfig` (gracefully no-ops if DSN absent)
+- `sentry.client.config.ts`, `sentry.server.config.ts`, `sentry.edge.config.ts` added to dashboard
 
-```bash
-# In apps/api-gateway
-npm install @sentry/nestjs@latest --workspace @treasuryos/api-gateway
-
-# In apps/dashboard
-npm install @sentry/nextjs@latest --workspace @treasuryos/dashboard
-```
-
-Set `SENTRY_DSN` in both Railway and Vercel environment variables.
+**Remaining ops action**: Set `SENTRY_DSN` in Railway and `NEXT_PUBLIC_SENTRY_DSN` / `SENTRY_DSN` in Vercel environment variables.
 
 ### 2.3 Seed User Management
 
@@ -166,27 +162,14 @@ The default seed users (`user_admin`, `user_compliance`, `user_auditor`) are ups
 2. Rotate credentials after each environment migration
 3. For mainnet launch, disable the auto-seeding or move it to a one-time migration
 
-### 2.4 GitHub Actions — CD for Railway
+### 2.4 GitHub Actions — CD for Railway ✅ (complete in this PR)
 
-Currently there is no automatic deploy-on-push. Add to `.github/workflows/cd.yml`:
+`.github/workflows/cd.yml` updated:
+- `npm install` → `npm ci`
+- Added `deploy-api` job: installs Railway CLI and runs `railway up --service api-gateway --detach`
+- `migrate-neon` job now runs only when migration files changed, after `deploy-api` succeeds
 
-```yaml
-name: TreasuryOS CD — Railway
-
-on:
-  push:
-    branches: [main]
-
-jobs:
-  deploy-api:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: superfly/flyctl-actions/setup-flyctl@master  # or Railway CLI
-      - run: railway up --service api-gateway
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-```
+**Remaining ops action**: Add `RAILWAY_TOKEN` secret to the GitHub repository (Settings → Secrets → Actions).
 
 ---
 
@@ -213,17 +196,17 @@ Alert:    on non-200 response
 
 Use BetterUptime, Checkly, or Railway's built-in health check alerts.
 
-### 3.3 Rate Limiting Tuning
+### 3.3 Rate Limiting Tuning ✅ (complete in this PR)
 
-Current throttler: 100 req/60s per IP. For production institutional use:
+Three named throttlers are now configured in `app.module.ts`:
 
-| Endpoint | Current Limit | Recommended |
-|----------|--------------|-------------|
-| `POST /api/auth/login` | 100/min global | 5/min per IP (brute-force protection) |
-| `GET /api/reports/*` | 100/min global | 20/min per user (large CSV downloads) |
-| All others | 100/min global | 200/min per user (authenticated) |
+| Endpoint | Limit | Throttler name |
+|----------|-------|----------------|
+| `POST /api/auth/login` | 5 req/min per IP | `login` |
+| `GET /api/reports/:id/download` | 20 req/min per user | `reports` |
+| All other authenticated routes | 200 req/min per user | `default` |
 
-**File to update**: `apps/api-gateway/src/app.module.ts` ThrottlerModule config.
+`@Throttle()` decorators applied directly to `AuthController.login` and `ReportsController.downloadReport`.
 
 ### 3.4 Database Connection Pooling
 
@@ -475,3 +458,5 @@ node ./node_modules/tsx/dist/cli.mjs \
 | `PILOT_INSTITUTION_ID` | API | — | Default: `pilot-eu-casp` |
 | `PILOT_INSTITUTION_NAME` | API | — | Default: `TreasuryOS Pilot Institution` |
 | `REDIS_QUEUE_ENABLED` | API | — | Default: `true` |
+| `SENTRY_DSN` | API | — | Sentry ingest URL; enables error tracking when set |
+| `NEXT_PUBLIC_SENTRY_DSN` | Dashboard | — | Sentry DSN for client-side error tracking |
