@@ -27,6 +27,7 @@ let DatabaseService = DatabaseService_1 = class DatabaseService {
         // Prevent runaway queries from holding connections indefinitely.
         statement_timeout: 30_000,
     });
+    seedUsersInitialized = false;
     shouldUseSsl() {
         if (this.env.DATABASE_SSL) {
             return true;
@@ -35,13 +36,10 @@ let DatabaseService = DatabaseService_1 = class DatabaseService {
         return this.env.DATABASE_URL.includes('sslmode=require');
     }
     async onModuleInit() {
-        try {
-            await this.upsertSeedUsers();
-        }
-        catch (error) {
-            this.logger.error(`Postgres initialization failed: ${error instanceof Error ? error.message : String(error)}`);
-            throw error;
-        }
+        // DON'T initialize seed users on startup - this causes boot failures
+        // if the database is unavailable. Instead, initialize on first request.
+        // This is 12-factor app best practice and required for serverless.
+        this.logger.log('Database module initialized (seed users deferred to first request)');
     }
     async onModuleDestroy() {
         await this.pool.end();
@@ -63,6 +61,20 @@ let DatabaseService = DatabaseService_1 = class DatabaseService {
         }
         finally {
             client.release();
+        }
+    }
+    async ensureSeedUsers() {
+        if (this.seedUsersInitialized) {
+            return;
+        }
+        try {
+            await this.upsertSeedUsers();
+            this.seedUsersInitialized = true;
+            this.logger.log('Seed users initialized successfully');
+        }
+        catch (error) {
+            this.logger.error(`Failed to initialize seed users: ${error instanceof Error ? error.message : String(error)}`, error instanceof Error ? error.stack : '');
+            throw error;
         }
     }
     async upsertSeedUsers() {

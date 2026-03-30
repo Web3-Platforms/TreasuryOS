@@ -7,24 +7,49 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+var JwtAuthGuard_1;
+import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Reflector } from '@nestjs/core';
 import { IS_PUBLIC_ROUTE } from '../public.decorator.js';
-let JwtAuthGuard = class JwtAuthGuard extends AuthGuard('supabase') {
+// List of routes that don't require authentication
+const PUBLIC_ROUTES = [
+    '/api/health',
+    '/api/health/live',
+    '/api/health/ready',
+    '/health',
+    '/favicon.ico',
+];
+let JwtAuthGuard = JwtAuthGuard_1 = class JwtAuthGuard extends AuthGuard('supabase') {
     reflector;
+    logger = new Logger(JwtAuthGuard_1.name);
     constructor(reflector) {
         super();
         this.reflector = reflector;
     }
     canActivate(context) {
-        const isPublic = this.reflector.getAllAndOverride(IS_PUBLIC_ROUTE, [
-            context.getHandler(),
-            context.getClass(),
-        ]);
-        if (isPublic) {
+        const handler = context.getHandler();
+        const classHandler = context.getClass();
+        const request = context.switchToHttp().getRequest();
+        const route = `${request.method} ${request.url}`;
+        const path = request.url.split('?')[0]; // Remove query params
+        // First, check if route is in our hardcoded public list
+        const isRoutePublic = PUBLIC_ROUTES.some((publicRoute) => path.startsWith(publicRoute));
+        if (isRoutePublic) {
+            this.logger.log(`[JWT Guard] Skipping auth for public route: ${route}`);
             return true;
         }
+        // Second, check for @Public() decorator using Reflector
+        const isPublic = this.reflector.getAllAndOverride(IS_PUBLIC_ROUTE, [
+            handler,
+            classHandler,
+        ]);
+        if (isPublic) {
+            this.logger.log(`[JWT Guard] Skipping auth for @Public() decorated route: ${route}`);
+            return true;
+        }
+        this.logger.log(`[JWT Guard] Checking JWT for protected route: ${route}`);
+        // Otherwise, use parent's authentication
         return super.canActivate(context);
     }
     handleRequest(err, user, info, context) {
@@ -36,7 +61,7 @@ let JwtAuthGuard = class JwtAuthGuard extends AuthGuard('supabase') {
         return user;
     }
 };
-JwtAuthGuard = __decorate([
+JwtAuthGuard = JwtAuthGuard_1 = __decorate([
     Injectable(),
     __metadata("design:paramtypes", [Reflector])
 ], JwtAuthGuard);

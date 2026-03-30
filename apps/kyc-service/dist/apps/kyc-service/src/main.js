@@ -7,8 +7,8 @@ async function bootstrap() {
     const env = loadKycServiceEnv();
     const app = await NestFactory.create(AppModule);
     app.setGlobalPrefix('api');
-    await app.listen(env.KYC_SERVICE_PORT);
-    Logger.log(`KYC service listening on http://localhost:${env.KYC_SERVICE_PORT}/api/health`, 'Bootstrap');
+    await app.listen(env.LISTEN_PORT);
+    Logger.log(`KYC service listening on http://localhost:${env.LISTEN_PORT}/api/health [${env.NODE_ENV}]`, 'Bootstrap');
 }
 bootstrap().catch((error) => {
     const logger = new Logger('Bootstrap');

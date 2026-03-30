@@ -1,46 +1,56 @@
-import { Injectable, ExecutionContext, UnauthorizedException } from '@nestjs/common';
+import { Injectable, ExecutionContext, UnauthorizedException, Logger } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Reflector } from '@nestjs/core';
 import { IS_PUBLIC_ROUTE } from '../public.decorator.js';
 
+// List of routes that don't require authentication
+const PUBLIC_ROUTES = [
+  '/api/health',
+  '/api/health/live',
+  '/api/health/ready',
+  '/health',
+  '/favicon.ico',
+];
+
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('supabase') {
+  private readonly logger = new Logger(JwtAuthGuard.name);
+
   constructor(private readonly reflector: Reflector) {
     super();
   }
 
   canActivate(context: ExecutionContext): any {
-    // Check if route is marked as public
     const handler = context.getHandler();
     const classHandler = context.getClass();
+    const request = context.switchToHttp().getRequest();
+    const route = `${request.method} ${request.url}`;
+    const path = request.url.split('?')[0]; // Remove query params
 
-    // Use reflector to check for @Public() decorator
-    // Try multiple methods for compatibility
-    const reflectorAny = this.reflector as any;
-    let isPublic = false;
+    // First, check if route is in our hardcoded public list
+    const isRoutePublic = PUBLIC_ROUTES.some((publicRoute) =>
+      path.startsWith(publicRoute),
+    );
 
-    // Method 1: Try getAllAndOverride (NestJS v10+)
-    if (typeof reflectorAny.getAllAndOverride === 'function') {
-      try {
-        isPublic = reflectorAny.getAllAndOverride(IS_PUBLIC_ROUTE, [handler, classHandler]) === true;
-      } catch {
-        // continue to next method
-      }
-    }
-
-    // Method 2: Try get on handler
-    if (!isPublic && typeof reflectorAny.get === 'function') {
-      try {
-        isPublic = reflectorAny.get(IS_PUBLIC_ROUTE, handler) === true;
-      } catch {
-        // continue
-      }
-    }
-
-    // If marked as public, skip authentication entirely
-    if (isPublic) {
+    if (isRoutePublic) {
+      this.logger.log(`[JWT Guard] Skipping auth for public route: ${route}`);
       return true;
     }
+
+    // Second, check for @Public() decorator using Reflector
+    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_ROUTE, [
+      handler,
+      classHandler,
+    ]);
+
+    if (isPublic) {
+      this.logger.log(
+        `[JWT Guard] Skipping auth for @Public() decorated route: ${route}`,
+      );
+      return true;
+    }
+
+    this.logger.log(`[JWT Guard] Checking JWT for protected route: ${route}`);
 
     // Otherwise, use parent's authentication
     return super.canActivate(context);

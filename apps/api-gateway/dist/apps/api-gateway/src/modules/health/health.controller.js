@@ -20,7 +20,10 @@ let HealthController = class HealthController {
     async getHealth() {
         const env = loadApiGatewayEnv();
         try {
+            // Test database connectivity
             await this.databaseService.pool.query('SELECT 1');
+            // Initialize seed users on first request if not already done
+            await this.databaseService.ensureSeedUsers();
         }
         catch (error) {
             throw new ServiceUnavailableException({
