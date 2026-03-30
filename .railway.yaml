@@ -6,3 +6,5 @@ deploy:
   restartPolicyMaxRetries: 10
   healthcheckPath: /api/health
   healthcheckTimeout: 60
+variables:
+  BP_DISABLE_RUST: "true"

@@ -1,4 +1,5 @@
 {
   "$schema": "https://schema.railway.com/railpack.json",
-  "providers": ["node"]
+  "providers": ["node"],
+  "ignoredPaths": ["programs", "Cargo.toml", "Cargo.lock"]
 }
