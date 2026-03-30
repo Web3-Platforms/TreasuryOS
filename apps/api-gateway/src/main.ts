@@ -8,6 +8,22 @@ import helmet from 'helmet';
 import { AppModule } from './app.module.js';
 import { loadApiGatewayEnv } from './config/env.js';
 
+// Catch all uncaught exceptions
+process.on('uncaughtException', (error: Error) => {
+  console.error('UNCAUGHT EXCEPTION:', error.message);
+  console.error(error.stack);
+  process.exit(1);
+});
+
+// Catch all unhandled rejections
+process.on('unhandledRejection', (reason: unknown) => {
+  console.error('UNHANDLED REJECTION:', reason);
+  if (reason instanceof Error) {
+    console.error(reason.stack);
+  }
+  process.exit(1);
+});
+
 async function bootstrap() {
   const env = loadApiGatewayEnv();
 
