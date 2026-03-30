@@ -25,11 +25,14 @@ process.on('unhandledRejection', (reason: unknown) => {
 });
 
 async function bootstrap() {
+  console.log('[Bootstrap] Starting...');
   const env = loadApiGatewayEnv();
+  console.log('[Bootstrap] Environment loaded, LISTEN_PORT:', env.LISTEN_PORT, 'NODE_ENV:', env.NODE_ENV);
 
   // ── Sentry ─────────────────────────────────────────────────────────────
   // Initialised before NestFactory so bootstrap errors are also captured.
   if (env.SENTRY_DSN) {
+    console.log('[Bootstrap] Initializing Sentry');
     Sentry.init({
       dsn: env.SENTRY_DSN,
       environment: env.NODE_ENV,
@@ -38,11 +41,13 @@ async function bootstrap() {
     });
   }
 
+  console.log('[Bootstrap] Creating NestFactory app');
   const app = await NestFactory.create(AppModule, {
     bufferLogs: true,
     rawBody: true,
   });
 
+  console.log('[Bootstrap] Configuring middleware and pipes');
   app.use(helmet());
   app.useGlobalPipes(new ValidationPipe({
     whitelist: true,
@@ -66,6 +71,7 @@ async function bootstrap() {
     }
   }
 
+  console.log('[Bootstrap] Enabling CORS for origins:', allowedOrigins);
   app.enableCors({
     origin: allowedOrigins,
     credentials: true,
@@ -74,6 +80,7 @@ async function bootstrap() {
   app.setGlobalPrefix('api');
   app.enableShutdownHooks();
 
+  console.log('[Bootstrap] Starting app listener on port', env.LISTEN_PORT);
   await app.listen(env.LISTEN_PORT);
 
   Logger.log(
