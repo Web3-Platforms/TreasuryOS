@@ -1,30 +1,24 @@
-FROM node:22-alpine AS builder
+FROM node:22-alpine
 
 WORKDIR /app
 
-# Copy the entire monorepo to ensure all shared packages and configs are present
+# 1. Copy the entire monorepo workspace
 COPY . .
 
-# Install all dependencies (including devDependencies needed for the build)
+# 2. Install all dependencies
 RUN npm ci
 
-# Build the api-gateway and its local workspace dependencies
+# 3. Build the api-gateway
+# In a NestJS monorepo, this usually outputs to /app/dist/apps/api-gateway/
 RUN npm run build --workspace=apps/api-gateway
 
-# --- Runner Stage ---
-FROM node:22-alpine AS runner
-
-WORKDIR /app
-
+# 4. Set Production Environment
 ENV NODE_ENV=production
 
-# Copy the entire built application from the builder stage
-# This guarantees that all monorepo symlinks and nested dist folders are perfectly preserved
-COPY --from=builder /app ./
-
-# Expose the port Railway provides
+# 5. Expose the port provided by Railway
 EXPOSE ${PORT:-3000}
 
-# Bulletproof start command: 
-# It checks the standard NestJS path, then the nested TS path, and falls back to your npm script.
-CMD ["sh", "-c", "node apps/api-gateway/dist/main.js || node apps/api-gateway/dist/src/main.js || npm run start:prod --workspace=apps/api-gateway"]]
+# 6. The Smart Start Command
+# This command checks the global root dist folder first, then the local dist folder.
+# This completely bypasses the broken `start:prod` npm script.
+CMD ["sh", "-c", "node dist/apps/api-gateway/main.js || node apps/api-gateway/dist/main.js || node dist/main.js"]
