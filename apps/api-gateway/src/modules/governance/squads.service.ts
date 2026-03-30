@@ -88,9 +88,9 @@ export class SquadsService implements OnModuleInit {
     await multisig.rpc.proposalCreate({
       connection: this.connection,
       feePayer: creator,
+      rentPayer: creator,
       multisigPda: this.multisigPda,
       transactionIndex,
-      creator: creatorPubkey, // Use derived pubkey
     });
 
     this.logger.log(`Created new Squads proposal. Index: ${transactionIndex}`);

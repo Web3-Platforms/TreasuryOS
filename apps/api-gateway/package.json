@@ -18,7 +18,7 @@
     "@nestjs/throttler": "^6.5.0",
     "@sentry/nestjs": "^10.46.0",
     "@solana/keychain-aws-kms": "^0.6.1",
-    "@sqds/multisig": "^2.1.4",
+    "@sqds/multisig": "^1.3.1",
     "@treasuryos/compliance-rules": "0.1.0",
     "@treasuryos/sdk": "0.1.0",
     "@treasuryos/types": "0.1.0",
