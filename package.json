@@ -35,9 +35,9 @@
     "@types/pg": "^8.20.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
-    "prettier": "latest",
-    "tsx": "latest",
-    "typescript": "latest"
+    "prettier": "^3.8.1",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
   },
   "dependencies": {
     "path-to-regexp": "8.4.0"

@@ -1,15 +1,16 @@
-name: TreasuryOS CD — Migrations
+name: TreasuryOS CD
 
 on:
   push:
     branches:
       - main
-    paths:
-      - 'infra/db/migrations/**'
 
 jobs:
-  migrate-neon:
+  # ── Deploy API gateway to Railway ────────────────────────────────────────
+  deploy-api:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
 
@@ -18,16 +19,59 @@ jobs:
           node-version: 22
           cache: npm
 
-      - run: sudo apt-get update && sudo apt-get install -y postgresql-client
+      - run: npm ci
 
-      - run: npm install
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Deploy to Railway
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: railway up --service api-gateway --detach
+
+  # ── Run migrations against Neon after code deploy ────────────────────────
+  migrate-neon:
+    needs: deploy-api
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Fetch enough history so we can diff against the push base
+          fetch-depth: 0
+
+      - name: Check whether migration files changed
+        id: migration-check
+        run: |
+          # On the very first push BEFORE is the null SHA — treat as no-op to avoid git errors.
+          if [ "${{ github.event.before }}" = "0000000000000000000000000000000000000000" ]; then
+            echo "changed=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          CHANGED=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep '^infra/db/migrations/' || true)
+          echo "changed=${CHANGED}" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/setup-node@v4
+        if: steps.migration-check.outputs.changed != ''
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: sudo apt-get update && sudo apt-get install -y postgresql-client
+        if: steps.migration-check.outputs.changed != ''
+
+      - run: npm ci
+        if: steps.migration-check.outputs.changed != ''
 
       - name: Run migrations against Neon
+        if: steps.migration-check.outputs.changed != ''
         env:
           DATABASE_URL: ${{ secrets.NEON_DATABASE_URL }}
         run: npm run db:migrate
 
       - name: Verify no pending migrations
+        if: steps.migration-check.outputs.changed != ''
         env:
           DATABASE_URL: ${{ secrets.NEON_DATABASE_URL }}
         run: npm run db:migrate:check

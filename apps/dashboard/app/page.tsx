@@ -28,12 +28,12 @@ export default async function DashboardHome() {
             <p style={{ color: '#888', margin: 0 }}>Review new entities and progress them through KYC</p>
           </Link>
 
-          <Link href="#" style={{ display: 'block', padding: '1.5rem', border: '1px solid #333', borderRadius: '8px', background: '#111', textDecoration: 'none' }}>
+          <Link href="/wallets" style={{ display: 'block', padding: '1.5rem', border: '1px solid #333', borderRadius: '8px', background: '#111', textDecoration: 'none' }}>
             <h2 style={{ fontSize: '1.25rem', marginBottom: '0.5rem', color: '#fff' }}>Wallet Governance</h2>
             <p style={{ color: '#888', margin: 0 }}>Approve institutional wallets for devnet sync</p>
           </Link>
 
-          <Link href="#" style={{ display: 'block', padding: '1.5rem', border: '1px solid #333', borderRadius: '8px', background: '#111', textDecoration: 'none' }}>
+          <Link href="/transactions" style={{ display: 'block', padding: '1.5rem', border: '1px solid #333', borderRadius: '8px', background: '#111', textDecoration: 'none' }}>
             <h2 style={{ fontSize: '1.25rem', marginBottom: '0.5rem', color: '#fff' }}>Transaction Escalate</h2>
             <p style={{ color: '#888', margin: 0 }}>Review flagged transactions cases</p>
           </Link>

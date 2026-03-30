@@ -1,0 +1,6 @@
+# nixpacks.toml – explicit Node.js build config for Railway
+# Without this, Nixpacks may auto-detect Rust (from the repo-root Cargo.toml)
+# instead of Node.js, causing "npm: not found" during the build step.
+
+[phases.setup]
+nixPkgs = ["nodejs_22"]
