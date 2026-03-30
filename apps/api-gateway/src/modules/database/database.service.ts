@@ -28,6 +28,8 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     statement_timeout: 30_000,
   });
 
+  private seedUsersInitialized = false;
+
   private shouldUseSsl(): boolean {
     if (this.env.DATABASE_SSL) {
       return true;
@@ -37,14 +39,10 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   }
 
   async onModuleInit() {
-    try {
-      await this.upsertSeedUsers();
-    } catch (error) {
-      this.logger.error(
-        `Postgres initialization failed: ${error instanceof Error ? error.message : String(error)}`,
-      );
-      throw error;
-    }
+    // DON'T initialize seed users on startup - this causes boot failures
+    // if the database is unavailable. Instead, initialize on first request.
+    // This is 12-factor app best practice and required for serverless.
+    this.logger.log('Database module initialized (seed users deferred to first request)');
   }
 
   async onModuleDestroy() {
@@ -67,6 +65,24 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       throw error;
     } finally {
       client.release();
+    }
+  }
+
+  async ensureSeedUsers() {
+    if (this.seedUsersInitialized) {
+      return;
+    }
+
+    try {
+      await this.upsertSeedUsers();
+      this.seedUsersInitialized = true;
+      this.logger.log('Seed users initialized successfully');
+    } catch (error) {
+      this.logger.error(
+        `Failed to initialize seed users: ${error instanceof Error ? error.message : String(error)}`,
+        error instanceof Error ? error.stack : '',
+      );
+      throw error;
     }
   }
 
