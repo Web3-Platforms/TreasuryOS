@@ -239,14 +239,15 @@ runtime variables inside Railway or Vercel.
 ### Required Secrets
 
 ```env
-RAILWAY_TOKEN=your-railway-token                 # Required by .github/workflows/cd.yml deploy-api
+RAILWAY_TOKEN=your-railway-project-token         # Required by .github/workflows/cd.yml deploy-api
 NEON_DATABASE_URL=postgresql://...               # Required by .github/workflows/cd.yml migrate-neon
 ```
 
 ### Notes
 
 - Add them in **GitHub → Repository → Settings → Secrets and variables → Actions**.
-- `RAILWAY_TOKEN` must have access to the target Railway project and service.
+- `RAILWAY_TOKEN` should be created as a Railway **Project Token** from the target project's settings.
+- `RAILWAY_API_TOKEN` is the separate account/workspace token name for account-level Railway API access and is not used by this workflow.
 - `NEON_DATABASE_URL` is only used when changes under `infra/db/migrations/`
   trigger the migration job on `main`.
 

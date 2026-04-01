@@ -27,17 +27,12 @@ jobs:
         run: |
           set -euo pipefail
           if [ -z "${RAILWAY_TOKEN:-}" ]; then
-            echo "Missing RAILWAY_TOKEN GitHub Actions secret. Add it in repository Settings -> Secrets and variables -> Actions." >&2
+            echo "Missing RAILWAY_TOKEN GitHub Actions secret. Add a Railway Project Token in repository Settings -> Secrets and variables -> Actions." >&2
             exit 1
           fi
 
       - name: Install Railway CLI
         run: npm install -g @railway/cli
-
-      - name: Verify Railway authentication
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-        run: railway whoami >/dev/null
 
       - name: Deploy to Railway
         env:

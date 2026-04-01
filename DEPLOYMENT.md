@@ -194,8 +194,13 @@ deployments:
 
 | Secret | Used by | Purpose |
 |---|---|---|
-| `RAILWAY_TOKEN` | `deploy-api` | Authenticates `railway up --service api-gateway --detach` |
+| `RAILWAY_TOKEN` | `deploy-api` | Railway **Project Token** used by `railway up --service api-gateway --detach` |
 | `NEON_DATABASE_URL` | `migrate-neon` | Runs `npm run db:migrate` and `npm run db:migrate:check` when migrations change |
+
+Create `RAILWAY_TOKEN` from the target Railway project's settings as a
+**Project Token**. This workflow uses `RAILWAY_TOKEN` for project-scoped deploy
+operations; `RAILWAY_API_TOKEN` is the separate account/workspace token used for
+account-level API access and is not required by `.github/workflows/cd.yml`.
 
 If `RAILWAY_TOKEN` is missing or invalid, the deploy job fails before Railway
 deployment starts. If `NEON_DATABASE_URL` is missing, migration verification
