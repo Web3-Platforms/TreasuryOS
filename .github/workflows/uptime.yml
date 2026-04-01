@@ -1,0 +1,82 @@
+name: TreasuryOS Uptime
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: treasuryos-uptime
+  cancel-in-progress: false
+
+env:
+  APP_URL: https://treasuryos.aicustombot.net
+  # Use Railway's healthy service domain until Cloudflare routes the custom API hostname correctly.
+  API_HEALTH_URL: https://treasuryosapi-gateway-production.up.railway.app/api/health
+
+jobs:
+  uptime:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check dashboard redirect and login page
+        run: |
+          set -euo pipefail
+          headers="$(curl -IsS --max-time 20 "$APP_URL")"
+          echo "$headers"
+          echo "$headers" | grep -E '^HTTP/[0-9.]+ 307|^HTTP/2 307'
+          echo "$headers" | grep -i '^location: /login'
+          curl -fsSL --max-time 20 "$APP_URL/login" | grep -q 'TreasuryOS Pilot Login'
+
+      - name: Check API health
+        run: |
+          set -euo pipefail
+          response="$(curl -fsSL --max-time 20 "$API_HEALTH_URL")"
+          echo "$response"
+          node -e 'const payload = JSON.parse(process.argv[1]); if (payload.status !== "ok") { throw new Error(`Unexpected API status: ${payload.status}`); }' "$response"
+
+      - name: Create or update failure issue
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const title = '[Launch] Uptime check failed';
+            const body = [
+              'A scheduled TreasuryOS uptime check failed.',
+              '',
+              `Run: ${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}`,
+              `App URL: ${process.env.APP_URL}`,
+              `API health URL: ${process.env.API_HEALTH_URL}`,
+              `Triggered by: ${context.eventName}`,
+            ].join('\n');
+
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner,
+              repo,
+              state: 'open',
+              per_page: 100,
+            });
+
+            const existing = issues.find((issue) => issue.title === title);
+
+            if (existing) {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: existing.number,
+                body,
+              });
+            } else {
+              await github.rest.issues.create({
+                owner,
+                repo,
+                title,
+                body,
+              });
+            }

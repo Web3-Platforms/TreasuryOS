@@ -59,7 +59,7 @@ process.on('unhandledRejection', (reason: unknown) => {
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PORT: z.coerce.number().int().min(1).max(65535).optional(),
-  KYC_PORT: z.coerce.number().int().min(1).max(65535).default(3002),
+  KYC_SERVICE_PORT: z.coerce.number().int().min(1).max(65535).default(3002),
 });
 ```
 
@@ -81,7 +81,7 @@ Each service has a default port and supports Railway's `PORT` environment variab
 | Service | Default | Env Var | Notes |
 |---------|---------|---------|-------|
 | api-gateway | 3001 | PORT | Uses LISTEN_PORT originally |
-| kyc-service | 3002 | KYC_PORT or PORT | Prefers PORT (Railway standard) |
+| kyc-service | 3002 | KYC_SERVICE_PORT or PORT | Prefers PORT (Railway standard) |
 | bank-adapter | 3003 | BANK_ADAPTER_PORT or PORT | Prefers PORT |
 | reporter | 3004 | REPORTER_PORT or PORT | Prefers PORT |
 
@@ -95,7 +95,7 @@ Create separate Railway projects for each service, each with:
 {
   "build": {
     "builder": "RAILPACK",
-    "buildCommand": "npm ci && npm run build --workspace=@treasuryos/SERVICE_NAME",
+    "buildCommand": "npm ci --include=dev && npm run build --workspace=@treasuryos/SERVICE_NAME",
     "buildEnv": {
       "BP_DISABLE_RUST": "true",
       "BP_DISABLE_RUST_TOOLCHAIN": "true",
@@ -112,6 +112,11 @@ Create separate Railway projects for each service, each with:
   }
 }
 ```
+
+Committed service configs now live at:
+- `infra/railway/kyc-service.railway.json`
+- `infra/railway/bank-adapter.railway.json`
+- `infra/railway/reporter.railway.json`
 
 **Option B: Monorepo Single Service (Current)**
 Keep the current railway.json approach with single service per Railway project.

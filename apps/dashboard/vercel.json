@@ -1,8 +1,8 @@
 {
-  "buildCommand": "npm run build -w @treasuryos/dashboard",
-  "installCommand": "npm ci --include=dev",
   "framework": "nextjs",
-  "outputDirectory": "apps/dashboard/.next",
+  "installCommand": "cd ../.. && npm ci --include=dev",
+  "buildCommand": "cd ../.. && npm run build -w @treasuryos/dashboard",
+  "outputDirectory": ".next",
   "headers": [
     {
       "source": "/(.*)",

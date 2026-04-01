@@ -4,8 +4,9 @@
 
 | Service | Required | Optional | Default Port |
 |---------|----------|----------|--------------|
-| api-gateway | DATABASE_URL, AUTH_TOKEN_SECRET, seed users | Redis, Supabase, Sentry | 3001 |
-| kyc-service | SOLANA_RPC_URL, PROGRAM_ID_COMPLIANCE_REGISTRY | KYC providers (Sumsub, Jumio) | 3002 |
+| dashboard | API_BASE_URL | KYC flag, demo access, Sentry | Vercel |
+| api-gateway | DATABASE_URL, AUTH_TOKEN_SECRET, seed users | Redis, Supabase, Sentry, KYC/Solana options | 3001 |
+| kyc-service | SOLANA_RPC_URL, PROGRAM_ID_COMPLIANCE_REGISTRY | KYC providers, SOLANA_NETWORK | 3002 |
 | bank-adapter | None | AMINA_API_URL, AMINA_API_KEY | 3003 |
 | reporter | None | None | 3004 |
 
@@ -48,16 +49,12 @@ FRONTEND_URL=https://app.example.com           # For CORS headers
 
 # ── Solana RPC ───────────────────────────────────────────
 SOLANA_RPC_URL=https://api.devnet.solana.com   # Default: devnet
-SOLANA_SIGNING_MODE=filesystem                 # Options: filesystem, kms
+SOLANA_SIGNING_MODE=filesystem                 # Options: filesystem, environment
 AUTHORITY_KEYPAIR_PATH=path/to/keypair.json    # For filesystem signing
+AUTHORITY_KEYPAIR_JSON=[1,2,3,...]             # For Railway-injected signer material
 SOLANA_SYNC_ENABLED=false                      # Enable on-chain sync
 SQUADS_MULTISIG_ENABLED=false                  # Enable multisig
 SQUADS_MULTISIG_ADDRESS=YourSquadsAddress      # If multisig enabled
-
-# ── AWS KMS (for signing) ───────────────────────────────
-AWS_KMS_KEY_ID=arn:aws:kms:region:account:key/id
-AWS_KMS_PUBLIC_KEY=Your-Public-Key
-AWS_REGION=us-east-1
 
 # ── Redis / Upstash ─────────────────────────────────────
 REDIS_URL=redis://localhost:6379               # Local Redis
@@ -70,6 +67,7 @@ UPSTASH_REDIS_REST_TOKEN=your-token            # For cloud deployments
 DATABASE_SSL=false                             # Enable for managed databases
 
 # ── KYC Providers ───────────────────────────────────────
+KYC_SUMSUB_ENABLED=false                        # Keep false for the first pilot launch
 SUMSUB_APP_TOKEN=your-app-token
 SUMSUB_SECRET_KEY=your-secret-key
 SUMSUB_WEBHOOK_SECRET=your-webhook-secret
@@ -90,16 +88,46 @@ PILOT_INSTITUTION_ID=pilot-eu-casp
 PILOT_INSTITUTION_NAME=TreasuryOS Pilot Institution
 PILOT_CUSTOMER_PROFILE=eu-regulated-casp
 
-# ── Frontend Configuration ──────────────────────────────
-NEXT_PUBLIC_API_BASE_URL=https://api.example.com
-
 # ── Railway (Auto-injected) ────────────────────────────
 RAILWAY_ENVIRONMENT=production                 # Read-only, auto-set
 ```
 
 ---
 
-## 🔐 2. KYC Service (port 3002)
+## 🖥️ 2. Dashboard (Vercel)
+
+### Required Variables
+
+```env
+# Server-side dashboard → API wiring
+API_BASE_URL=https://api.example.com/api
+```
+
+### Optional Variables
+
+```env
+# Keep false for the pilot launch unless Sumsub is intentionally enabled.
+KYC_SUMSUB_ENABLED=false
+
+# Demo access only works when all three values are provided.
+DEMO_ACCESS_ENABLED=false
+DEMO_ACCESS_EMAIL=demo@example.com
+DEMO_ACCESS_PASSWORD=replace-with-demo-password
+
+# Sentry for dashboard server/client runtimes
+SENTRY_DSN=https://key@sentry.io/project-id
+NEXT_PUBLIC_SENTRY_DSN=https://key@sentry.io/project-id
+```
+
+### Notes
+
+- The dashboard uses `API_BASE_URL`, not `NEXT_PUBLIC_API_BASE_URL`.
+- `KYC_SUMSUB_ENABLED` is read by both the dashboard and the API so the launch posture stays consistent.
+- Leave demo access disabled unless you explicitly want a public demo login path.
+
+---
+
+## 🔐 3. KYC Service (port 3002)
 
 ### Required Variables
 
@@ -116,6 +144,9 @@ PROGRAM_ID_COMPLIANCE_REGISTRY=YourProgram32CharId123456789  # 32+ chars
 # ── Port Configuration (Railway) ───────────────────────────
 PORT=3002                                      # Used by Railway only
 KYC_SERVICE_PORT=3002                          # Local fallback
+
+# ── Solana RPC Labels ─────────────────────────────────────
+SOLANA_NETWORK=devnet                          # Optional label, defaults to devnet
 
 # ── KYC Providers ───────────────────────────────────────
 SUMSUB_APP_TOKEN=your-app-token                # For SumSub KYC
@@ -135,7 +166,7 @@ The KYC Service automatically:
 
 ---
 
-## 🏦 3. Bank Adapter (port 3003)
+## 🏦 4. Bank Adapter (port 3003)
 
 ### Required Variables
 
@@ -168,7 +199,7 @@ The Bank Adapter automatically:
 
 ---
 
-## 📊 4. Reporter Service (port 3004)
+## 📊 5. Reporter Service (port 3004)
 
 ### Required Variables
 
@@ -225,6 +256,7 @@ For **api-gateway**:
 NODE_ENV = production
 AUTH_TOKEN_SECRET = your-super-secret-key-32-chars-long
 DATABASE_URL = postgresql://user:pass@neon.tech/db
+KYC_SUMSUB_ENABLED = false
 DEFAULT_ADMIN_EMAIL = admin@treasuryos.example
 DEFAULT_ADMIN_PASSWORD = AdminPass123!
 DEFAULT_COMPLIANCE_EMAIL = compliance@treasuryos.example

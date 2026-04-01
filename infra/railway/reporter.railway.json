@@ -2,7 +2,7 @@
   "$schema": "https://railway.app/railway.schema.json",
   "build": {
     "builder": "RAILPACK",
-    "buildCommand": "npm ci --include=dev && npm run build --workspace=@treasuryos/api-gateway",
+    "buildCommand": "npm ci --include=dev && npm run build --workspace=@treasuryos/reporter",
     "buildEnv": {
       "BP_DISABLE_RUST": "true",
       "BP_DISABLE_RUST_TOOLCHAIN": "true",
@@ -10,7 +10,7 @@
     }
   },
   "deploy": {
-    "startCommand": "npm run start:prod --workspace=@treasuryos/api-gateway",
+    "startCommand": "npm run start:prod --workspace=@treasuryos/reporter",
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10,
     "healthcheckPath": "/api/health",

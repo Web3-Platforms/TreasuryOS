@@ -36,7 +36,7 @@ TreasuryOS has reached **MVP completion** and all core compliance lifecycle feat
 | Supabase Storage | ✅ Ready | StorageModule integrated |
 | KYC (SumSub) | ⚠️ Sandbox | Requires production tokens for launch |
 | Solana / Anchor Programs | ⚠️ Devnet | Requires mainnet deployment |
-| AWS KMS signing | ⚠️ Optional | Configured; keys not provisioned |
+| Solana authority signer | ⚠️ Optional | Environment/file-based signing supported; production material not configured |
 | Squads V4 multisig | ⚠️ Optional | Module present; address not set |
 | Banking adapters | ⚠️ Simulated | SWIFT/Amina stubs only |
 
@@ -74,7 +74,7 @@ treasury-os/                       ← npm workspace root (Node ≥22, npm ≥10
 **Location**: `apps/api-gateway`  
 **Framework**: NestJS 10 with Express platform  
 **Language**: TypeScript, compiled to `dist/` via `tsc`  
-**Entry point for Railway**: `node apps/api-gateway/dist/main.js`
+**Entry point for Railway**: `npm run start:prod --workspace=@treasuryos/api-gateway`
 
 ### Modules
 
@@ -106,9 +106,9 @@ treasury-os/                       ← npm workspace root (Node ≥22, npm ≥10
 ### Build Pipeline
 
 ```
-npm ci                                     # Install all workspace deps
+npm ci --include=dev                       # Install workspace build deps as well
 npm run build -w @treasuryos/api-gateway   # tsc → apps/api-gateway/dist/
-node apps/api-gateway/dist/main.js         # Start production server
+npm run start:prod -w @treasuryos/api-gateway  # Start the compiled production server
 ```
 
 ---
@@ -152,8 +152,8 @@ node apps/api-gateway/dist/main.js         # Start production server
 |---|---|---|
 | `railway.json` created | ✅ Done | Uses **Railpacks** (`RAILPACK` builder) |
 | Builder | ✅ Railpacks | Not Nixpacks — faster, more reproducible |
-| Build command | ✅ `npm ci && npm run build -w @treasuryos/api-gateway` | Full install + workspace build |
-| Start command | ✅ `node apps/api-gateway/dist/main.js` | Direct Node.js invocation |
+| Build command | ✅ `npm ci --include=dev && npm run build -w @treasuryos/api-gateway` | Installs workspace build dependencies before compiling |
+| Start command | ✅ `npm run start:prod --workspace=@treasuryos/api-gateway` | Uses the compiled API entrypoint from the workspace script |
 | `start:prod` npm script | ✅ Added | `apps/api-gateway/package.json` |
 | Health check path | ✅ `/api/health` | 30-second timeout |
 | Restart policy | ✅ `ON_FAILURE` / 3 retries | Auto-recovery on crash |
@@ -203,12 +203,12 @@ node apps/api-gateway/dist/main.js         # Start production server
 ### Solana / Anchor Programs
 
 - **Status**: Devnet — `programs/` contains the Anchor programs (Wallet Whitelist, Compliance Registry).
-- **Action required**: Deploy programs to mainnet, set `SOLANA_RPC_URL` (mainnet), `PROGRAM_ID_WALLET_WHITELIST` in Railway, set `SOLANA_SIGNING_MODE=kms`.
+- **Action required**: Deploy programs to mainnet, set `SOLANA_RPC_URL` (mainnet), `PROGRAM_ID_WALLET_WHITELIST` in Railway, and configure production signer material.
 
-### AWS KMS
+### Solana Authority Signer
 
-- **Status**: Code complete — `@solana/keychain-aws-kms` integrated for Ed25519 signing.
-- **Action required**: Provision KMS key, set `AWS_KMS_KEY_ID`, `AWS_KMS_PUBLIC_KEY`, `AWS_REGION` in Railway.
+- **Status**: Code complete — the API gateway can load signing material from `AUTHORITY_KEYPAIR_JSON` or `AUTHORITY_KEYPAIR_PATH`.
+- **Action required**: Set `SOLANA_SIGNING_MODE=environment` and `AUTHORITY_KEYPAIR_JSON` in Railway, or mount a signer file and keep `SOLANA_SIGNING_MODE=filesystem`.
 
 ### Squads V4 Multisig
 
@@ -245,7 +245,7 @@ node apps/api-gateway/dist/main.js         # Start production server
 1. **Solana Mainnet**: Programs are on devnet. Mainnet deployment requires:
    - Dedicated RPC endpoint (Helius or Triton recommended for reliability)
    - Updated `PROGRAM_ID_WALLET_WHITELIST` for mainnet
-   - AWS KMS configured and `SOLANA_SIGNING_MODE=kms`
+   - Production signer configured for Railway
    - Anchor program audit completed
 
 2. **SumSub Production Tokens**: Sandbox tokens must be swapped for production tokens.  
@@ -294,6 +294,7 @@ node apps/api-gateway/dist/main.js         # Start production server
 - [ ] `DEFAULT_AUDITOR_EMAIL` / `DEFAULT_AUDITOR_PASSWORD` set
 - [ ] `PROGRAM_ID_WALLET_WHITELIST` set
 - [ ] `SOLANA_RPC_URL` set
+- [ ] Production signer configured via `AUTHORITY_KEYPAIR_JSON` or a mounted `AUTHORITY_KEYPAIR_PATH`
 - [ ] `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `SUPABASE_JWT_SECRET`, `SUPABASE_STORAGE_BUCKET` set
 - [ ] `SUMSUB_APP_TOKEN`, `SUMSUB_SECRET_KEY`, `SUMSUB_WEBHOOK_SECRET` set (production, not sandbox)
 - [ ] First deploy succeeds — `railway run npm run db:migrate` executed
@@ -315,7 +316,6 @@ node apps/api-gateway/dist/main.js         # Start production server
 - [ ] CORS: `FRONTEND_URL` in Railway matches Vercel domain exactly
 - [ ] SumSub webhook URL configured in SumSub Dashboard → `https://api.treasuryos.aicustombot.net/api/kyc/webhooks/sumsub`
 - [ ] Webhook signature test passes from SumSub Dashboard
-- [ ] `SOLANA_SIGNING_MODE=kms` and AWS KMS configured (for production signing)
 - [ ] Anchor programs deployed to mainnet and `PROGRAM_ID_WALLET_WHITELIST` updated
 - [ ] `tsconfig.tsbuildinfo` added to `.gitignore`
 - [ ] All `"latest"` dependency versions pinned to specific semver ranges
@@ -342,7 +342,7 @@ node apps/api-gateway/dist/main.js         # Start production server
 
 9. Engage a third-party firm for the Anchor program security audit.
 10. Deploy Anchor programs to Solana mainnet and update `PROGRAM_ID_WALLET_WHITELIST`.
-11. Provision AWS KMS keys and switch `SOLANA_SIGNING_MODE` to `kms`.
+11. Configure Railway signer material and verify production wallet sync.
 12. Obtain production SumSub tokens and complete a live KYC verification test.
 13. Obtain mTLS certificates for SWIFT/Amina banking adapters.
 14. Deploy Squads V4 multisig on-chain and enable governance for high-value transactions.

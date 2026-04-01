@@ -62,10 +62,10 @@ The `railway.json` at the repo root configures:
   "$schema": "https://schema.railway.com/railway.json",
   "build": {
     "builder": "RAILPACK",
-    "buildCommand": "npm ci && npm run build -w @treasuryos/api-gateway"
+    "buildCommand": "npm ci --include=dev && npm run build -w @treasuryos/api-gateway"
   },
   "deploy": {
-    "startCommand": "node apps/api-gateway/dist/main.js",
+    "startCommand": "npm run start:prod --workspace=@treasuryos/api-gateway",
     "healthcheckPath": "/api/health",
     "healthcheckTimeout": 30,
     "restartPolicyType": "ON_FAILURE",
@@ -134,7 +134,7 @@ full descriptions.
 |---|---|
 | `SOLANA_RPC_URL` | `https://api.mainnet-beta.solana.com` |
 | `SOLANA_SYNC_ENABLED` | `true` |
-| `SOLANA_SIGNING_MODE` | `kms` (production) or `filesystem` (dev) |
+| `SOLANA_SIGNING_MODE` | `environment` (production) or `filesystem` (dev) |
 | `SQUADS_MULTISIG_ENABLED` | `true` |
 | `SQUADS_MULTISIG_ADDRESS` | *(your Squads multisig PDA)* |
 
@@ -276,12 +276,10 @@ whether they are required.
 | `SUMSUB_LEVEL_NAME` | Railway | No | KYC verification level (default: `basic-kyc-level`) |
 | `SOLANA_RPC_URL` | Railway | Yes | Solana RPC endpoint |
 | `PROGRAM_ID_WALLET_WHITELIST` | Railway | Yes | Deployed whitelist program ID |
-| `SOLANA_SIGNING_MODE` | Railway | No | `filesystem` (dev) or `kms` (prod) |
+| `SOLANA_SIGNING_MODE` | Railway | No | `filesystem` (dev/file-mounted) or `environment` (prod secret) |
 | `SOLANA_SYNC_ENABLED` | Railway | No | Enable on-chain sync (default: `false`) |
-| `AUTHORITY_KEYPAIR_PATH` | Railway | Dev | Path to local Solana keypair file |
-| `AWS_KMS_KEY_ID` | Railway | No | AWS KMS key ID (when `SIGNING_MODE=kms`) |
-| `AWS_KMS_PUBLIC_KEY` | Railway | No | AWS KMS public key |
-| `AWS_REGION` | Railway | No | AWS region for KMS |
+| `AUTHORITY_KEYPAIR_PATH` | Railway | No | Mounted or local Solana keypair file |
+| `AUTHORITY_KEYPAIR_JSON` | Railway | No | JSON array for Railway-injected signer material |
 | `SQUADS_MULTISIG_ENABLED` | Railway | No | Enable Squads multisig (default: `false`) |
 | `SQUADS_MULTISIG_ADDRESS` | Railway | No | Squads multisig PDA |
 | `SUPABASE_URL` | Railway | No | Supabase project URL |

@@ -9,7 +9,7 @@ npm run dev --workspace=@treasuryos/kyc-service
 npm run dev --workspace=@treasuryos/bank-adapter
 npm run dev --workspace=@treasuryos/reporter
 
-# Production
+# Production (run after `npm run build --workspace=...`)
 npm run start:prod --workspace=@treasuryos/api-gateway
 npm run start:prod --workspace=@treasuryos/kyc-service
 npm run start:prod --workspace=@treasuryos/bank-adapter
@@ -53,13 +53,19 @@ npm run build --workspace=@treasuryos/api-gateway
 
 ## Railway Deployment
 
-Each service needs individual railway.json:
+Each service needs individual Railway config. Ready-to-use service configs live at:
+
+- `infra/railway/kyc-service.railway.json`
+- `infra/railway/bank-adapter.railway.json`
+- `infra/railway/reporter.railway.json`
+
+Underlying format:
 
 ```json
 {
   "build": {
     "builder": "RAILPACK",
-    "buildCommand": "npm ci && npm run build --workspace=@treasuryos/SERVICE_NAME",
+    "buildCommand": "npm ci --include=dev && npm run build --workspace=@treasuryos/SERVICE_NAME",
     "buildEnv": {
       "BP_DISABLE_RUST": "true",
       "NODE_ENV": "production"

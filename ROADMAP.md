@@ -23,7 +23,7 @@ Vercel (dashboard)          Railway (api-gateway)
                                         │          │
                           Neon Postgres │          │ Upstash Redis
                           Supabase Storage         │ SumSub KYC
-                          AWS KMS (Solana signing) │
+                          Railway/file signer      │
                           Squads V4 (multisig)     │
 ```
 
@@ -35,11 +35,11 @@ These are the minimal changes needed for the code to build and deploy at all.
 
 | # | Change | File(s) | Status |
 |---|--------|---------|--------|
-| 0.1 | Switch Railway builder RAILPACK → NIXPACKS | `railway.json`, `nixpacks.toml` | ✅ Done |
-| 0.2 | Add `nixpacks.toml` to pin `nodejs_22` (prevents Rust auto-detection from `Cargo.toml`) | `nixpacks.toml` | ✅ Done |
-| 0.3 | Rename `proxy.ts` → `middleware.ts` so Next.js actually runs auth guard | `apps/dashboard/middleware.ts` | ✅ Done |
+| 0.1 | Standardize Railway deployment on `RAILPACK` with explicit Node provider metadata | `railway.json`, `railpack.json` | ✅ Done |
+| 0.2 | Keep `nixpacks.toml` as a legacy fallback if Railway is forced onto the Nixpacks builder | `nixpacks.toml` | ✅ Done |
+| 0.3 | Move dashboard auth gating to the active Next.js 16 root `proxy.ts` file convention and remove the stale duplicate `middleware.ts` | `apps/dashboard/proxy.ts` | ✅ Done |
 | 0.4 | Remove `output:"standalone"` from Next.js config (Vercel-native, not Docker) | `apps/dashboard/next.config.mjs` | ✅ Done |
-| 0.5 | Use `npm ci` in `vercel.json` installCommand (reproducible builds) | `vercel.json` | ✅ Done |
+| 0.5 | Use `npm ci --include=dev` in `vercel.json` installCommand so workspace build dependencies are present in production builds | `vercel.json` | ✅ Done |
 | 0.6 | Fix `AuthService.login()` to return `accessToken` — was returning `{ user }` only, dashboard login completely broken | `apps/api-gateway/src/modules/auth/auth.service.ts` | ✅ Done |
 | 0.7 | Fix `SupabaseStrategy` to validate with `AUTH_TOKEN_SECRET` (consistent with tokens we issue) | `apps/api-gateway/src/modules/auth/strategies/supabase.strategy.ts` | ✅ Done |
 | 0.8 | Fix `api-client.ts` to read `treasuryos_access_token` cookie instead of dead Supabase `getSession()` call | `apps/dashboard/lib/api-client.ts` | ✅ Done |
@@ -80,8 +80,9 @@ Everything below is an ops/configuration task. Code is ready; environment variab
 | `DEFAULT_AUDITOR_PASSWORD` | Strong password | Railway → Variables |
 | `PROGRAM_ID_WALLET_WHITELIST` | Devnet program ID (current: `FXFMG4hzBcuRu33mVXyTHESH7FnsmUD6Fajr17FugbRt`) | Railway → Variables |
 | `SOLANA_RPC_URL` | `https://api.devnet.solana.com` (devnet) | Railway → Variables |
-| `SOLANA_SIGNING_MODE` | `filesystem` (devnet) | Railway → Variables |
-| `AUTHORITY_KEYPAIR_PATH` | Path to devnet keypair file | Railway → Variables |
+| `SOLANA_SIGNING_MODE` | `filesystem` (local) or `environment` (Railway) | Railway → Variables |
+| `AUTHORITY_KEYPAIR_PATH` | Path to devnet keypair file or mounted signer file | Local env / Railway → Variables |
+| `AUTHORITY_KEYPAIR_JSON` | Railway-injected signer JSON | Railway → Variables |
 | `SUPABASE_URL` | Your Supabase project URL | Railway → Variables |
 | `SUPABASE_SERVICE_KEY` | Supabase service_role key | Railway → Variables |
 | `SUPABASE_JWT_SECRET` | Supabase JWT secret (Settings → API) | Railway → Variables |
@@ -254,25 +255,21 @@ The webhook path `POST /api/kyc/webhooks/sumsub` is implemented. Verify the enti
 
 ---
 
-## Phase 5 — Solana Mainnet & KMS
+## Phase 5 — Solana Mainnet & Signing
 
-### 5.1 AWS KMS Setup (required for production Solana signing)
+### 5.1 Solana Signer Setup (required for production Solana signing)
 
-The filesystem keypair approach (`SOLANA_SIGNING_MODE=filesystem`) is only for development. **Never use filesystem keypairs in production** — the private key would be stored as plain text in an environment variable.
+For deployed environments, prefer Railway-injected signer material (`SOLANA_SIGNING_MODE=environment`) so the authority stays in platform-managed secrets instead of source control.
 
 **Steps**:
-1. Create an AWS KMS key (Ed25519 key type, `GENERATE_VERIFY_MAC`)  
-   Region: choose geographically close to Railway deployment
-2. Grant the Railway service's IAM role `kms:Sign` and `kms:GetPublicKey` permissions
-3. Export the public key as base58: `aws kms get-public-key --key-id <KEY_ID>`
-4. Set Railway env vars:
+1. Export the production Solana authority keypair as a JSON array (the same format used by Solana CLI keypair files).
+2. Set Railway env vars:
    ```
-   SOLANA_SIGNING_MODE=kms
-   AWS_KMS_KEY_ID=<key-id>
-   AWS_KMS_PUBLIC_KEY=<base58-public-key>
-   AWS_REGION=<region>
+   SOLANA_SIGNING_MODE=environment
+   AUTHORITY_KEYPAIR_JSON=<json-array>
    ```
-5. Remove `AUTHORITY_KEYPAIR_PATH` from Railway (no longer needed)
+3. If your deploy target supports mounted secret files instead, keep `SOLANA_SIGNING_MODE=filesystem` and point `AUTHORITY_KEYPAIR_PATH` at the mounted file.
+4. Verify the API health check and a wallet sync dry run after deploy.
 
 ### 5.2 Solana Programs — Devnet → Mainnet
 
@@ -381,7 +378,7 @@ Before allowing any real institutional clients:
 - [ ] SumSub webhook HMAC signature test passed from SumSub Dashboard
 - [ ] `/api/health` returns `200 OK` from public internet
 - [ ] Anchor program security audit completed (third-party)
-- [ ] AWS KMS configured for Solana signing (no filesystem keypairs)
+- [ ] Production Solana signer configured without example or local-only key material
 - [ ] Penetration test completed on API Gateway
 - [ ] Sentry error tracking active in both Railway and Vercel
 - [ ] Uptime monitor active on health check endpoint
@@ -446,11 +443,9 @@ node ./node_modules/tsx/dist/cli.mjs \
 | `SUMSUB_WEBHOOK_SECRET` | API | ✅ | From SumSub Dashboard |
 | `SOLANA_RPC_URL` | API | ✅ | Devnet or mainnet RPC endpoint |
 | `PROGRAM_ID_WALLET_WHITELIST` | API | ✅ | Deployed program ID |
-| `SOLANA_SIGNING_MODE` | API | ✅ | `filesystem` (dev) or `kms` (prod) |
-| `AUTHORITY_KEYPAIR_PATH` | API | dev only | Not for production |
-| `AWS_KMS_KEY_ID` | API | prod | When `SOLANA_SIGNING_MODE=kms` |
-| `AWS_KMS_PUBLIC_KEY` | API | prod | When `SOLANA_SIGNING_MODE=kms` |
-| `AWS_REGION` | API | prod | When `SOLANA_SIGNING_MODE=kms` |
+| `SOLANA_SIGNING_MODE` | API | ✅ | `filesystem` (local/file-mounted) or `environment` (Railway secret) |
+| `AUTHORITY_KEYPAIR_PATH` | API | — | Filesystem or mounted signer file |
+| `AUTHORITY_KEYPAIR_JSON` | API | prod | Railway-injected signer material |
 | `SQUADS_MULTISIG_ENABLED` | API | — | Default: `false` |
 | `SQUADS_MULTISIG_ADDRESS` | API | — | When multisig enabled |
 | `DEFAULT_ADMIN_EMAIL` | API | ✅ | Seed user — change password post-deploy |

@@ -2,11 +2,22 @@
 
 This document outlines the strategic roadmap for evolving the TreasuryOS MVP into a production-grade, MiCA-compliant operations suite.
 
+## Immediate Release Closure
+- [x] **Pilot Launch Scope Chosen**: First launch stays KYC-off and preview-only for Solana sync.
+- [x] **Validated Local Baseline**: `npm run typecheck`, `npm test`, and `API_BASE_URL=http://localhost:3001/api npm run build` now pass from the repo root.
+- [x] **Next.js 16 Auth Gate**: Dashboard route protection now lives in `apps/dashboard/proxy.ts`.
+- [x] **Uptime Monitoring**: Scheduled monitoring is active via `.github/workflows/uptime.yml`.
+- [ ] **Cloudflare API DNS**: Route `api.treasuryos.aicustombot.net` to the active Railway service target.
+- [ ] **Sentry Provisioning**: Create/attach the final Sentry project and DSNs, or explicitly waive Sentry for beta launch.
+- [ ] **Production Env Verification**: Reconfirm the final Railway/Vercel/GitHub variables for the selected pilot scope.
+- [ ] **Final Live Smoke Pass**: Re-run launch smoke checks after config freeze.
+- [ ] **Go/No-Go Cutover**: Execute the monitored release window.
+
 ## Phase 1: Security & Infrastructure (In Progress)
-- [x] **KMS Vault Logic**: Transitioned from filesystem keys to AWS KMS hardware signing logic.
+- [x] **Signer Refactor**: Centralized Solana authority loading for filesystem and Railway-injected signer material.
 - [x] **Vercel/Serverless Readiness**: API Gateway optimized for serverless runtime.
 - [ ] **Protocol Audit**: Hire a third-party security firm to audit the Anchor programs and Rust permissioning logic.
-- [ ] **Infrastructure Provisioning**: Deploy to a formal Kubernetes (EKS/GKE) cluster or set up the managed Vercel/Cloudflare edge.
+- [ ] **Infrastructure Provisioning**: Harden the managed Railway/Vercel/Cloudflare stack for production traffic.
 
 ## Phase 2: Real-World Connectivity (6-12 Weeks)
 - [ ] **Banking Integration**: Secure production mTLS certificates for Amina/SWIFT and implement the live ISO20022 message relay.
@@ -20,6 +31,6 @@ This document outlines the strategic roadmap for evolving the TreasuryOS MVP int
 ## Current Project Status
 - **Core MVP**: [COMPLETED]
 - **Operational Dashboard**: [STABLE]
-- **Institutional Logic (KMS/Squads)**: [SYSTEM READY]
+- **Institutional Logic (Signer/Squads)**: [SYSTEM READY]
 - **Security Posture**: [PRODUCTION-READY LOGIC]
-- **Deployment**: [VERCEL CONFIG READY]
+- **Deployment**: [PILOT LAUNCH CANDIDATE]
