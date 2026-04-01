@@ -9,7 +9,11 @@
    - Implementation summary
    - Bug & Risk report
    - Security hardening strategy
-3. **[ENVIRONMENT_VARIABLES.md](ENVIRONMENT_VARIABLES.md)** ⭐ REQUIRED FOR SETUP
+3. **[LANDING_PAGE_REDESIGN_PROCESS.md](LANDING_PAGE_REDESIGN_PROCESS.md)** ⭐ NEW: Redesign Overview
+   - Visual & UX transformation summary
+   - Architectural & design choices
+   - Implementation details
+4. **[ENVIRONMENT_VARIABLES.md](ENVIRONMENT_VARIABLES.md)** ⭐ REQUIRED FOR SETUP
    - Complete environment variable reference
    - Required vs optional for each service
    - Security best practices
