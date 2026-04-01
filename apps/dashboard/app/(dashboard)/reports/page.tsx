@@ -62,13 +62,23 @@ export default async function ReportsPage() {
                 </td>
                 <td style={{ padding: '1rem', textAlign: 'right' }}>
                   {report.status === ReportJobStatus.Generated && (
-                    <a 
-                      href={`/api/download/${report.id}`} 
-                      download 
-                      style={{ color: '#0d6efd', textDecoration: 'none', fontWeight: 500 }}
-                    >
-                      Download CSV
-                    </a>
+                    <div style={{ display: 'inline-flex', gap: '0.75rem', alignItems: 'center' }}>
+                      <a 
+                        href={`/download/${report.id}?format=csv`} 
+                        download 
+                        style={{ color: '#0d6efd', textDecoration: 'none', fontWeight: 500 }}
+                      >
+                        Download CSV
+                      </a>
+                      <span style={{ color: '#555' }}>·</span>
+                      <a
+                         href={`/download/${report.id}?format=xlsx`}
+                        download
+                        style={{ color: '#0d6efd', textDecoration: 'none', fontWeight: 500 }}
+                      >
+                        Download Excel
+                      </a>
+                    </div>
                   )}
                 </td>
               </tr>

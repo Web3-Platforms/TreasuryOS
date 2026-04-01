@@ -4,13 +4,14 @@ import type { WalletRecord } from '@treasuryos/types';
 import Link from 'next/link';
 import { WalletReviewActions } from '@/components/wallet-review-actions';
 
-export default async function WalletDetailPage({ params }: { params: { id: string } }) {
+export default async function WalletDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   let wallet: WalletRecord | null = null;
   
   try {
-    wallet = await fetchApi<WalletRecord>(`wallets/${params.id}`);
+    wallet = await fetchApi<WalletRecord>(`wallets/${id}`);
   } catch (error) {
-    console.error(`Failed to load wallet ${params.id}:`, error);
+    console.error(`Failed to load wallet ${id}:`, error);
   }
 
   if (!wallet) {

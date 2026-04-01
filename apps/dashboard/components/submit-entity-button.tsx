@@ -4,12 +4,27 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { submitEntityAction } from '../app/actions';
 
-export function SubmitEntityButton({ entityId }: { entityId: string }) {
+type SubmitEntityButtonProps = {
+  entityId: string;
+  enabled?: boolean;
+  disabledDescription?: string;
+};
+
+export function SubmitEntityButton({
+  entityId,
+  enabled = true,
+  disabledDescription,
+}: SubmitEntityButtonProps) {
   const router = useRouter();
   const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const isDisabled = isPending || !enabled;
 
   async function handleAction() {
+    if (!enabled) {
+      return;
+    }
+
     setIsPending(true);
     setError(null);
 
@@ -28,19 +43,24 @@ export function SubmitEntityButton({ entityId }: { entityId: string }) {
     <div>
       <button 
         onClick={handleAction}
-        disabled={isPending}
+        disabled={isDisabled}
         style={{
           padding: '0.75rem 1.5rem',
-          background: isPending ? '#555' : '#0d6efd',
+          background: isDisabled ? '#555' : '#0d6efd',
           color: 'white',
           border: 'none',
           borderRadius: '4px',
           fontWeight: 'bold',
-          cursor: isPending ? 'not-allowed' : 'pointer'
+          cursor: isDisabled ? 'not-allowed' : 'pointer'
         }}
       >
-        {isPending ? 'Submitting...' : 'Submit to Sumsub KYC'}
+        {!enabled ? 'Sumsub KYC coming soon' : isPending ? 'Submitting...' : 'Submit to Sumsub KYC'}
       </button>
+      {!enabled && disabledDescription && (
+        <p style={{ color: '#d9a441', marginTop: '0.5rem', fontSize: '0.875rem' }}>
+          {disabledDescription}
+        </p>
+      )}
       {error && (
         <p style={{ color: '#ff4d4f', marginTop: '0.5rem', fontSize: '0.875rem' }}>
           {error}

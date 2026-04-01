@@ -4,13 +4,14 @@ import type { ReviewedTransaction } from '@treasuryos/types';
 import Link from 'next/link';
 import { TransactionReviewActions } from '@/components/transaction-review-actions';
 
-export default async function TransactionDetailPage({ params }: { params: { id: string } }) {
+export default async function TransactionDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   let txCase: ReviewedTransaction | null = null;
   
   try {
-    txCase = await fetchApi<ReviewedTransaction>(`transaction-cases/${params.id}`);
+    txCase = await fetchApi<ReviewedTransaction>(`transaction-cases/${id}`);
   } catch (error) {
-    console.error(`Failed to load transaction case ${params.id}:`, error);
+    console.error(`Failed to load transaction case ${id}:`, error);
   }
 
   if (!txCase) {
