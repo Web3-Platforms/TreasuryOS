@@ -5,13 +5,11 @@
 ### Deployment & Configuration
 
 1. **[PRODUCTION_DEPLOYMENT.md](PRODUCTION_DEPLOYMENT.md)** ⭐ START HERE
-   - Overview of all 4 microservices
-   - Production setup checklist
-   - Health check configuration
-   - Error handling features
-   - Troubleshooting guide
-
-2. **[ENVIRONMENT_VARIABLES.md](ENVIRONMENT_VARIABLES.md)** ⭐ REQUIRED FOR SETUP
+2. **[LANDING_PAGE_REPORT.md](LANDING_PAGE_REPORT.md)** ⭐ NEW: Landing Page & Lead Capture Overview
+   - Implementation summary
+   - Bug & Risk report
+   - Security hardening strategy
+3. **[ENVIRONMENT_VARIABLES.md](ENVIRONMENT_VARIABLES.md)** ⭐ REQUIRED FOR SETUP
    - Complete environment variable reference
    - Required vs optional for each service
    - Security best practices
@@ -153,7 +151,7 @@ curl http://localhost:3004/api/health
 - SOLANA_RPC_URL, PROGRAM_ID_WALLET_WHITELIST
 
 **Recommended Optional (6 variables)**
-- Redis, Supabase, Sentry, AWS KMS
+- Redis, Supabase, Sentry, signer configuration
 
 ### KYC Service
 **Required (3 variables)**
