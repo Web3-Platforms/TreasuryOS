@@ -7,6 +7,7 @@ Institutional-grade digital asset treasury and compliance platform built for the
 TreasuryOS bridges traditional institutional controls with decentralized asset management. It features a modular, three-tier architecture providing identity verification, multi-signature governance (via Squads V4), and role-based workflows for institutional onboarding.
 
 ### Core Components
+- **Landing Page (`apps/landing-page`):** Professional high-conversion marketing site and lead capture.
 - **Dashboard (`apps/dashboard`):** Next.js administrative interface for Treasury Managers and Compliance Officers.
 - **API Gateway (`apps/api-gateway`):** NestJS central entry point for all institutional commands, handling RBAC and session management.
 - **KYC Service (`apps/kyc-service`):** Handles identity verification and on-chain compliance registry synchronization.
@@ -42,8 +43,9 @@ npm install
 npm run db:migrate
 
 # Start Services (Monorepo Workspaces)
+npm run dev:landing    # Landing Page (Port 3000)
 npm run dev:api        # API Gateway (Port 3001)
-npm run dev:dashboard  # Dashboard (Port 3000)
+npm run dev:dashboard  # Dashboard (Port 3002)
 npm run dev:kyc        # KYC Service (Port 3002)
 npm run dev:bank       # Bank Adapter (Port 3003)
 npm run dev:reporter   # Reporter (Port 3004)
@@ -76,7 +78,7 @@ npm run lint
     - Cloudflare WAF + mTLS for origin protection in production.
 
 ### Directory Structure
-- `apps/`: Individual microservices.
+- `apps/`: Individual microservices and the `landing-page`.
 - `packages/`: Shared libraries (`sdk`, `types`, `compliance-rules`).
 - `programs/`: Anchor/Rust Solana smart contracts.
 - `infra/`: Infrastructure-as-code and configuration (DB, GCP, K8s).

@@ -25,6 +25,7 @@
     "dev:bank": "npm run dev -w @treasuryos/bank-adapter",
     "dev:reporter": "npm run dev -w @treasuryos/reporter",
     "dev:dashboard": "npm run dev -w @treasuryos/dashboard",
+    "dev:landing": "npm run dev -w @treasuryos/landing-page",
     "seed:registry": "node ./node_modules/tsx/dist/cli.mjs scripts/seed-registry.ts",
     "test": "node ./node_modules/tsx/dist/cli.mjs --tsconfig tsconfig.test.json --test tests/**/*.test.ts",
     "format": "node ./node_modules/prettier/bin/prettier.cjs --write ."
