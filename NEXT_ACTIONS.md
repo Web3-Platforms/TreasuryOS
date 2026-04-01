@@ -6,7 +6,8 @@ This document outlines the strategic roadmap for evolving the TreasuryOS MVP int
 - [x] **Pilot Launch Scope Chosen**: First launch stays KYC-off and preview-only for Solana sync.
 - [x] **Validated Local Baseline**: `npm run typecheck`, `npm test`, and `API_BASE_URL=http://localhost:3001/api npm run build` now pass from the repo root.
 - [x] **Next.js 16 Auth Gate**: Dashboard route protection now lives in `apps/dashboard/proxy.ts`.
-- [x] **Uptime Monitoring**: Scheduled monitoring is active via `.github/workflows/uptime.yml`.
+- [ ] **Push Release Commits**: Push the validated local release-hardening commits to GitHub so deployment/workflow changes are actually active upstream.
+- [ ] **Uptime Monitoring Activation**: `.github/workflows/uptime.yml` is ready locally, but it will not run until the current local commits are pushed to GitHub.
 - [ ] **Cloudflare API DNS**: Route `api.treasuryos.aicustombot.net` to the active Railway service target.
 - [ ] **Sentry Provisioning**: Create/attach the final Sentry project and DSNs, or explicitly waive Sentry for beta launch.
 - [ ] **Production Env Verification**: Reconfirm the final Railway/Vercel/GitHub variables for the selected pilot scope.

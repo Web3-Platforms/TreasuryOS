@@ -15,10 +15,10 @@ Current verified state:
 - Access ready: GitHub, Railway, Vercel, Neon, Upstash, Supabase, Cloudflare, Sentry, Solana CLI, Anchor CLI.
 - Product state: Sumsub user-facing flows are intentionally disabled and shown as coming soon.
 - Code state: the root typecheck/test/build validation now passes with the required dashboard `API_BASE_URL`, and dashboard production deploys now succeed with `apps/dashboard/vercel.json`.
-- Infrastructure state: production DB migrations are applied, Railway API health is green, and `treasuryos.aicustombot.net` is live on Vercel.
-- API domain state: Railway has a valid active custom domain for `api.treasuryos.aicustombot.net`, but Cloudflare still needs to route that hostname to `p623sier.up.railway.app`.
+- Infrastructure state: production DB migrations are applied, Railway API health is green at `https://treasuryosapi-gateway-production.up.railway.app/api/health`, and `treasuryos.aicustombot.net` is live on Vercel.
+- API domain state: `https://api.treasuryos.aicustombot.net/api/health` still fails TLS/Cloudflare routing, so the API custom domain is not launch-ready yet.
 - Launch mitigation state: Vercel production `API_BASE_URL` now points at the healthy Railway service domain so the live dashboard is not blocked by the unfinished API custom-domain route.
-- Observability state: GitHub Actions now has a scheduled uptime workflow that checks the live dashboard and Railway API health.
+- Observability state: `.github/workflows/uptime.yml` is ready locally to check the live dashboard and Railway API health, but it will not be active until the current local commits are pushed to GitHub.
 - Sentry state: application code is wired for Sentry, but no Railway/Vercel DSNs are configured yet because the current Sentry account has no organization/project available to generate them.
 - Security state: production seed-user passwords are rotated to strong 24-character values, the live `app_users` hashes were synced to those rotated credentials, and live admin login is verified against the Railway service URL.
 - Acceptance state: the live smoke suite now passes on the dashboard custom domain and Railway API service URL, including the dashboard `[id]` detail pages after the Next.js 16 params fix was deployed to Vercel production.
@@ -90,12 +90,15 @@ Phase 5 — Launch acceptance and cutover
     - Monitor logs, health checks, and Sentry after release.
 
 Ready-now execution order:
-- `launch-go-live-cutover`
+- `push-release-commits`
+- `finalize-launch-config`
+- `run-final-smoke-pass`
+- `execute-launch-cutover`
 
 Notes:
 - The biggest decision is not technical but scope: whether you want the first live release to be a pilot with KYC/on-chain limits, or a full production launch with Sumsub production and a finalized Solana path.
 - If you want the fastest path to "live", pilot launch is shortest.
 - If you want regulated production launch, Sumsub production credentials and the final Solana path are mandatory gates.
-- The only remaining domain-specific blocker is a Cloudflare DNS change for `api.treasuryos.aicustombot.net` to route traffic to `p623sier.up.railway.app`.
+- The only remaining domain-specific blocker is fixing Cloudflare/TLS routing so `https://api.treasuryos.aicustombot.net/api/health` reaches the live Railway API service.
 - The only remaining observability blocker is Sentry organization/project setup so DSNs can be added to Railway and Vercel.
 - The live smoke suite passed with two expected scope warnings: no wallet/case detail data exists yet in production because KYC and downstream approvals are intentionally disabled for the first launch scope.

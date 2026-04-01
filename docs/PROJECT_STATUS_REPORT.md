@@ -42,9 +42,10 @@ This means:
 - Vercel dashboard deployment path is working
 - Railway API deployment path is working
 - Production database migrations are applied
-- Railway API health is green
-- The dashboard custom domain is live
-- Scheduled uptime monitoring is active through GitHub Actions
+- Railway API health is green at `https://treasuryosapi-gateway-production.up.railway.app/api/health`
+- The dashboard custom domain is live at `https://treasuryos.aicustombot.net`
+- The API custom domain still fails TLS/Cloudflare routing at `https://api.treasuryos.aicustombot.net/api/health`
+- Scheduled uptime monitoring is prepared in `.github/workflows/uptime.yml` and will activate once the current local release commits are pushed to GitHub
 
 ### Code and application state
 
@@ -73,8 +74,9 @@ Those checks now pass together from the repository root.
 
 ### 1. API custom-domain routing
 
-- Railway has the API custom domain configured
-- Cloudflare still needs to route `api.treasuryos.aicustombot.net` to the Railway service target
+- Railway has a healthy direct service URL at `https://treasuryosapi-gateway-production.up.railway.app/api/health`
+- `https://api.treasuryos.aicustombot.net/api/health` currently fails TLS/Cloudflare routing
+- Cloudflare still needs to route `api.treasuryos.aicustombot.net` to the active Railway service target before cutover
 
 ### 2. Sentry project and DSNs
 
@@ -105,8 +107,8 @@ These items are intentionally not part of the first launch:
 
 ## Immediate Recommended Sequence
 
-1. Finalize production configuration and DNS
-2. Confirm observability posture (Sentry DSNs or explicit beta waiver)
-3. Re-run the final live smoke pass
-4. Execute the launch go/no-go review
-5. Cut over and monitor
+1. Push the current local release commits to GitHub
+2. Finalize production configuration and DNS
+3. Confirm observability posture (Sentry DSNs or explicit beta waiver)
+4. Re-run the final live smoke pass
+5. Execute the launch go/no-go review and cut over
