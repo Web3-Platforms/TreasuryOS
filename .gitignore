@@ -55,7 +55,10 @@ temp/
 /tmp/
 *.log
 tsconfig.tsbuildinfo
+/env.txt
+/│
 
 # Ignore large videos
 docs/Videos/
 .vercel
+.env*.local
