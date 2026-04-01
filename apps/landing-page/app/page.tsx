@@ -57,7 +57,7 @@ export default function LandingPage() {
     initial: { opacity: 0, y: 30 },
     whileInView: { opacity: 1, y: 0 },
     viewport: { once: true },
-    transition: { duration: 0.6, ease: "easeOut" }
+    transition: { duration: 0.6 }
   };
 
   return (
@@ -109,7 +109,7 @@ export default function LandingPage() {
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
+            transition={{ duration: 0.8 }}
             className="max-w-5xl mx-auto"
           >
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass border-white/5 text-primary text-[10px] font-black uppercase tracking-[0.3em] mb-12 animate-pulse">
