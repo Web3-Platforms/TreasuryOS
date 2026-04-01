@@ -58,3 +58,4 @@ tsconfig.tsbuildinfo
 
 # Ignore large videos
 docs/Videos/
+.vercel
