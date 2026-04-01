@@ -10,10 +10,11 @@
    - Bug & Risk report
    - Security hardening strategy
 3. **[LANDING_PAGE_REDESIGN_PROCESS.md](LANDING_PAGE_REDESIGN_PROCESS.md)** ⭐ NEW: Redesign Overview
-4. **[LANDING_PAGE_REFINEMENT.md](LANDING_PAGE_REFINEMENT.md)** ⭐ NEW: Refinement & CI/CD Overview
-   - Dynamic layout transformation
-   - GitHub-Vercel CI/CD integration
-5. **[ENVIRONMENT_VARIABLES.md](ENVIRONMENT_VARIABLES.md)** ⭐ REQUIRED FOR SETUP
+4. **[LANDING_PAGE_REFINEMENT.md](LANDING_PAGE_REFINEMENT.md)** ⭐ Refinement & CI/CD Overview
+5. **[LANDING_PAGE_REDESIGN_V3.md](LANDING_PAGE_REDESIGN_V3.md)** ⭐ NEW: V3 Institutional Redesign
+   - Ground-up visual transformation
+   - Bento grid & Obsidian design system
+6. **[ENVIRONMENT_VARIABLES.md](ENVIRONMENT_VARIABLES.md)** ⭐ REQUIRED FOR SETUP
    - Complete environment variable reference
    - Required vs optional for each service
    - Security best practices
