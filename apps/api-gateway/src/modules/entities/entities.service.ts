@@ -4,6 +4,7 @@ import {
   Inject,
   Injectable,
   NotFoundException,
+  ServiceUnavailableException,
 } from '@nestjs/common';
 import {
   canApproveEntity,
@@ -173,6 +174,7 @@ export class EntitiesService {
 
   async submitEntity(entityId: string, actor: AuthenticatedUser) {
     const entity = await this.requireEntity(entityId);
+    this.ensureSumsubEnabled();
 
     if (!(canSubmitEntity(entity.status) || entity.status === EntityStatus.Submitted)) {
       throw new ConflictException('Entity cannot be submitted in its current state');
@@ -300,6 +302,7 @@ export class EntitiesService {
     payload: SumsubWebhookPayload,
     digestMetadata: { digest: string; digestAlg: string },
   ) {
+    this.ensureSumsubEnabled();
     const receivedAt = new Date().toISOString();
     const eventCreatedAt = parseSumsubTimestamp(payload.createdAtMs);
 
@@ -456,6 +459,12 @@ export class EntitiesService {
     if (payload.reviewStatus === 'completed') {
       entity.status = EntityStatus.UnderReview;
       entity.kycStatus = entity.kycStatus === KycStatus.Approved ? entity.kycStatus : KycStatus.UnderReview;
+    }
+  }
+
+  private ensureSumsubEnabled() {
+    if (!this.env.KYC_SUMSUB_ENABLED) {
+      throw new ServiceUnavailableException('Sumsub KYC is coming soon');
     }
   }
 

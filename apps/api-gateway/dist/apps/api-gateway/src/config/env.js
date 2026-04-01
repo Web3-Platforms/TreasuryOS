@@ -50,6 +50,7 @@ const envSchema = z.object({
     // ── CORS ─────────────────────────────────────────────────────
     FRONTEND_URL: z.string().optional(),
     // ── KYC ──────────────────────────────────────────────────────
+    KYC_SUMSUB_ENABLED: stringBooleanSchema.default(false),
     SUMSUB_LEVEL_NAME: z.string().min(1).default('basic-kyc-level'),
     SUMSUB_APP_TOKEN: z.string().optional(),
     SUMSUB_SECRET_KEY: z.string().optional(),
@@ -57,12 +58,11 @@ const envSchema = z.object({
     // ── Solana ───────────────────────────────────────────────────
     SOLANA_RPC_URL: z.string().url().default('https://api.devnet.solana.com'),
     PROGRAM_ID_WALLET_WHITELIST: z.string().min(32),
-    // Optional in production (Railway has no filesystem keypairs)
+    // Local development can read the Solana authority from a filesystem keypair.
     AUTHORITY_KEYPAIR_PATH: z.string().optional(),
-    SOLANA_SIGNING_MODE: z.enum(['filesystem', 'kms']).default('filesystem'),
-    AWS_KMS_KEY_ID: z.string().optional(),
-    AWS_KMS_PUBLIC_KEY: z.string().optional(),
-    AWS_REGION: z.string().optional(),
+    // Railway can inject the same JSON array used by the Solana CLI keypair file.
+    AUTHORITY_KEYPAIR_JSON: z.string().optional(),
+    SOLANA_SIGNING_MODE: z.enum(['filesystem', 'environment']).default('filesystem'),
     SQUADS_MULTISIG_ENABLED: stringBooleanSchema.default(false),
     SQUADS_MULTISIG_ADDRESS: z.string().optional(),
     SOLANA_SYNC_ENABLED: stringBooleanSchema.default(false),

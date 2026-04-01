@@ -27,6 +27,7 @@ declare const envSchema: z.ZodObject<{
     UPSTASH_REDIS_REST_URL: z.ZodOptional<z.ZodString>;
     UPSTASH_REDIS_REST_TOKEN: z.ZodOptional<z.ZodString>;
     FRONTEND_URL: z.ZodOptional<z.ZodString>;
+    KYC_SUMSUB_ENABLED: z.ZodDefault<z.ZodPipe<z.ZodTransform<unknown, unknown>, z.ZodBoolean>>;
     SUMSUB_LEVEL_NAME: z.ZodDefault<z.ZodString>;
     SUMSUB_APP_TOKEN: z.ZodOptional<z.ZodString>;
     SUMSUB_SECRET_KEY: z.ZodOptional<z.ZodString>;
@@ -34,13 +35,11 @@ declare const envSchema: z.ZodObject<{
     SOLANA_RPC_URL: z.ZodDefault<z.ZodString>;
     PROGRAM_ID_WALLET_WHITELIST: z.ZodString;
     AUTHORITY_KEYPAIR_PATH: z.ZodOptional<z.ZodString>;
+    AUTHORITY_KEYPAIR_JSON: z.ZodOptional<z.ZodString>;
     SOLANA_SIGNING_MODE: z.ZodDefault<z.ZodEnum<{
         filesystem: "filesystem";
-        kms: "kms";
+        environment: "environment";
     }>>;
-    AWS_KMS_KEY_ID: z.ZodOptional<z.ZodString>;
-    AWS_KMS_PUBLIC_KEY: z.ZodOptional<z.ZodString>;
-    AWS_REGION: z.ZodOptional<z.ZodString>;
     SQUADS_MULTISIG_ENABLED: z.ZodDefault<z.ZodPipe<z.ZodTransform<unknown, unknown>, z.ZodBoolean>>;
     SQUADS_MULTISIG_ADDRESS: z.ZodOptional<z.ZodString>;
     SOLANA_SYNC_ENABLED: z.ZodDefault<z.ZodPipe<z.ZodTransform<unknown, unknown>, z.ZodBoolean>>;

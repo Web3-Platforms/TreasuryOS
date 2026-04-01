@@ -17,6 +17,7 @@ import { UserStatus } from '@treasuryos/types';
 import { verifyPassword } from '../../common/passwords.js';
 import { loadApiGatewayEnv } from '../../config/env.js';
 import { AuditService } from '../audit/audit.service.js';
+import { DatabaseService } from '../database/database.service.js';
 import { RedisQueueService } from '../platform/redis-queue.service.js';
 import { UsersRepository } from './users.repository.js';
 const loginSchema = z.object({
@@ -25,15 +26,18 @@ const loginSchema = z.object({
 });
 let AuthService = class AuthService {
     usersRepository;
+    databaseService;
     auditService;
     queueService;
-    constructor(usersRepository, auditService, queueService) {
+    constructor(usersRepository, databaseService, auditService, queueService) {
         this.usersRepository = usersRepository;
+        this.databaseService = databaseService;
         this.auditService = auditService;
         this.queueService = queueService;
     }
     async login(input, context) {
         const credentials = loginSchema.parse(input);
+        await this.databaseService.ensureSeedUsers();
         const user = await this.usersRepository.findByEmail(credentials.email);
         if (!user || user.status !== UserStatus.Active) {
             await this.auditService.record({
@@ -94,9 +98,11 @@ let AuthService = class AuthService {
 AuthService = __decorate([
     Injectable(),
     __param(0, Inject(UsersRepository)),
-    __param(1, Inject(AuditService)),
-    __param(2, Inject(RedisQueueService)),
+    __param(1, Inject(DatabaseService)),
+    __param(2, Inject(AuditService)),
+    __param(3, Inject(RedisQueueService)),
     __metadata("design:paramtypes", [UsersRepository,
+        DatabaseService,
         AuditService,
         RedisQueueService])
 ], AuthService);

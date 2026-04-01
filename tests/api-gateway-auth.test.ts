@@ -18,6 +18,7 @@ import { Pool } from 'pg';
 
 import { AppModule } from '../apps/api-gateway/src/app.module.js';
 import { AuthService } from '../apps/api-gateway/src/modules/auth/auth.service.js';
+import { DatabaseService } from '../apps/api-gateway/src/modules/database/database.service.js';
 import { WalletSyncService } from '../apps/api-gateway/src/modules/wallets/wallet-sync.service.js';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -27,7 +28,11 @@ const TEST_SUPABASE_JWT_SECRET = 'test-supabase-jwt-secret-that-is-32-chars!!';
 
 function withApiEnv(overrides: Record<string, string> = {}) {
   const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'treasuryos-auth-'));
+  const authorityKeypairPath = path.join(tempRoot, 'id.json');
   const originalEnv = { ...process.env };
+  const authorityKeypair = Keypair.generate();
+
+  fs.writeFileSync(authorityKeypairPath, JSON.stringify(Array.from(authorityKeypair.secretKey)));
 
   Object.assign(process.env, {
     NODE_ENV: 'test',
@@ -46,16 +51,19 @@ function withApiEnv(overrides: Record<string, string> = {}) {
     DEFAULT_AUDITOR_EMAIL: 'auditor@treasuryos.local',
     DEFAULT_AUDITOR_PASSWORD: 'change-me-auditor',
     DATABASE_URL: 'postgresql://postgres:postgres@localhost:5432/treasury_os',
+    DATABASE_SSL: 'false',
     REDIS_URL: 'redis://127.0.0.1:6399',
     REDIS_QUEUE_ENABLED: 'false',
     REDIS_QUEUE_NAME: 'treasuryos:test-events',
+    KYC_SUMSUB_ENABLED: 'false',
     SUMSUB_APP_TOKEN: 'sumsub-app-token',
     SUMSUB_SECRET_KEY: 'sumsub-secret-key',
     SUMSUB_LEVEL_NAME: 'basic-kyc-level',
     SUMSUB_WEBHOOK_SECRET: 'sumsub-webhook-secret',
     SOLANA_RPC_URL: 'https://api.devnet.solana.com',
     PROGRAM_ID_WALLET_WHITELIST: 'FXFMG4hzBcuRu33mVXyTHESH7FnsmUD6Fajr17FugbRt',
-    AUTHORITY_KEYPAIR_PATH: path.join(tempRoot, 'id.json'),
+    AUTHORITY_KEYPAIR_PATH: authorityKeypairPath,
+    SOLANA_SIGNING_MODE: 'filesystem',
     SOLANA_SYNC_ENABLED: 'false',
     NEXT_PUBLIC_API_BASE_URL: 'http://localhost:3001',
     SUPABASE_JWT_SECRET: TEST_SUPABASE_JWT_SECRET,
@@ -83,6 +91,7 @@ async function bootstrapApiApp() {
   });
   app.setGlobalPrefix('api');
   await app.listen(0);
+  await app.get(DatabaseService).ensureSeedUsers();
 
   const address = app.getHttpServer().address() as AddressInfo;
   return {
@@ -91,10 +100,6 @@ async function bootstrapApiApp() {
   };
 }
 
-/**
- * Validates credentials via the login endpoint and returns a Supabase-compatible
- * JWT signed with the test secret for use in subsequent API calls.
- */
 async function login(baseUrl: string, email: string, password: string) {
   const response = await fetch(`${baseUrl}/auth/login`, {
     method: 'POST',
@@ -105,12 +110,13 @@ async function login(baseUrl: string, email: string, password: string) {
   });
 
   assert.equal(response.status, 200);
-  const data = await response.json();
+  const data = await response.json() as { accessToken?: string; user?: { id: string; email: string } };
+  assert.equal(typeof data.user?.id, 'string');
+  assert.equal(typeof data.user?.email, 'string');
 
-  // Generate a Supabase-compatible JWT signed with the test secret
   const accessToken = jwt.sign(
-    { sub: data.user.id, email: data.user.email },
-    TEST_SUPABASE_JWT_SECRET,
+    { sub: data.user!.id, email: data.user!.email },
+    process.env.AUTH_TOKEN_SECRET!,
     { expiresIn: '1h' },
   );
 
@@ -145,16 +151,17 @@ async function resetDatabase() {
     await pool.query(
       `
         truncate table
+          auth_sessions,
           audit_events,
           provider_webhooks,
           report_jobs,
           transaction_cases,
           wallets,
-          entities
+          entities,
+          app_users
         restart identity cascade
       `,
     );
-    await pool.query('delete from app_users');
   } finally {
     await pool.end();
   }
@@ -197,8 +204,62 @@ test('auth service validates credentials and returns user info', async () => {
   }
 });
 
-test('rbac, onboarding, wallet governance, transaction review, and reporting work end to end', async () => {
+test('entity submission returns service unavailable when Sumsub KYC is disabled', async () => {
   const fixture = withApiEnv();
+  let app: Awaited<ReturnType<typeof bootstrapApiApp>>['app'] | undefined;
+
+  try {
+    await resetDatabase();
+    const started = await bootstrapApiApp();
+    app = started.app;
+
+    const complianceLogin = await login(started.baseUrl, 'compliance@treasuryos.local', 'change-me-compliance');
+
+    const createEntityResponse = await fetch(`${started.baseUrl}/entities`, {
+      method: 'POST',
+      headers: {
+        authorization: `Bearer ${complianceLogin.accessToken}`,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        legalName: 'Sumsub Disabled GmbH',
+        jurisdiction: 'EU',
+        riskLevel: 'medium',
+      }),
+    });
+    assert.equal(createEntityResponse.status, 201);
+    const createdEntity = await createEntityResponse.json();
+
+    const submitEntityResponse = await fetch(`${started.baseUrl}/entities/${createdEntity.id}/submit`, {
+      method: 'POST',
+      headers: {
+        authorization: `Bearer ${complianceLogin.accessToken}`,
+      },
+    });
+    assert.equal(submitEntityResponse.status, 503);
+    const submitEntityError = await submitEntityResponse.json() as { message?: string | string[] };
+    assert.match(String(submitEntityError.message), /coming soon/i);
+
+    const entityAfterFailedSubmitResponse = await fetch(`${started.baseUrl}/entities/${createdEntity.id}`, {
+      headers: {
+        authorization: `Bearer ${complianceLogin.accessToken}`,
+      },
+    });
+    assert.equal(entityAfterFailedSubmitResponse.status, 200);
+    const entityAfterFailedSubmit = await entityAfterFailedSubmitResponse.json();
+    assert.equal(entityAfterFailedSubmit.status, 'draft');
+    assert.equal(entityAfterFailedSubmit.kycApplicantId, undefined);
+  } finally {
+    if (app) {
+      await app.close();
+    }
+
+    fixture.restore();
+  }
+});
+
+test('rbac, onboarding, wallet governance, transaction review, and reporting work end to end when Sumsub is enabled', async () => {
+  const fixture = withApiEnv({ KYC_SUMSUB_ENABLED: 'true' });
   const originalFetch = globalThis.fetch;
   const sumsubWebhookSecret = process.env.SUMSUB_WEBHOOK_SECRET!;
   let app: Awaited<ReturnType<typeof bootstrapApiApp>>['app'] | undefined;

@@ -1,8 +1,8 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { Connection, PublicKey, TransactionMessage, TransactionInstruction, Keypair } from '@solana/web3.js';
+import { Connection, PublicKey, TransactionMessage, TransactionInstruction } from '@solana/web3.js';
 import * as multisig from "@sqds/multisig";
 import { loadApiGatewayEnv } from '../../config/env.js';
-import { KmsService } from '../security/kms.service.js';
+import { AuthoritySignerService } from '../security/authority-signer.service.js';
 
 @Injectable()
 export class SquadsService implements OnModuleInit {
@@ -10,7 +10,7 @@ export class SquadsService implements OnModuleInit {
   private connection: Connection;
   private multisigPda: PublicKey | null = null;
 
-  constructor(private readonly kmsService: KmsService) {
+  constructor(private readonly authoritySignerService: AuthoritySignerService) {
     const env = loadApiGatewayEnv();
     this.connection = new Connection(env.SOLANA_RPC_URL, 'confirmed');
   }
@@ -103,7 +103,7 @@ export class SquadsService implements OnModuleInit {
    * Use this instead of executing instructions directly via a single keypair.
    */
   async createTransactionProposal(instruction: TransactionInstruction): Promise<bigint> {
-    return this.proposeTransaction([instruction], this.kmsService.getSigner());
+    return this.proposeTransaction([instruction], this.authoritySignerService.getSigner());
   }
 
   isEnabled(): boolean {

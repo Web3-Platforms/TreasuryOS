@@ -5,14 +5,14 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 import { Module, Global } from '@nestjs/common';
-import { KmsService } from './kms.service.js';
+import { AuthoritySignerService } from './authority-signer.service.js';
 let SecurityModule = class SecurityModule {
 };
 SecurityModule = __decorate([
     Global(),
     Module({
-        providers: [KmsService],
-        exports: [KmsService],
+        providers: [AuthoritySignerService],
+        exports: [AuthoritySignerService],
     })
 ], SecurityModule);
 export { SecurityModule };

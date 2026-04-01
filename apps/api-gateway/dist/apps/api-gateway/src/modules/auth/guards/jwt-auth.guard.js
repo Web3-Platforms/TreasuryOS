@@ -7,8 +7,11 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
 var JwtAuthGuard_1;
-import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Reflector } from '@nestjs/core';
 import { IS_PUBLIC_ROUTE } from '../public.decorator.js';
@@ -63,6 +66,7 @@ let JwtAuthGuard = JwtAuthGuard_1 = class JwtAuthGuard extends AuthGuard('supaba
 };
 JwtAuthGuard = JwtAuthGuard_1 = __decorate([
     Injectable(),
+    __param(0, Inject(Reflector)),
     __metadata("design:paramtypes", [Reflector])
 ], JwtAuthGuard);
 export { JwtAuthGuard };

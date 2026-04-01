@@ -1,4 +1,4 @@
-import { Controller, Get, ServiceUnavailableException } from '@nestjs/common';
+import { Controller, Get, Inject, ServiceUnavailableException } from '@nestjs/common';
 
 import { buildInfo } from '../../common/build-info.js';
 import { loadApiGatewayEnv } from '../../config/env.js';
@@ -7,7 +7,7 @@ import { DatabaseService } from '../database/database.service.js';
 
 @Controller('health')
 export class HealthController {
-  constructor(private readonly databaseService: DatabaseService) {}
+  constructor(@Inject(DatabaseService) private readonly databaseService: DatabaseService) {}
 
   @Public()
   @Get()
@@ -16,10 +16,7 @@ export class HealthController {
 
     try {
       // Test database connectivity
-      await this.databaseService.pool.query('SELECT 1');
-      
-      // Initialize seed users on first request if not already done
-      await this.databaseService.ensureSeedUsers();
+      await this.databaseService.getPool().query('SELECT 1');
     } catch (error) {
       throw new ServiceUnavailableException({
         status: 'error',

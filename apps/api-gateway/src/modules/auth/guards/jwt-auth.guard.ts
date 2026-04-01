@@ -1,4 +1,4 @@
-import { Injectable, ExecutionContext, UnauthorizedException, Logger } from '@nestjs/common';
+import { ExecutionContext, Inject, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Reflector } from '@nestjs/core';
 import { IS_PUBLIC_ROUTE } from '../public.decorator.js';
@@ -16,7 +16,7 @@ const PUBLIC_ROUTES = [
 export class JwtAuthGuard extends AuthGuard('supabase') {
   private readonly logger = new Logger(JwtAuthGuard.name);
 
-  constructor(private readonly reflector: Reflector) {
+  constructor(@Inject(Reflector) private readonly reflector: Reflector) {
     super();
   }
 

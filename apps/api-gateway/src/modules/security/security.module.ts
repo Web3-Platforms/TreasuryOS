@@ -1,9 +1,9 @@
 import { Module, Global } from '@nestjs/common';
-import { KmsService } from './kms.service.js';
+import { AuthoritySignerService } from './authority-signer.service.js';
 
 @Global()
 @Module({
-  providers: [KmsService],
-  exports: [KmsService],
+  providers: [AuthoritySignerService],
+  exports: [AuthoritySignerService],
 })
 export class SecurityModule {}

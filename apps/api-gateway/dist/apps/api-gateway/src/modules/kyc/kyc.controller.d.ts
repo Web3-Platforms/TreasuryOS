@@ -5,6 +5,7 @@ export declare class KycController {
     private readonly sumsubService;
     private readonly entitiesService;
     private readonly auditService;
+    private readonly env;
     constructor(sumsubService: SumsubService, entitiesService: EntitiesService, auditService: AuditService);
     handleSumsubWebhook(rawBody: Buffer | undefined, headers: Record<string, string | string[] | undefined>): Promise<{
         duplicate: boolean;

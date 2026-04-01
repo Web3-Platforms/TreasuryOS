@@ -1,10 +1,10 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { WalletWhitelistClient, isValidSolanaAddress, loadAuthorityKeypair } from '@treasuryos/sdk';
+import { WalletWhitelistClient, isValidSolanaAddress } from '@treasuryos/sdk';
 import { ChainSyncStatus, type EntityRecord, type WalletRecord } from '@treasuryos/types';
-import { Connection, PublicKey, Transaction, sendAndConfirmTransaction } from '@solana/web3.js';
+import { Connection, Transaction, sendAndConfirmTransaction } from '@solana/web3.js';
 
 import { loadApiGatewayEnv } from '../../config/env.js';
-import { KmsService } from '../security/kms.service.js';
+import { AuthoritySignerService } from '../security/authority-signer.service.js';
 import { SquadsService } from '../governance/squads.service.js';
 
 export type WalletSyncOutcome = {
@@ -20,8 +20,8 @@ export class WalletSyncService {
   private readonly env = loadApiGatewayEnv();
 
   constructor(
-    @Inject(KmsService)
-    private readonly kmsService: KmsService,
+    @Inject(AuthoritySignerService)
+    private readonly authoritySignerService: AuthoritySignerService,
     @Inject(SquadsService)
     private readonly squadsService: SquadsService,
   ) {}
@@ -51,26 +51,8 @@ export class WalletSyncService {
 
     try {
       const client = this.createClient();
-      
-      // Determine authority public key and signer
-      let authorityPubkey: PublicKey;
-      let authoritySigner: any = null;
-
-      if (this.env.SOLANA_SIGNING_MODE === 'kms') {
-        if (!this.env.AWS_KMS_PUBLIC_KEY) {
-          throw new Error('AWS_KMS_PUBLIC_KEY is required when SOLANA_SIGNING_MODE is set to kms');
-        }
-        authorityPubkey = new PublicKey(this.env.AWS_KMS_PUBLIC_KEY);
-        authoritySigner = this.kmsService.getSigner();
-        if (!authoritySigner) throw new Error('KMS Signer not initialized');
-      } else {
-        if (!this.env.AUTHORITY_KEYPAIR_PATH) {
-          throw new Error('AUTHORITY_KEYPAIR_PATH is required when SOLANA_SIGNING_MODE is filesystem');
-        }
-        const authorityKeypair = loadAuthorityKeypair(this.env.AUTHORITY_KEYPAIR_PATH);
-        authorityPubkey = authorityKeypair.publicKey;
-        authoritySigner = authorityKeypair;
-      }
+      const authoritySigner = this.authoritySignerService.getSigner();
+      const authorityPubkey = authoritySigner.publicKey;
 
       // Build the instruction
       const { whitelistEntry, instruction } = client.buildAddWalletInstruction(
@@ -93,19 +75,12 @@ export class WalletSyncService {
       const transaction = new Transaction().add(instruction);
       const connection = new Connection(this.env.SOLANA_RPC_URL, 'confirmed');
 
-      let signature: string;
-      if (this.env.SOLANA_SIGNING_MODE === 'kms') {
-        const [signedTx] = await this.kmsService.signTransactions([transaction]);
-        signature = await connection.sendRawTransaction(signedTx.serialize());
-        await connection.confirmTransaction(signature, 'confirmed');
-      } else {
-        signature = await sendAndConfirmTransaction(
-          connection,
-          transaction,
-          [authoritySigner],
-          { commitment: 'confirmed' },
-        );
-      }
+      const signature = await sendAndConfirmTransaction(
+        connection,
+        transaction,
+        [authoritySigner],
+        { commitment: 'confirmed' },
+      );
 
       return {
         chainSyncStatus: ChainSyncStatus.Sent,

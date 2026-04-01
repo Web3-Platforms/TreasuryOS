@@ -106,6 +106,10 @@ export function isValidSolanaAddress(value: string) {
 export function loadAuthorityKeypair(keypairPath: string) {
   const resolvedPath = expandHome(keypairPath);
   const contents = fs.readFileSync(resolvedPath, 'utf8');
+  return loadAuthorityKeypairFromJson(contents);
+}
+
+export function loadAuthorityKeypairFromJson(contents: string) {
   const secretKey = Uint8Array.from(JSON.parse(contents));
   return Keypair.fromSecretKey(secretKey);
 }

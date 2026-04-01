@@ -1,12 +1,12 @@
 import { OnModuleInit } from '@nestjs/common';
 import { TransactionInstruction } from '@solana/web3.js';
-import { KmsService } from '../security/kms.service.js';
+import { AuthoritySignerService } from '../security/authority-signer.service.js';
 export declare class SquadsService implements OnModuleInit {
-    private readonly kmsService;
+    private readonly authoritySignerService;
     private readonly logger;
     private connection;
     private multisigPda;
-    constructor(kmsService: KmsService);
+    constructor(authoritySignerService: AuthoritySignerService);
     onModuleInit(): Promise<void>;
     /**
      * Proposes a transaction to the Squads Multi-Sig vault.

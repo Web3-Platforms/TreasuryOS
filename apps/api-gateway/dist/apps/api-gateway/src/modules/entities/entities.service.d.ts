@@ -34,6 +34,7 @@ export declare class EntitiesService {
         stale: boolean;
     }>;
     private applyWebhookTransition;
+    private ensureSumsubEnabled;
     private requireEntity;
     private requireEntityFromStore;
 }

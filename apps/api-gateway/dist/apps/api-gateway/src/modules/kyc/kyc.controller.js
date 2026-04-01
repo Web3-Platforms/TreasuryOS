@@ -10,7 +10,8 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-import { Controller, Headers, HttpCode, Inject, Post, RawBody, UnauthorizedException, } from '@nestjs/common';
+import { Controller, Headers, HttpCode, Inject, Post, RawBody, ServiceUnavailableException, UnauthorizedException, } from '@nestjs/common';
+import { loadApiGatewayEnv } from '../../config/env.js';
 import { AuditService } from '../audit/audit.service.js';
 import { Public } from '../auth/public.decorator.js';
 import { EntitiesService } from '../entities/entities.service.js';
@@ -19,12 +20,16 @@ let KycController = class KycController {
     sumsubService;
     entitiesService;
     auditService;
+    env = loadApiGatewayEnv();
     constructor(sumsubService, entitiesService, auditService) {
         this.sumsubService = sumsubService;
         this.entitiesService = entitiesService;
         this.auditService = auditService;
     }
     async handleSumsubWebhook(rawBody, headers) {
+        if (!this.env.KYC_SUMSUB_ENABLED) {
+            throw new ServiceUnavailableException('Sumsub KYC is coming soon');
+        }
         try {
             const verifiedWebhook = this.sumsubService.verifyWebhook(rawBody, headers);
             const result = await this.entitiesService.applyVerifiedKycWebhook(verifiedWebhook.payload, {

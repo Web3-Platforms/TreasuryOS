@@ -10,7 +10,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-import { BadRequestException, ConflictException, Inject, Injectable, NotFoundException, } from '@nestjs/common';
+import { BadRequestException, ConflictException, Inject, Injectable, NotFoundException, ServiceUnavailableException, } from '@nestjs/common';
 import { canApproveEntity, canReviewEntity, canSubmitEntity, } from '@treasuryos/compliance-rules';
 import { EntityStatus, Jurisdiction, KycStatus, RiskLevel, } from '@treasuryos/types';
 import { z } from 'zod';
@@ -129,6 +129,7 @@ let EntitiesService = class EntitiesService {
     }
     async submitEntity(entityId, actor) {
         const entity = await this.requireEntity(entityId);
+        this.ensureSumsubEnabled();
         if (!(canSubmitEntity(entity.status) || entity.status === EntityStatus.Submitted)) {
             throw new ConflictException('Entity cannot be submitted in its current state');
         }
@@ -232,6 +233,7 @@ let EntitiesService = class EntitiesService {
         return updatedEntity;
     }
     async applyVerifiedKycWebhook(payload, digestMetadata) {
+        this.ensureSumsubEnabled();
         const receivedAt = new Date().toISOString();
         const eventCreatedAt = parseSumsubTimestamp(payload.createdAtMs);
         const result = await this.database.withTransaction(async (client) => {
@@ -360,6 +362,11 @@ let EntitiesService = class EntitiesService {
         if (payload.reviewStatus === 'completed') {
             entity.status = EntityStatus.UnderReview;
             entity.kycStatus = entity.kycStatus === KycStatus.Approved ? entity.kycStatus : KycStatus.UnderReview;
+        }
+    }
+    ensureSumsubEnabled() {
+        if (!this.env.KYC_SUMSUB_ENABLED) {
+            throw new ServiceUnavailableException('Sumsub KYC is coming soon');
         }
     }
     async requireEntity(entityId) {

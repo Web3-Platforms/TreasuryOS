@@ -7,7 +7,10 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-import { Controller, Get, ServiceUnavailableException } from '@nestjs/common';
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+import { Controller, Get, Inject, ServiceUnavailableException } from '@nestjs/common';
 import { buildInfo } from '../../common/build-info.js';
 import { loadApiGatewayEnv } from '../../config/env.js';
 import { Public } from '../auth/public.decorator.js';
@@ -21,9 +24,7 @@ let HealthController = class HealthController {
         const env = loadApiGatewayEnv();
         try {
             // Test database connectivity
-            await this.databaseService.pool.query('SELECT 1');
-            // Initialize seed users on first request if not already done
-            await this.databaseService.ensureSeedUsers();
+            await this.databaseService.getPool().query('SELECT 1');
         }
         catch (error) {
             throw new ServiceUnavailableException({
@@ -54,6 +55,7 @@ __decorate([
 ], HealthController.prototype, "getHealth", null);
 HealthController = __decorate([
     Controller('health'),
+    __param(0, Inject(DatabaseService)),
     __metadata("design:paramtypes", [DatabaseService])
 ], HealthController);
 export { HealthController };

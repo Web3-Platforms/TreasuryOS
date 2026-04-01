@@ -8,6 +8,7 @@ import { UserStatus } from '@treasuryos/types';
 import { verifyPassword } from '../../common/passwords.js';
 import { loadApiGatewayEnv } from '../../config/env.js';
 import { AuditService } from '../audit/audit.service.js';
+import { DatabaseService } from '../database/database.service.js';
 import { RedisQueueService } from '../platform/redis-queue.service.js';
 import { UsersRepository } from './users.repository.js';
 import { LoginDto } from './dto/login.dto.js';
@@ -27,6 +28,8 @@ export class AuthService {
   constructor(
     @Inject(UsersRepository)
     private readonly usersRepository: UsersRepository,
+    @Inject(DatabaseService)
+    private readonly databaseService: DatabaseService,
     @Inject(AuditService)
     private readonly auditService: AuditService,
     @Inject(RedisQueueService)
@@ -35,6 +38,9 @@ export class AuthService {
 
   async login(input: LoginDto, context: RequestContext) {
     const credentials = loginSchema.parse(input);
+
+    await this.databaseService.ensureSeedUsers();
+
     const user = await this.usersRepository.findByEmail(credentials.email);
 
     if (!user || user.status !== UserStatus.Active) {

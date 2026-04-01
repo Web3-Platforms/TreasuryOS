@@ -1,5 +1,5 @@
 import { ChainSyncStatus, type EntityRecord, type WalletRecord } from '@treasuryos/types';
-import { KmsService } from '../security/kms.service.js';
+import { AuthoritySignerService } from '../security/authority-signer.service.js';
 import { SquadsService } from '../governance/squads.service.js';
 export type WalletSyncOutcome = {
     chainSyncStatus: ChainSyncStatus;
@@ -8,11 +8,11 @@ export type WalletSyncOutcome = {
     whitelistEntry: string;
 };
 export declare class WalletSyncService {
-    private readonly kmsService;
+    private readonly authoritySignerService;
     private readonly squadsService;
     private readonly logger;
     private readonly env;
-    constructor(kmsService: KmsService, squadsService: SquadsService);
+    constructor(authoritySignerService: AuthoritySignerService, squadsService: SquadsService);
     createPreview(institutionId: string, walletAddress: string): {
         whitelistEntry: string;
     };

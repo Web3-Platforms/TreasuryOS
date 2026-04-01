@@ -16,3 +16,4 @@ export declare class WalletWhitelistClient {
 }
 export declare function isValidSolanaAddress(value: string): boolean;
 export declare function loadAuthorityKeypair(keypairPath: string): Keypair;
+export declare function loadAuthorityKeypairFromJson(contents: string): Keypair;

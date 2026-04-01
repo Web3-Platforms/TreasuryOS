@@ -12,14 +12,14 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Connection, PublicKey, TransactionMessage } from '@solana/web3.js';
 import * as multisig from "@sqds/multisig";
 import { loadApiGatewayEnv } from '../../config/env.js';
-import { KmsService } from '../security/kms.service.js';
+import { AuthoritySignerService } from '../security/authority-signer.service.js';
 let SquadsService = SquadsService_1 = class SquadsService {
-    kmsService;
+    authoritySignerService;
     logger = new Logger(SquadsService_1.name);
     connection;
     multisigPda = null;
-    constructor(kmsService) {
-        this.kmsService = kmsService;
+    constructor(authoritySignerService) {
+        this.authoritySignerService = authoritySignerService;
         const env = loadApiGatewayEnv();
         this.connection = new Connection(env.SOLANA_RPC_URL, 'confirmed');
     }
@@ -95,7 +95,7 @@ let SquadsService = SquadsService_1 = class SquadsService {
      * Use this instead of executing instructions directly via a single keypair.
      */
     async createTransactionProposal(instruction) {
-        return this.proposeTransaction([instruction], this.kmsService.getSigner());
+        return this.proposeTransaction([instruction], this.authoritySignerService.getSigner());
     }
     isEnabled() {
         return !!this.multisigPda;
@@ -103,7 +103,7 @@ let SquadsService = SquadsService_1 = class SquadsService {
 };
 SquadsService = SquadsService_1 = __decorate([
     Injectable(),
-    __metadata("design:paramtypes", [KmsService])
+    __metadata("design:paramtypes", [AuthoritySignerService])
 ], SquadsService);
 export { SquadsService };
 //# sourceMappingURL=squads.service.js.map
