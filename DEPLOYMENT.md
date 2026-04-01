@@ -184,6 +184,23 @@ Expected response:
 }
 ```
 
+### Step 5 — GitHub Actions CD Secrets
+
+The repository includes `.github/workflows/cd.yml`, which deploys the API
+Gateway on pushes to `main` and runs Neon migrations when SQL files change.
+
+Add these repository-level GitHub Actions secrets before relying on automated
+deployments:
+
+| Secret | Used by | Purpose |
+|---|---|---|
+| `RAILWAY_TOKEN` | `deploy-api` | Authenticates `railway up --service api-gateway --detach` |
+| `NEON_DATABASE_URL` | `migrate-neon` | Runs `npm run db:migrate` and `npm run db:migrate:check` when migrations change |
+
+If `RAILWAY_TOKEN` is missing or invalid, the deploy job fails before Railway
+deployment starts. If `NEON_DATABASE_URL` is missing, migration verification
+fails on any push that changes `infra/db/migrations/*`.
+
 ---
 
 ## Vercel — Dashboard

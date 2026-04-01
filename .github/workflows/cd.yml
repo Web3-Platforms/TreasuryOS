@@ -19,10 +19,25 @@ jobs:
           node-version: 22
           cache: npm
 
-      - run: npm ci
+      - run: npm ci --include=dev
+
+      - name: Validate Railway deploy secret
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ -z "${RAILWAY_TOKEN:-}" ]; then
+            echo "Missing RAILWAY_TOKEN GitHub Actions secret. Add it in repository Settings -> Secrets and variables -> Actions." >&2
+            exit 1
+          fi
 
       - name: Install Railway CLI
         run: npm install -g @railway/cli
+
+      - name: Verify Railway authentication
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: railway whoami >/dev/null
 
       - name: Deploy to Railway
         env:
@@ -58,10 +73,21 @@ jobs:
           node-version: 22
           cache: npm
 
+      - name: Validate Neon migration secret
+        if: steps.migration-check.outputs.changed != ''
+        env:
+          DATABASE_URL: ${{ secrets.NEON_DATABASE_URL }}
+        run: |
+          set -euo pipefail
+          if [ -z "${DATABASE_URL:-}" ]; then
+            echo "Missing NEON_DATABASE_URL GitHub Actions secret. Add it in repository Settings -> Secrets and variables -> Actions." >&2
+            exit 1
+          fi
+
       - run: sudo apt-get update && sudo apt-get install -y postgresql-client
         if: steps.migration-check.outputs.changed != ''
 
-      - run: npm ci
+      - run: npm ci --include=dev
         if: steps.migration-check.outputs.changed != ''
 
       - name: Run migrations against Neon

@@ -18,7 +18,8 @@ Current verified state:
 - Infrastructure state: production DB migrations are applied, Railway API health is green at `https://treasuryosapi-gateway-production.up.railway.app/api/health`, and `treasuryos.aicustombot.net` is live on Vercel.
 - API domain state: `https://api.treasuryos.aicustombot.net/api/health` still fails TLS/Cloudflare routing, so the API custom domain is not launch-ready yet.
 - Launch mitigation state: Vercel production `API_BASE_URL` now points at the healthy Railway service domain so the live dashboard is not blocked by the unfinished API custom-domain route.
-- Observability state: `.github/workflows/uptime.yml` is ready locally to check the live dashboard and Railway API health, but it will not be active until the current local commits are pushed to GitHub.
+- Observability state: `.github/workflows/uptime.yml` is now active on GitHub and checks the live dashboard plus the Railway API health URL.
+- GitHub CD state: the main-branch deploy workflow is active, but the latest run failed before Railway deploy because the repository does not yet have a working `RAILWAY_TOKEN` Actions secret.
 - Sentry state: application code is wired for Sentry, but no Railway/Vercel DSNs are configured yet because the current Sentry account has no organization/project available to generate them.
 - Security state: production seed-user passwords are rotated to strong 24-character values, the live `app_users` hashes were synced to those rotated credentials, and live admin login is verified against the Railway service URL.
 - Acceptance state: the live smoke suite now passes on the dashboard custom domain and Railway API service URL, including the dashboard `[id]` detail pages after the Next.js 16 params fix was deployed to Vercel production.
@@ -100,5 +101,6 @@ Notes:
 - If you want the fastest path to "live", pilot launch is shortest.
 - If you want regulated production launch, Sumsub production credentials and the final Solana path are mandatory gates.
 - The only remaining domain-specific blocker is fixing Cloudflare/TLS routing so `https://api.treasuryos.aicustombot.net/api/health` reaches the live Railway API service.
+- The GitHub deployment blocker is repository Actions secret setup: `RAILWAY_TOKEN` for Railway deploys and `NEON_DATABASE_URL` for migration runs.
 - The only remaining observability blocker is Sentry organization/project setup so DSNs can be added to Railway and Vercel.
 - The live smoke suite passed with two expected scope warnings: no wallet/case detail data exists yet in production because KYC and downstream approvals are intentionally disabled for the first launch scope.

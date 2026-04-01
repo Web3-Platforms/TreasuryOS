@@ -45,7 +45,8 @@ This means:
 - Railway API health is green at `https://treasuryosapi-gateway-production.up.railway.app/api/health`
 - The dashboard custom domain is live at `https://treasuryos.aicustombot.net`
 - The API custom domain still fails TLS/Cloudflare routing at `https://api.treasuryos.aicustombot.net/api/health`
-- Scheduled uptime monitoring is prepared in `.github/workflows/uptime.yml` and will activate once the current local release commits are pushed to GitHub
+- Scheduled uptime monitoring is active through the `TreasuryOS Uptime` GitHub Actions workflow
+- GitHub CD is active on `main`, but the latest Railway deploy failed because the repository does not yet have a working `RAILWAY_TOKEN` Actions secret
 
 ### Code and application state
 
@@ -83,11 +84,17 @@ Those checks now pass together from the repository root.
 - Application code is wired for Sentry
 - Railway and Vercel DSNs are not fully in place yet because the necessary Sentry organization/project provisioning is still incomplete
 
-### 3. Final live smoke pass
+### 3. GitHub Actions deployment secrets
+
+- `gh secret list -R Web3-Platforms/TreasuryOS` currently reports no repository Actions secrets
+- `.github/workflows/cd.yml` requires `RAILWAY_TOKEN` for Railway deploys and `NEON_DATABASE_URL` for migration runs
+- Until those secrets exist and validate successfully, automated deploys from `main` are not reliable
+
+### 4. Final live smoke pass
 
 The final live smoke pass still needs to be re-run against the chosen pilot-launch scope after configuration is frozen.
 
-### 4. Release cutover
+### 5. Release cutover
 
 The project still needs a final go/no-go review and monitored cutover window.
 
@@ -107,8 +114,7 @@ These items are intentionally not part of the first launch:
 
 ## Immediate Recommended Sequence
 
-1. Push the current local release commits to GitHub
-2. Finalize production configuration and DNS
-3. Confirm observability posture (Sentry DSNs or explicit beta waiver)
-4. Re-run the final live smoke pass
-5. Execute the launch go/no-go review and cut over
+1. Finalize GitHub/CD secrets, production configuration, and DNS
+2. Confirm observability posture (Sentry DSNs or explicit beta waiver)
+3. Re-run the final live smoke pass
+4. Execute the launch go/no-go review and cut over

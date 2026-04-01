@@ -231,6 +231,27 @@ Currently supports:
 
 ---
 
+## 🔐 6. GitHub Actions / Deployment Secrets
+
+These values are configured as repository **Actions secrets** in GitHub, not as
+runtime variables inside Railway or Vercel.
+
+### Required Secrets
+
+```env
+RAILWAY_TOKEN=your-railway-token                 # Required by .github/workflows/cd.yml deploy-api
+NEON_DATABASE_URL=postgresql://...               # Required by .github/workflows/cd.yml migrate-neon
+```
+
+### Notes
+
+- Add them in **GitHub → Repository → Settings → Secrets and variables → Actions**.
+- `RAILWAY_TOKEN` must have access to the target Railway project and service.
+- `NEON_DATABASE_URL` is only used when changes under `infra/db/migrations/`
+  trigger the migration job on `main`.
+
+---
+
 ## 🚀 Railway Deployment Guide
 
 ### How Railway Sets Environment Variables
