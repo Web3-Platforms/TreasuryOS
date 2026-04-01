@@ -4,7 +4,7 @@ Problem:
 - TreasuryOS is close to launch, but it is not fully live-ready yet.
 - Verified platform access is now in place for GitHub, Railway, Vercel, Neon, Upstash, Supabase, Cloudflare, Sentry, and local Solana tooling.
 - Code validation is healthy for `npm run typecheck`, `npm test`, and `API_BASE_URL=http://localhost:3001/api npm run build`.
-- The main remaining gaps are the final Cloudflare traffic record for the API custom domain, Sentry project/DSN provisioning, final production-environment verification, and the final go-live cutover decision.
+- The main remaining gaps are the final Cloudflare traffic record for the API custom domain, the final live smoke pass, and the final go-live cutover decision.
 
 Approach:
 - Treat launch as a gated sequence instead of one big deploy.
@@ -21,7 +21,7 @@ Current verified state:
 - Observability state: `.github/workflows/uptime.yml` is now active on GitHub and checks the live dashboard plus the Railway API health URL.
 - GitHub CD state: the main-branch deploy workflow is active, and run `#87` now succeeds with Railway Project Token auth plus the exact live service target `@treasuryos/api-gateway`. The migration job is also unblocked and currently skips cleanly when no migration files changed.
 - Production config state: GitHub secret presence, Railway API variable names, and the root-linked Vercel dashboard variable names are now verified for the pilot path. The `apps/dashboard/.vercel` link points to a separate stale `dashboard` project and should not be used for production env checks.
-- Sentry state: application code is wired for Sentry, but no Railway/Vercel DSNs are configured yet because the current Sentry account has no organization/project available to generate them.
+- Sentry state: application code is wired for Sentry, and Sentry is explicitly waived for the beta launch. DSN provisioning is deferred until post-beta hardening.
 - Security state: production seed-user passwords are rotated to strong 24-character values, the live `app_users` hashes were synced to those rotated credentials, and live admin login is verified against the Railway service URL.
 - Acceptance state: the live smoke suite now passes on the dashboard custom domain and Railway API service URL, including the dashboard `[id]` detail pages after the Next.js 16 params fix was deployed to Vercel production.
 
@@ -103,5 +103,5 @@ Notes:
 - If you want regulated production launch, Sumsub production credentials and the final Solana path are mandatory gates.
 - The only remaining domain-specific blocker is fixing Cloudflare/TLS routing so `https://api.treasuryos.aicustombot.net/api/health` reaches the live Railway API service.
 - GitHub CD is no longer a launch blocker; the deploy workflow now passes on `main` with the Railway Project Token flow and the exact `@treasuryos/api-gateway` service target.
-- The only remaining observability blocker is Sentry organization/project setup so DSNs can be added to Railway and Vercel.
+- Sentry is not a current launch blocker because it has been explicitly waived for beta and deferred to post-launch hardening.
 - The live smoke suite passed with two expected scope warnings: no wallet/case detail data exists yet in production because KYC and downstream approvals are intentionally disabled for the first launch scope.

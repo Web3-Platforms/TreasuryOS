@@ -10,8 +10,8 @@ This document outlines the strategic roadmap for evolving the TreasuryOS MVP int
 - [x] **Uptime Monitoring Activation**: GitHub Actions now has the active `TreasuryOS Uptime` workflow from `.github/workflows/uptime.yml`.
 - [x] **GitHub CD Verified**: `.github/workflows/cd.yml` now succeeds from `main` with Railway Project Token auth and the exact `@treasuryos/api-gateway` service target.
 - [ ] **Cloudflare API DNS**: Route `api.treasuryos.aicustombot.net` to the active Railway service target.
-- [ ] **Sentry Provisioning**: Create/attach the final Sentry project and DSNs, or explicitly waive Sentry for beta launch.
-- [ ] **Production Env Verification**: Reconfirm the final Railway/Vercel/GitHub variables for the selected pilot scope.
+- [x] **Sentry Beta Waiver**: Sentry is explicitly waived for the beta launch and should be revisited during post-beta hardening.
+- [x] **Production Env Verification**: GitHub secrets, Railway API variable names, and the root Vercel `treasury-os` dashboard variable names are now verified for the pilot scope.
 - [ ] **Final Live Smoke Pass**: Re-run launch smoke checks after config freeze.
 - [ ] **Go/No-Go Cutover**: Execute the monitored release window.
 

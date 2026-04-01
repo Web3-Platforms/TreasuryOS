@@ -48,6 +48,7 @@ This means:
 - Scheduled uptime monitoring is active through the `TreasuryOS Uptime` GitHub Actions workflow
 - GitHub CD is active on `main`, and run `#87` now succeeds with Railway Project Token auth and the exact `@treasuryos/api-gateway` service target
 - Production variable names are now confirmed on Railway for `@treasuryos/api-gateway` and on the root-linked Vercel project `treasury-os`; `apps/dashboard/.vercel` points to a separate stale `dashboard` project with no env vars and should not be used for production checks
+- Sentry is explicitly waived for the beta launch and is no longer treated as a current release blocker
 
 ### Code and application state
 
@@ -80,22 +81,11 @@ Those checks now pass together from the repository root.
 - `https://api.treasuryos.aicustombot.net/api/health` currently fails TLS/Cloudflare routing
 - Cloudflare still needs to route `api.treasuryos.aicustombot.net` to the active Railway service target before cutover
 
-### 2. Sentry project and DSNs
-
-- Application code is wired for Sentry
-- Railway and Vercel DSNs are not fully in place yet because the necessary Sentry organization/project provisioning is still incomplete
-
-### 3. Production environment verification
-
-- GitHub Actions deploys are now working again, and the visible name-only verification pass succeeded for GitHub secrets, Railway API variables, and the root-linked Vercel dashboard project
-- The root-linked Vercel project `treasury-os` is the correct production dashboard project; `apps/dashboard/.vercel` points to a separate `dashboard` project with no environment variables
-- The remaining configuration uncertainty is now mostly about value-level decisions and waivers, not missing key names
-
-### 4. Final live smoke pass
+### 2. Final live smoke pass
 
 The final live smoke pass still needs to be re-run against the chosen pilot-launch scope after configuration is frozen.
 
-### 5. Release cutover
+### 3. Release cutover
 
 The project still needs a final go/no-go review and monitored cutover window.
 
@@ -115,7 +105,6 @@ These items are intentionally not part of the first launch:
 
 ## Immediate Recommended Sequence
 
-1. Finalize production configuration and DNS
-2. Confirm observability posture (Sentry DSNs or explicit beta waiver)
-3. Re-run the final live smoke pass
-4. Execute the launch go/no-go review and cut over
+1. Fix the API custom-domain Cloudflare/TLS route
+2. Re-run the final live smoke pass
+3. Execute the launch go/no-go review and cut over

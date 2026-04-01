@@ -117,10 +117,9 @@ names:
 This audit reduces configuration uncertainty, but it does not fully close the
 launch checklist.
 
-The remaining externally visible blockers are still:
+The remaining externally visible blocker is now:
 
 - Cloudflare/TLS routing for `api.treasuryos.aicustombot.net`
-- Sentry project/DSN provisioning, or an explicit beta-launch waiver
 
 ## Recommendation
 
@@ -130,5 +129,4 @@ pilot path.
 For the next launch step, focus on:
 
 1. fixing the API custom-domain route in Cloudflare
-2. deciding whether Sentry is being provisioned now or explicitly waived for beta
-3. re-running the final live smoke pass after those two decisions are locked
+2. re-running the final live smoke pass after that route is fixed
