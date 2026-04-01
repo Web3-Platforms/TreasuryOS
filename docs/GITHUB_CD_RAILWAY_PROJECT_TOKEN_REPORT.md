@@ -84,3 +84,17 @@ railway up --service '@treasuryos/api-gateway' --detach
 
 This should move the CD workflow past the service lookup error and reveal the
 next true deploy result.
+
+## Final Verification Result
+
+That follow-up fix worked.
+
+GitHub Actions run `#87` (`23871526778`) completed successfully:
+
+- `deploy-api` passed
+- `migrate-neon` was unblocked and skipped cleanly because no migration files changed on that push
+
+This confirms that the GitHub CD path is now correctly configured for:
+
+- Railway Project Token authentication via `RAILWAY_TOKEN`
+- the exact live Railway API service target `@treasuryos/api-gateway`
