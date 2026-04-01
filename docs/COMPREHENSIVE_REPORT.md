@@ -49,7 +49,7 @@ The infrastructure was transitioned into standard serverless and managed cloud o
 - **Devnet Synchronization:** Approved requests interact directly with the Solana Devnet via the `@treasuryos/sdk` to insert public keys into the institutional Whitelist Contract.
 - **Signing Strategies:**
   - **Local/Development:** Read directly from filesystem `~/.config/solana/id.json`.
-  - **Production:** AWS KMS-backed keys (`SOLANA_SIGNING_MODE=kms`), enabling headless and secure chain transaction signatures from bounded API containers without exposing keypairs.
+  - **Deployed Environments:** Read authority key material from Railway-injected `AUTHORITY_KEYPAIR_JSON` (or a mounted keypair file) so the signer stays outside source control.
 
 ### C. Transaction Case Management & Escalations
 - Real-time transaction monitors interface with the system. Triggers identified as high risk are bundled into *Cases*.

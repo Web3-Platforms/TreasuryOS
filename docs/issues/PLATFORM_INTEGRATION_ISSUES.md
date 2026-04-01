@@ -418,23 +418,22 @@ that must be generated before the first production deployment.
    `DEFAULT_*_EMAIL` and `DEFAULT_*_PASSWORD` env vars.  Change these
    passwords immediately after first login.
 
-4. **Consider AWS KMS** for institutional-grade key management:
-   - Set `SOLANA_SIGNING_MODE=kms`
-   - Provision an AWS KMS Ed25519 key and set `AWS_KMS_KEY_ID`, `AWS_REGION`,
-     `AWS_KMS_PUBLIC_KEY`
-   - See `apps/api-gateway/src/modules/security/kms.service.ts`
+4. **Configure the Solana authority signer** for institutional-grade key management:
+   - Set `SOLANA_SIGNING_MODE=environment`
+   - Set `AUTHORITY_KEYPAIR_JSON` in Railway (or mount a signer file and use `AUTHORITY_KEYPAIR_PATH`)
+   - See `apps/api-gateway/src/modules/security/authority-signer.service.ts`
 
 ### Acceptance Criteria
 
 - [ ] `AUTH_TOKEN_SECRET` is a random 32+ character value (not the example value)
 - [ ] Default user passwords are set to strong values
 - [ ] Default passwords are changed on first login
-- [ ] `AUTHORITY_KEYPAIR_PATH` points to a valid (non-example) Solana keypair
+- [ ] A valid Solana authority signer is configured via `AUTHORITY_KEYPAIR_JSON` or `AUTHORITY_KEYPAIR_PATH`
 
 ### References
 
 - `apps/api-gateway/src/config/env.ts` — Secret validation (min 32 chars)
-- `apps/api-gateway/src/modules/security/kms.service.ts` — KMS integration
+- `apps/api-gateway/src/modules/security/authority-signer.service.ts` — signer loading
 - `.env.example` — All secret variable names
 
 ---

@@ -37,7 +37,7 @@ to git.
 | `SUMSUB_WEBHOOK_SECRET` | Railway | On suspicion of compromise | Compliance |
 | `SUPABASE_SERVICE_KEY` | Railway | 90 days | Engineering |
 | `SUPABASE_JWT_SECRET` | Railway | 90 days | Engineering |
-| `AWS_KMS_KEY_ID` | Railway | Per AWS KMS policy | Engineering |
+| `AUTHORITY_KEYPAIR_JSON` | Railway | On signer rotation | Engineering |
 
 ---
 
@@ -101,16 +101,24 @@ curl https://api.treasuryos.aicustombot.net/api/health
 
 ### Seed User Passwords
 
-Seed user passwords are only used during the initial database seed. After
-seeding, change passwords directly in the application or database:
+Seed user credentials are sourced from the Railway `DEFAULT_*_PASSWORD`
+variables and are upserted into `app_users` on the first login request handled
+by a fresh API process. Treat production rotation as incomplete until a live
+login succeeds with the new password.
 
-```bash
-# Via the API (requires admin token)
-curl -X PATCH https://api.treasuryos.aicustombot.net/api/auth/users/<id> \
-  -H "Authorization: Bearer <admin-token>" \
-  -H "Content-Type: application/json" \
-  -d '{"password": "<new-strong-password>"}'
-```
+Recommended production procedure:
+
+1. Generate new strong passwords and store them only in the approved secret
+   manager.
+2. Update `DEFAULT_ADMIN_PASSWORD`, `DEFAULT_COMPLIANCE_PASSWORD`, and
+   `DEFAULT_AUDITOR_PASSWORD` in Railway.
+3. Trigger or confirm a fresh Railway deployment for the API service.
+4. Verify the new credentials by performing a real login against the live API.
+5. If the login still uses stale hashes after redeploy, manually sync the
+   `app_users` password hashes with the same `scrypt` algorithm used by the API
+   before declaring the rotation complete.
+
+Do not assume that updating the Railway variables alone is sufficient.
 
 ---
 
@@ -151,8 +159,8 @@ environment must have its own:
   it only in the API Gateway — never in the frontend or any client-side code.
 - Database users should have only the permissions they need. The application
   user should not have `CREATE TABLE` or `DROP TABLE` privileges in production.
-- AWS KMS keys should be restricted to the specific IAM role used by the
-  Railway service.
+- Keep `AUTHORITY_KEYPAIR_JSON` scoped to the API service only and rotate it
+  alongside any Solana authority changes.
 
 ### Secret length and entropy
 
@@ -265,8 +273,8 @@ environment.
 
 - [ ] `SOLANA_RPC_URL` points to mainnet (not devnet) for production
 - [ ] `PROGRAM_ID_WALLET_WHITELIST` is the mainnet-deployed program ID
-- [ ] `SOLANA_SIGNING_MODE=kms` and AWS KMS is configured for production signing
-- [ ] `AUTHORITY_KEYPAIR_PATH` is NOT set in production (filesystem keypairs are insecure in cloud environments)
+- [ ] Production signing is configured with `SOLANA_SIGNING_MODE=environment` and a valid `AUTHORITY_KEYPAIR_JSON`, or with a mounted `AUTHORITY_KEYPAIR_PATH`
+- [ ] Example or local-only signer material is not present in production variables
 
 ### Monitoring & Observability
 

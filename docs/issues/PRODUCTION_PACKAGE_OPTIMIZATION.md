@@ -63,7 +63,7 @@ Optimized package.json files to reduce container size and ensure only production
 - ✅ Security (helmet, zod, passport, jsonwebtoken)
 - ✅ Database (pg)
 - ✅ Blockchain (Solana packages)
-- ✅ AWS KMS for key management
+- ✅ Solana authority signer for key management
 - ✅ Error tracking (Sentry)
 - ✅ TreasuryOS packages (@treasuryos/*)
 

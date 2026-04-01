@@ -24,7 +24,7 @@ Implement these rules to block automated scanning and common Web3 reconnaissance
 Encryption at the edge is mandatory to prevent man-in-the-middle (MITM) attacks and credential theft.
 
 - **SSL/TLS Mode**: **Full (Strict)**
-  - *Note: This requires an Origin CA certificate installed on your backend (Vercel/GCP), ensuring the connection is end-to-end encrypted.*
+  - *Note: This requires an Origin CA certificate installed on your backend (Vercel/Railway), ensuring the connection is end-to-end encrypted.*
 - **Always Use HTTPS**: Enabled
 - **HSTS (HTTP Strict Transport Security)**: Enabled
   - **Max Age**: 6 months (15552000)

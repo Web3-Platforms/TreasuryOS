@@ -8,9 +8,9 @@ import { AppModule } from './app.module.js';
 
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
-  // Railway injects PORT; we check PORT first, then fall back to KYC_PORT.
+  // Railway injects PORT; we check PORT first, then fall back to KYC_SERVICE_PORT.
   PORT: z.coerce.number().int().min(1).max(65535).optional(),
-  KYC_PORT: z.coerce.number().int().min(1).max(65535).default(3002),
+  KYC_SERVICE_PORT: z.coerce.number().int().min(1).max(65535).default(3002),
 });
 
 async function bootstrap() {
@@ -29,8 +29,8 @@ async function bootstrap() {
 
   const parsed = envSchema.parse(process.env);
 
-  // Railway injects PORT; prefer it over KYC_PORT
-  const listenPort = parsed.PORT ?? parsed.KYC_PORT;
+  // Railway injects PORT; prefer it over KYC_SERVICE_PORT
+  const listenPort = parsed.PORT ?? parsed.KYC_SERVICE_PORT;
 
   const app = await NestFactory.create(AppModule);
 

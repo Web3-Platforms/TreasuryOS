@@ -46,7 +46,7 @@ TreasuryOS is a monorepo with two deployable services:
 A `vercel.json` has been created at the project root with API rewrites and security headers.
 
 ### Notes
-- Vercel can only host the **Dashboard** (Next.js). The API Gateway requires a container runtime (see GCP/Replit below).
+- Vercel can only host the **Dashboard** (Next.js). The API Gateway requires a container runtime (see Railway/Replit below).
 - The `output: "standalone"` setting in `next.config.mjs` is already enabled.
 
 ---
@@ -84,7 +84,7 @@ Cloudflare is best used as an **edge proxy** in front of TreasuryOS rather than 
 
 ### Setup
 1. Add your domain to Cloudflare.
-2. Configure DNS records pointing to your API Gateway host (GCP Cloud Run, Railway, etc.).
+2. Configure DNS records pointing to your Railway API Gateway host.
 3. Enable **Cloudflare Proxy** (orange cloud) for DDoS protection and caching.
 4. Add WAF rules for API rate limiting:
    ```
@@ -105,61 +105,7 @@ npx wrangler pages deploy apps/dashboard/.next --project-name=treasuryos-dashboa
 
 ---
 
-## Platform 4: GCP Cloud Run (Full Stack — Recommended for Production)
-
-> **Best for**: Production deployment. Both Dashboard and API Gateway run as managed containers.
-
-### Prerequisites
-- Google Cloud SDK (`gcloud`) installed
-- Docker installed locally
-- A GCP project with billing enabled
-
-### One-Click Deploy
-```bash
-chmod +x scripts/deploy-gcp.sh
-./scripts/deploy-gcp.sh YOUR_GCP_PROJECT_ID us-central1
-```
-
-This script will:
-1. Enable required GCP APIs (Cloud Run, Artifact Registry)
-2. Build multi-stage Docker images for both services
-3. Push to Artifact Registry
-4. Deploy both services to Cloud Run
-5. Print the live URLs
-
-### Manual Deploy
-```bash
-# Build API Gateway
-docker build --target api-gateway-runner --build-arg APP_NAME=api-gateway -t treasuryos-api .
-
-# Build Dashboard
-docker build --target dashboard-runner --build-arg APP_NAME=dashboard -t treasuryos-dashboard .
-
-# Push to your container registry and deploy via `gcloud run deploy`
-```
-
-### Environment Variables (Cloud Run)
-Set these in the Cloud Run service configuration:
-```
-DATABASE_URL=postgresql://user:pass@/dbname?host=/cloudsql/PROJECT:REGION:INSTANCE
-REDIS_URL=redis://your-redis-host:6379
-JWT_SECRET=<production-secret-min-32-chars>
-AUTH_TOKEN_SECRET=<production-secret-min-32-chars>
-DEFAULT_ADMIN_EMAIL=admin@yourcompany.com
-DEFAULT_ADMIN_PASSWORD=<strong-password>
-DEFAULT_COMPLIANCE_EMAIL=compliance@yourcompany.com
-DEFAULT_COMPLIANCE_PASSWORD=<strong-password>
-DEFAULT_AUDITOR_EMAIL=auditor@yourcompany.com
-DEFAULT_AUDITOR_PASSWORD=<strong-password>
-SOLANA_RPC_URL=https://api.mainnet-beta.solana.com
-PROGRAM_ID_WALLET_WHITELIST=<your-deployed-program-id>
-AUTHORITY_KEYPAIR_PATH=/secrets/authority-keypair.json
-SOLANA_SYNC_ENABLED=true
-```
-
----
-
-## Platform 5: Replit (Development / Demo)
+## Platform 4: Replit (Development / Demo)
 
 > **Best for**: Quick demos, hackathons, and development environments.
 
@@ -204,7 +150,7 @@ Access the dashboard at `http://localhost:3000`.
 
 ---
 
-## Platform 6: Railway (API Gateway — Recommended for Production)
+## Platform 5: Railway (API Gateway — Recommended for Production)
 
 > **Best for**: Deploying the NestJS API Gateway with automatic scaling, managed Postgres add-on, and zero-config deployments.
 
@@ -224,7 +170,8 @@ REDIS_URL=<upstash-rediss-url>
 REDIS_QUEUE_ENABLED=true
 REDIS_QUEUE_NAME=treasuryos:events
 PROGRAM_ID_WALLET_WHITELIST=<deployed-program-id>
-AUTHORITY_KEYPAIR_PATH=/tmp/authority.json
+SOLANA_SIGNING_MODE=environment
+AUTHORITY_KEYPAIR_JSON=[1,2,3,...]
 DEFAULT_ADMIN_EMAIL=admin@yourcompany.com
 DEFAULT_ADMIN_PASSWORD=<strong-password>
 DEFAULT_COMPLIANCE_EMAIL=compliance@yourcompany.com
@@ -256,7 +203,7 @@ FRONTEND_URL=https://<your-vercel-dashboard-url>
 
 ---
 
-## Platform 7: Neon (Managed Postgres)
+## Platform 6: Neon (Managed Postgres)
 
 > **Best for**: Serverless-compatible PostgreSQL for Vercel + Railway deployments. Scales to zero between requests.
 
@@ -285,7 +232,7 @@ DATABASE_URL="<neon-url>" npm run db:migrate
 
 ---
 
-## Platform 8: Upstash Redis (Managed Redis with TLS)
+## Platform 7: Upstash Redis (Managed Redis with TLS)
 
 > **Best for**: Serverless-compatible Redis for Vercel + Railway. Each command opens a fresh TLS connection — no persistent connections needed.
 
@@ -309,7 +256,7 @@ REDIS_QUEUE_NAME=treasuryos:events
 
 ---
 
-## Platform 9: Supabase Storage
+## Platform 8: Supabase Storage
 
 > **Best for**: Storing compliance documents, KYC artifacts, and audit reports.
 
@@ -345,6 +292,5 @@ SUPABASE_STORAGE_BUCKET=compliance-docs
 | **Supabase** | ❌ N/A | ❌ N/A | ✅ Storage | Document storage |
 | **Netlify** | ✅ Plugin | ❌ External | ❌ External | Frontend hosting |
 | **Cloudflare** | ✅ Pages | ⚠️ Edge only | ❌ External | CDN/WAF layer |
-| **GCP Cloud Run** | ✅ Container | ✅ Container | ✅ Cloud SQL | Full production |
 | **Replit** | ✅ Native | ✅ Native | ⚠️ Add-on | Dev/Demo |
 | **Docker Compose** | ✅ Container | ✅ Container | ✅ Local | Staging |

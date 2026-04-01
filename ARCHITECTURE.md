@@ -19,7 +19,7 @@ graph TD
     end
 
     subgraph "Institutional Security"
-        AGW -->|Signing Request| KMS[AWS KMS - Hardware Ed25519]
+        AGW -->|Signing Request| Signer[Authority Signer - Railway/File Secret]
         AGW -->|Proposal Loop| Squads[Squads V4 Multisig - Solana]
     end
 
@@ -40,7 +40,7 @@ graph TD
 The central entry point for all institutional commands.
 - **Vercel Optimized**: Built as a stateless NestJS application optimized for Serverless execution.
 - **Identity Control**: Integrated with JWT-based RBAC and session persistence in Neon/Supabase.
-- **KMS Service**: Direct interface with AWS KMS for non-custodial but institutional-grade key management.
+- **Authority Signer**: Loads the Solana authority from Railway-injected secret material or a mounted keypair file for on-chain operations.
 
 ### 2.2 Solana Programs (`programs/`)
 On-chain logic enforcing compliance at the protocol level.
@@ -58,14 +58,14 @@ The administrative interface for Treasury Managers and Compliance Officers.
 TreasuryOS employs a **Defense-in-Depth** strategy:
 
 1.  **Transport Security**: Cloudflare WAF + mTLS for origin protection.
-2.  **Key Isolation**: Private keys never touch the application memory. They reside in AWS KMS FIPS 140-2 Level 3 hardware modules.
+2.  **Key Management**: Signing material is injected through platform secret managers or mounted signer files instead of being committed to the repository.
 3.  **Governance Enforcement**: High-value transactions require $n$-of-$m$ on-chain multisig approval via Squads V4.
 4.  **Compliance Interceptor**: Every transaction is screened against the Registry before signing is authorized.
 
 ## 4. Deployment Strategy
 
-- **Compute**: Vercel (Frontend + API Gateway).
+- **Compute**: Vercel (Frontend) + Railway (API Gateway).
 - **Database**: Neon (High-concurrency API state).
 - **Storage**: Supabase (Compliance documents and artifact hosting).
-- **Secrets**: Vercel Secrets + AWS Secrets Manager.
+- **Secrets**: Railway Variables + Vercel Environment Variables.
 - **Observability**: Manifest + Sentry for error tracking.
