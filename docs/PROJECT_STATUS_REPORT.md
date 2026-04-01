@@ -46,7 +46,8 @@ This means:
 - The dashboard custom domain is live at `https://treasuryos.aicustombot.net`
 - The API custom domain still fails TLS/Cloudflare routing at `https://api.treasuryos.aicustombot.net/api/health`
 - Scheduled uptime monitoring is active through the `TreasuryOS Uptime` GitHub Actions workflow
-- GitHub CD is active on `main`, but the latest Railway deploy failed because the repository does not yet have a working `RAILWAY_TOKEN` Actions secret
+- GitHub CD is active on `main`, and run `#87` now succeeds with Railway Project Token auth and the exact `@treasuryos/api-gateway` service target
+- Production variable names are now confirmed on Railway for `@treasuryos/api-gateway` and on the root-linked Vercel project `treasury-os`; `apps/dashboard/.vercel` points to a separate stale `dashboard` project with no env vars and should not be used for production checks
 
 ### Code and application state
 
@@ -84,11 +85,11 @@ Those checks now pass together from the repository root.
 - Application code is wired for Sentry
 - Railway and Vercel DSNs are not fully in place yet because the necessary Sentry organization/project provisioning is still incomplete
 
-### 3. GitHub Actions deployment secrets
+### 3. Production environment verification
 
-- `gh secret list -R Web3-Platforms/TreasuryOS` currently reports no repository Actions secrets
-- `.github/workflows/cd.yml` requires `RAILWAY_TOKEN` for Railway deploys and `NEON_DATABASE_URL` for migration runs
-- Until those secrets exist and validate successfully, automated deploys from `main` are not reliable
+- GitHub Actions deploys are now working again, and the visible name-only verification pass succeeded for GitHub secrets, Railway API variables, and the root-linked Vercel dashboard project
+- The root-linked Vercel project `treasury-os` is the correct production dashboard project; `apps/dashboard/.vercel` points to a separate `dashboard` project with no environment variables
+- The remaining configuration uncertainty is now mostly about value-level decisions and waivers, not missing key names
 
 ### 4. Final live smoke pass
 
@@ -114,7 +115,7 @@ These items are intentionally not part of the first launch:
 
 ## Immediate Recommended Sequence
 
-1. Finalize GitHub/CD secrets, production configuration, and DNS
+1. Finalize production configuration and DNS
 2. Confirm observability posture (Sentry DSNs or explicit beta waiver)
 3. Re-run the final live smoke pass
 4. Execute the launch go/no-go review and cut over

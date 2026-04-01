@@ -8,7 +8,7 @@ This document outlines the strategic roadmap for evolving the TreasuryOS MVP int
 - [x] **Next.js 16 Auth Gate**: Dashboard route protection now lives in `apps/dashboard/proxy.ts`.
 - [x] **Push Release Commits**: The validated local release-hardening commits are now on `origin/main`.
 - [x] **Uptime Monitoring Activation**: GitHub Actions now has the active `TreasuryOS Uptime` workflow from `.github/workflows/uptime.yml`.
-- [ ] **GitHub CD Secrets**: Add/verify repository Actions secrets `RAILWAY_TOKEN` and `NEON_DATABASE_URL` so `.github/workflows/cd.yml` can deploy and migrate successfully.
+- [x] **GitHub CD Verified**: `.github/workflows/cd.yml` now succeeds from `main` with Railway Project Token auth and the exact `@treasuryos/api-gateway` service target.
 - [ ] **Cloudflare API DNS**: Route `api.treasuryos.aicustombot.net` to the active Railway service target.
 - [ ] **Sentry Provisioning**: Create/attach the final Sentry project and DSNs, or explicitly waive Sentry for beta launch.
 - [ ] **Production Env Verification**: Reconfirm the final Railway/Vercel/GitHub variables for the selected pilot scope.
