@@ -1,17 +1,17 @@
 @import "tailwindcss";
 
 :root {
-  --background: #0a0a0b;
+  --background: #020617;
   --foreground: #f8fafc;
-  --primary: #3b82f6;
+  --primary: #2563eb;
   --primary-foreground: #ffffff;
-  --secondary: #1e1e2d;
+  --secondary: #0f172a;
   --secondary-foreground: #f1f5f9;
   --muted: #1e293b;
   --muted-foreground: #94a3b8;
-  --accent: #8b5cf6;
+  --accent: #6366f1;
   --accent-foreground: #ffffff;
-  --border: #334155;
+  --border: #1e293b;
 }
 
 @theme {
@@ -31,27 +31,37 @@
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Inter', sans-serif;
   overflow-x: hidden;
 }
 
 @layer utilities {
-  .bg-grid {
+  .bg-radial-grid {
     background-size: 40px 40px;
-    background-image: linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    background-image: 
+      radial-gradient(circle, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
   }
   .glass {
-    background: rgba(15, 23, 42, 0.7);
+    background: rgba(15, 23, 42, 0.4);
     backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.05);
   }
   .mesh-gradient {
-    background: radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.15) 0, transparent 50%),
-                radial-gradient(at 100% 0%, rgba(139, 92, 246, 0.15) 0, transparent 50%),
-                radial-gradient(at 100% 100%, rgba(59, 130, 246, 0.1) 0, transparent 50%),
-                radial-gradient(at 0% 100%, rgba(139, 92, 246, 0.1) 0, transparent 50%);
+    background: radial-gradient(at 0% 0%, rgba(37, 99, 235, 0.1) 0, transparent 40%),
+                radial-gradient(at 100% 0%, rgba(99, 102, 241, 0.1) 0, transparent 40%),
+                radial-gradient(at 100% 100%, rgba(37, 99, 235, 0.05) 0, transparent 40%),
+                radial-gradient(at 0% 100%, rgba(99, 102, 241, 0.05) 0, transparent 40%);
   }
+  .animate-gradient {
+    background-size: 300% 300%;
+    animation: gradient-move 10s ease infinite;
+  }
+}
+
+@keyframes gradient-move {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 
 @layer base {
@@ -59,6 +69,6 @@ body {
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground selection:bg-primary/30;
   }
 }
