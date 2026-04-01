@@ -37,7 +37,7 @@ jobs:
       - name: Deploy to Railway
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-        run: railway up --service api-gateway --detach
+        run: railway up --service '@treasuryos/api-gateway' --detach
 
   # ── Run migrations against Neon after code deploy ────────────────────────
   migrate-neon:

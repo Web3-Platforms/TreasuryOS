@@ -39,7 +39,7 @@ I updated `.github/workflows/cd.yml` to:
 
 - keep the explicit presence check for `RAILWAY_TOKEN`
 - remove the `railway whoami` validation step
-- continue deploying with `railway up --service api-gateway --detach`
+- continue deploying with `railway up`
 
 I also updated deployment docs so the token type is explicit:
 
@@ -57,3 +57,30 @@ the right context by using it for the actual deploy operation.
 If deployment still fails after this fix, the next failure will be a more
 reliable signal about the token itself or the Railway service configuration,
 rather than a false negative from a user-level auth check.
+
+## Follow-up Failure and Targeting Fix
+
+After pushing the project-token fix, GitHub Actions run `#86` reached the real
+deploy step and failed with:
+
+```text
+railway up --service api-gateway --detach
+Service not found
+```
+
+I then re-linked the live Railway project locally and confirmed the actual API
+Gateway service identity in Railway production is:
+
+- service name: `@treasuryos/api-gateway`
+- service ID: `3337810b-af7f-4377-912c-5ae9a2557284`
+
+That means the workflow's `api-gateway` alias was too short for the live
+Railway project. I updated `.github/workflows/cd.yml` again to deploy to the
+exact live service name:
+
+```text
+railway up --service '@treasuryos/api-gateway' --detach
+```
+
+This should move the CD workflow past the service lookup error and reveal the
+next true deploy result.
