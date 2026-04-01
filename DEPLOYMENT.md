@@ -194,7 +194,7 @@ deployments:
 
 | Secret | Used by | Purpose |
 |---|---|---|
-| `RAILWAY_TOKEN` | `deploy-api` | Railway **Project Token** used by `railway up --service api-gateway --detach` |
+| `RAILWAY_TOKEN` | `deploy-api` | Railway **Project Token** used by `railway up --service '@treasuryos/api-gateway' --detach` |
 | `NEON_DATABASE_URL` | `migrate-neon` | Runs `npm run db:migrate` and `npm run db:migrate:check` when migrations change |
 
 Create `RAILWAY_TOKEN` from the target Railway project's settings as a
@@ -322,11 +322,13 @@ whether they are required.
 
 1. In Railway → service → **Settings → Networking → Custom Domain**.
 2. Add `api.treasuryos.aicustombot.net`.
-3. Railway provides a CNAME target (e.g. `<service>.up.railway.app`).
+3. Railway provides a CNAME target for the live service domain.
 4. In your DNS provider, create:
    ```
-   CNAME  api.treasuryos.aicustombot.net  →  <service>.up.railway.app
+   CNAME  api.treasuryos.aicustombot.net  →  treasuryosapi-gateway-production.up.railway.app
    ```
+   If you use Cloudflare, start with **Proxy status = DNS only** until the
+   health check succeeds cleanly.
 5. Railway provisions a TLS certificate automatically via Let's Encrypt.
 6. Verify:
    ```bash

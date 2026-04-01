@@ -45,6 +45,7 @@ This means:
 - Railway API health is green at `https://treasuryosapi-gateway-production.up.railway.app/api/health`
 - The dashboard custom domain is live at `https://treasuryos.aicustombot.net`
 - The API custom domain still fails TLS/Cloudflare routing at `https://api.treasuryos.aicustombot.net/api/health`
+- Directly connecting the branded API host to `treasuryosapi-gateway-production.up.railway.app` returns `200`, which confirms Railway is already serving the custom hostname correctly and Cloudflare is the remaining fault domain
 - Scheduled uptime monitoring is active through the `TreasuryOS Uptime` GitHub Actions workflow
 - GitHub CD is active on `main`, and run `#87` now succeeds with Railway Project Token auth and the exact `@treasuryos/api-gateway` service target
 - Production variable names are now confirmed on Railway for `@treasuryos/api-gateway` and on the root-linked Vercel project `treasury-os`; `apps/dashboard/.vercel` points to a separate stale `dashboard` project with no env vars and should not be used for production checks
@@ -79,7 +80,9 @@ Those checks now pass together from the repository root.
 
 - Railway has a healthy direct service URL at `https://treasuryosapi-gateway-production.up.railway.app/api/health`
 - `https://api.treasuryos.aicustombot.net/api/health` currently fails TLS/Cloudflare routing
-- Cloudflare still needs to route `api.treasuryos.aicustombot.net` to the active Railway service target before cutover
+- Direct custom-host-to-Railway testing succeeds against `treasuryosapi-gateway-production.up.railway.app`, so Railway is not the remaining problem
+- Cloudflare still needs a `CNAME` for `api.treasuryos.aicustombot.net` pointing to `treasuryosapi-gateway-production.up.railway.app`
+- The safest first pass is `DNS only` until the branded health check returns `200`
 
 ### 2. Final live smoke pass
 

@@ -16,7 +16,7 @@ Current verified state:
 - Product state: Sumsub user-facing flows are intentionally disabled and shown as coming soon.
 - Code state: the root typecheck/test/build validation now passes with the required dashboard `API_BASE_URL`, and dashboard production deploys now succeed with `apps/dashboard/vercel.json`.
 - Infrastructure state: production DB migrations are applied, Railway API health is green at `https://treasuryosapi-gateway-production.up.railway.app/api/health`, and `treasuryos.aicustombot.net` is live on Vercel.
-- API domain state: `https://api.treasuryos.aicustombot.net/api/health` still fails TLS/Cloudflare routing, so the API custom domain is not launch-ready yet.
+- API domain state: `https://api.treasuryos.aicustombot.net/api/health` still fails TLS/Cloudflare routing, but direct custom-host-to-Railway testing against `treasuryosapi-gateway-production.up.railway.app` returns `200`, which confirms Cloudflare is now the remaining issue.
 - Launch mitigation state: Vercel production `API_BASE_URL` now points at the healthy Railway service domain so the live dashboard is not blocked by the unfinished API custom-domain route.
 - Observability state: `.github/workflows/uptime.yml` is now active on GitHub and checks the live dashboard plus the Railway API health URL.
 - GitHub CD state: the main-branch deploy workflow is active, and run `#87` now succeeds with Railway Project Token auth plus the exact live service target `@treasuryos/api-gateway`. The migration job is also unblocked and currently skips cleanly when no migration files changed.
@@ -101,7 +101,7 @@ Notes:
 - The biggest decision is not technical but scope: whether you want the first live release to be a pilot with KYC/on-chain limits, or a full production launch with Sumsub production and a finalized Solana path.
 - If you want the fastest path to "live", pilot launch is shortest.
 - If you want regulated production launch, Sumsub production credentials and the final Solana path are mandatory gates.
-- The only remaining domain-specific blocker is fixing Cloudflare/TLS routing so `https://api.treasuryos.aicustombot.net/api/health` reaches the live Railway API service.
+- The only remaining domain-specific blocker is fixing Cloudflare/TLS routing so `api.treasuryos.aicustombot.net` is a `CNAME` to `treasuryosapi-gateway-production.up.railway.app` and the branded health endpoint returns `200`.
 - GitHub CD is no longer a launch blocker; the deploy workflow now passes on `main` with the Railway Project Token flow and the exact `@treasuryos/api-gateway` service target.
 - Sentry is not a current launch blocker because it has been explicitly waived for beta and deferred to post-launch hardening.
 - The live smoke suite passed with two expected scope warnings: no wallet/case detail data exists yet in production because KYC and downstream approvals are intentionally disabled for the first launch scope.
