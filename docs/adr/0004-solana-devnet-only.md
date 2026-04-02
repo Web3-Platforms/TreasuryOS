@@ -2,11 +2,11 @@
 
 ## Status
 
-Accepted
+Superseded by ADR 0005
 
 ## Decision
 
-The MVP only targets Solana devnet for wallet whitelist and related chain synchronization work.
+The original MVP targeted Solana devnet for wallet whitelist and related chain synchronization work.
 
 ## Rationale
 
@@ -16,4 +16,4 @@ The MVP only targets Solana devnet for wallet whitelist and related chain synchr
 
 ## Consequence
 
-Mainnet, production signing controls, and custody/HSM strategy remain Real App work.
+This ADR is now historical. The current beta posture moves the non-mainnet Solana target to testnet while still keeping live sync disabled by default.

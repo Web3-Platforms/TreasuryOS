@@ -100,7 +100,7 @@ export class WalletSyncService {
   private createClient() {
     return new WalletWhitelistClient(this.env.PROGRAM_ID_WALLET_WHITELIST, {
       url: this.env.SOLANA_RPC_URL,
-      network: 'devnet',
+      network: this.env.SOLANA_NETWORK,
       commitment: 'confirmed',
     });
   }

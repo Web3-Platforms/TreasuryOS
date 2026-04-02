@@ -18,7 +18,7 @@ TreasuryOS is now in a release-candidate state for its first live pilot launch.
 - The API gateway now uses the centralized `AuthoritySignerService` for filesystem and environment-injected signer material.
 - The selected first-launch scope is intentionally limited:
   - Sumsub stays disabled and shown as "coming soon"
-  - Solana remains preview-only
+  - Solana remains preview-only with testnet as the beta cluster if on-chain sync is later enabled
   - `SOLANA_SYNC_ENABLED=false` at launch
 - The remaining launch step is operational rather than code-level: the final go/no-go release decision and monitored cutover window.
 
@@ -35,6 +35,7 @@ This means:
 - KYC submission stays disabled at launch
 - Existing KYC-related UI is positioned as "coming soon"
 - On-chain synchronization remains disabled for the first launch
+- The non-mainnet Solana target for the beta path is testnet, not mainnet
 - The live release should be communicated as a controlled rollout rather than a fully expanded production feature set
 
 ### Platform and deployment state

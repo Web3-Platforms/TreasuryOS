@@ -46,7 +46,7 @@ The infrastructure was transitioned into standard serverless and managed cloud o
 
 ### B. Wallet Whitelisting & Solana Interaction
 - When an entity's KYC transitions to `Approved`, their submitted treasury wallets enter the `WalletRequest` queue.
-- **Devnet Synchronization:** Approved requests interact directly with the Solana Devnet via the `@treasuryos/sdk` to insert public keys into the institutional Whitelist Contract.
+- **Non-mainnet Synchronization:** Approved requests interact with Solana via the `@treasuryos/sdk` to insert public keys into the institutional whitelist contract; the current beta posture targets testnet when sync is enabled.
 - **Signing Strategies:**
   - **Local/Development:** Read directly from filesystem `~/.config/solana/id.json`.
   - **Deployed Environments:** Read authority key material from Railway-injected `AUTHORITY_KEYPAIR_JSON` (or a mounted keypair file) so the signer stays outside source control.

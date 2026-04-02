@@ -28,7 +28,7 @@ Current verified state:
 Launch tracks:
 1. Pilot launch:
    - Keep Sumsub as coming soon.
-   - Keep Solana on devnet or keep Solana sync disabled.
+   - Keep Solana on testnet or keep Solana sync disabled.
    - Clearly position the launch as pilot / controlled rollout.
 2. Full production launch:
    - Re-enable Sumsub with production credentials.
@@ -39,6 +39,7 @@ Selected launch scope:
 - The first launch will proceed without KYC.
 - Sumsub stays disabled and marked as coming soon.
 - Solana remains preview-only for the first launch.
+- When the Solana beta path is resumed, the non-mainnet target is testnet.
 - Keep `SOLANA_SYNC_ENABLED=false` at launch and defer real on-chain sync until after launch.
 - Launch messaging and operations must not assume live KYC at launch.
 
@@ -71,7 +72,7 @@ Phase 3 — Feature readiness for the selected launch track
    - Pilot launch: keep KYC disabled, align docs/UX/commercial messaging with "coming soon", and ensure no operator expects live KYC.
 7. Solana / Squads path.
    - Full production launch: deploy/finalize the live program path, signer material, RPC, program IDs, and optional Squads multisig.
-   - Pilot launch: explicitly keep the current devnet or sync-disabled path and document that scope.
+   - Pilot launch: explicitly keep the current testnet or sync-disabled path and document that scope.
 
 Phase 4 — Deployment and hardening
 8. Deploy and migrate.

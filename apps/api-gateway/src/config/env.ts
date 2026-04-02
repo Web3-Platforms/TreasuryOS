@@ -75,6 +75,7 @@ const envSchema = z.object({
 
   // ── Solana ───────────────────────────────────────────────────
   SOLANA_RPC_URL: z.string().url().default('https://api.devnet.solana.com'),
+  SOLANA_NETWORK: z.enum(['devnet', 'testnet', 'mainnet-beta', 'custom']).default('devnet'),
   PROGRAM_ID_WALLET_WHITELIST: z.string().min(32),
   // Local development can read the Solana authority from a filesystem keypair.
   AUTHORITY_KEYPAIR_PATH: z.string().optional(),

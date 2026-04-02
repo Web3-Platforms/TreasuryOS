@@ -14,13 +14,14 @@
 | DEFAULT_COMPLIANCE_PASSWORD | string | 8 | `CompP@ss123!` |
 | DEFAULT_AUDITOR_EMAIL | email | - | `auditor@example.com` |
 | DEFAULT_AUDITOR_PASSWORD | string | 8 | `AuditP@ss123!` |
-| SOLANA_RPC_URL | HTTPS URL | - | `https://api.devnet.solana.com` |
+| SOLANA_RPC_URL | HTTPS URL | - | `https://api.testnet.solana.com` |
 | PROGRAM_ID_WALLET_WHITELIST | base58 | 32 | `TokenkegQfeZyiNwAJsyFbPVwwQQftsrPJ4...` |
 
 ### Recommended Optional
 | Variable | Format | Purpose |
 |----------|--------|---------|
 | REDIS_URL | Redis URI | Caching & queues |
+| SOLANA_NETWORK | `devnet`/`testnet`/`mainnet-beta`/`custom` | Solana cluster label |
 | SUPABASE_URL | HTTPS URL | File storage |
 | SUPABASE_JWT_SECRET | base64 string | JWT validation |
 | SUPABASE_SERVICE_KEY | string | Service access |
@@ -34,12 +35,13 @@
 | Variable | Format | Min Length | Example |
 |----------|--------|-----------|---------|
 | NODE_ENV | `production` | - | `production` |
-| SOLANA_RPC_URL | HTTPS URL | - | `https://api.devnet.solana.com` |
+| SOLANA_RPC_URL | HTTPS URL | - | `https://api.testnet.solana.com` |
 | PROGRAM_ID_COMPLIANCE_REGISTRY | base58 | 32 | `AuthProgId...` |
 
 ### Optional
 | Variable | Format | Purpose |
 |----------|--------|---------|
+| SOLANA_NETWORK | `devnet`/`testnet`/`mainnet-beta`/`custom` | Solana cluster label |
 | SUMSUB_APP_TOKEN | string | SumSub KYC |
 | SUMSUB_SECRET_KEY | string | SumSub auth |
 | JUMIO_API_TOKEN | string | Jumio KYC |
@@ -171,6 +173,7 @@ DEFAULT_COMPLIANCE_PASSWORD=CompliancePass123
 DEFAULT_AUDITOR_EMAIL=auditor@local.test
 DEFAULT_AUDITOR_PASSWORD=AuditorPass123
 SOLANA_RPC_URL=https://api.devnet.solana.com
+SOLANA_NETWORK=devnet
 PROGRAM_ID_WALLET_WHITELIST=TokenkegQfeZyiNwAJsyFbPVwwQQftsr...
 ```
 
@@ -179,6 +182,7 @@ PROGRAM_ID_WALLET_WHITELIST=TokenkegQfeZyiNwAJsyFbPVwwQQftsr...
 NODE_ENV=development
 KYC_SERVICE_PORT=3002
 SOLANA_RPC_URL=https://api.devnet.solana.com
+SOLANA_NETWORK=devnet
 PROGRAM_ID_COMPLIANCE_REGISTRY=AuthProgIdZvDH...
 ```
 
@@ -214,7 +218,8 @@ REPORTER_PORT=3004
 
 ### Production
 - Use managed database with SSL
-- Use Solana mainnet or custom RPC
+- Beta launch: use Solana testnet and keep sync disabled until signer + program IDs are ready
+- Full production launch: use Solana mainnet or custom RPC
 - Store secrets in Railway Variables (encrypted)
 - Use strong random secrets (32+ chars)
 - Enable error tracking (Sentry)

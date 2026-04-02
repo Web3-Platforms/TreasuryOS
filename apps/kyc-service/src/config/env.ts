@@ -18,6 +18,7 @@ const envSchema = z.object({
   JUMIO_API_SECRET: z.string().optional(),
   JUMIO_WORKFLOW_ID: z.string().optional(),
   SOLANA_RPC_URL: z.string().url(),
+  SOLANA_NETWORK: z.enum(['devnet', 'testnet', 'mainnet-beta', 'custom']).default('devnet'),
   PROGRAM_ID_COMPLIANCE_REGISTRY: z.string().min(32),
 });
 

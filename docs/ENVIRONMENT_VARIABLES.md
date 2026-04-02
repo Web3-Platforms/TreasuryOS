@@ -48,7 +48,8 @@ API_GATEWAY_PORT=3001                          # Local fallback
 FRONTEND_URL=https://app.example.com           # For CORS headers
 
 # ── Solana RPC ───────────────────────────────────────────
-SOLANA_RPC_URL=https://api.devnet.solana.com   # Default: devnet
+SOLANA_RPC_URL=https://api.devnet.solana.com   # Local default; use testnet for beta launch
+SOLANA_NETWORK=devnet                          # Optional cluster label; set testnet for beta launch
 SOLANA_SIGNING_MODE=filesystem                 # Options: filesystem, environment
 AUTHORITY_KEYPAIR_PATH=path/to/keypair.json    # For filesystem signing
 AUTHORITY_KEYPAIR_JSON=[1,2,3,...]             # For Railway-injected signer material
@@ -134,7 +135,7 @@ NEXT_PUBLIC_SENTRY_DSN=https://key@sentry.io/project-id
 ```env
 # ── Core Configuration ──────────────────────────────────────────
 NODE_ENV=production
-SOLANA_RPC_URL=https://api.devnet.solana.com   # Solana RPC endpoint
+SOLANA_RPC_URL=https://api.devnet.solana.com   # Local default; use testnet for beta launch
 PROGRAM_ID_COMPLIANCE_REGISTRY=YourProgram32CharId123456789  # 32+ chars
 ```
 
@@ -339,10 +340,12 @@ DEFAULT_COMPLIANCE_PASSWORD=CompliancePass123
 DEFAULT_AUDITOR_EMAIL=auditor@local.test
 DEFAULT_AUDITOR_PASSWORD=AuditorPass123
 SOLANA_RPC_URL=https://api.devnet.solana.com
+SOLANA_NETWORK=devnet
 PROGRAM_ID_WALLET_WHITELIST=YourProgramIdHere123456789012345
 
 # ── KYC Service ──────────────────────────────────────────
 KYC_SERVICE_PORT=3002
+SOLANA_NETWORK=devnet
 PROGRAM_ID_COMPLIANCE_REGISTRY=YourComplianceProgramId123456789012345
 
 # ── Bank Adapter ─────────────────────────────────────────

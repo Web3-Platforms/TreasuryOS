@@ -35,7 +35,7 @@ export default async function DashboardHome() {
 
           <Link href="/wallets" style={{ display: 'block', padding: '1.5rem', border: '1px solid #333', borderRadius: '8px', background: '#111', textDecoration: 'none' }}>
             <h2 style={{ fontSize: '1.25rem', marginBottom: '0.5rem', color: '#fff' }}>Wallet Governance</h2>
-            <p style={{ color: '#888', margin: 0 }}>Approve institutional wallets for devnet sync</p>
+            <p style={{ color: '#888', margin: 0 }}>Approve institutional wallets for Solana sync preview</p>
           </Link>
 
           <Link href="/transactions" style={{ display: 'block', padding: '1.5rem', border: '1px solid #333', borderRadius: '8px', background: '#111', textDecoration: 'none' }}>

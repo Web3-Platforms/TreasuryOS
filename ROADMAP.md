@@ -78,10 +78,11 @@ Everything below is an ops/configuration task. Code is ready; environment variab
 | `DEFAULT_COMPLIANCE_PASSWORD` | Strong password | Railway → Variables |
 | `DEFAULT_AUDITOR_EMAIL` | Your auditor email | Railway → Variables |
 | `DEFAULT_AUDITOR_PASSWORD` | Strong password | Railway → Variables |
-| `PROGRAM_ID_WALLET_WHITELIST` | Devnet program ID (current: `FXFMG4hzBcuRu33mVXyTHESH7FnsmUD6Fajr17FugbRt`) | Railway → Variables |
-| `SOLANA_RPC_URL` | `https://api.devnet.solana.com` (devnet) | Railway → Variables |
+| `PROGRAM_ID_WALLET_WHITELIST` | Testnet program ID (set after the beta testnet deploy) | Railway → Variables |
+| `SOLANA_RPC_URL` | `https://api.testnet.solana.com` (beta testnet) | Railway → Variables |
+| `SOLANA_NETWORK` | `testnet` | Railway → Variables |
 | `SOLANA_SIGNING_MODE` | `filesystem` (local) or `environment` (Railway) | Railway → Variables |
-| `AUTHORITY_KEYPAIR_PATH` | Path to devnet keypair file or mounted signer file | Local env / Railway → Variables |
+| `AUTHORITY_KEYPAIR_PATH` | Path to the beta/testnet keypair file or mounted signer file | Local env / Railway → Variables |
 | `AUTHORITY_KEYPAIR_JSON` | Railway-injected signer JSON | Railway → Variables |
 | `SUPABASE_URL` | Your Supabase project URL | Railway → Variables |
 | `SUPABASE_SERVICE_KEY` | Supabase service_role key | Railway → Variables |
