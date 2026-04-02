@@ -83,7 +83,7 @@ export default async function WalletDetailPage({ params }: { params: Promise<{ i
 
         <div style={{ background: '#111', border: '1px solid #333', borderRadius: '8px', padding: '1.5rem' }}>
           <h2 style={{ fontSize: '1.25rem', marginTop: 0, marginBottom: '1rem', borderBottom: '1px solid #333', paddingBottom: '0.5rem' }}>
-            Solana Devnet Whitelist Sync
+            Solana Whitelist Sync
           </h2>
           <dl style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '1rem', margin: 0 }}>
             <dt style={{ color: '#aaa', fontWeight: 500 }}>Sync Status</dt>

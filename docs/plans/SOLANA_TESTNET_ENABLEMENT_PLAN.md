@@ -18,6 +18,7 @@ Move TreasuryOS from Solana preview-only mode to real on-chain execution on **te
   - `3ZaNXXp99xnWYYcaCJMJWnBfMxj2K4QpHkADV8D7321c`
 - The API gateway production-start path was smoke-tested locally after fixing an eager Squads SDK import that crashed Node 22 startup even when multisig was disabled.
 - The live Railway runtime now returns `GET /api/health/ready` successfully with preview-safe testnet settings on both the custom domain and the Railway domain.
+- The dashboard now exposes entity approval actions for `under_review` entities, closing the missing UI step between KYC completion and wallet request creation.
 - The remaining external work for real enablement is still:
   - flip `SOLANA_SYNC_ENABLED=true` for one controlled canary redeploy
   - approve one wallet through the normal product flow

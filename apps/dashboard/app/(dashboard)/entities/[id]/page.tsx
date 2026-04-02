@@ -3,6 +3,7 @@ import { AppShell } from '@/components/app-shell';
 import { isSumsubKycEnabled } from '@/lib/feature-flags';
 import type { EntityRecord, WalletRecord } from '@treasuryos/types';
 import Link from 'next/link';
+import { EntityReviewActions } from '@/components/entity-review-actions';
 import { SubmitEntityButton } from '@/components/submit-entity-button';
 import { RequestWalletForm } from '@/components/request-wallet-form';
 
@@ -62,12 +63,14 @@ export default async function EntityDetailPage({ params }: { params: Promise<{ i
             </div>
           </div>
           
-          {canSubmit && (
+          {canSubmit ? (
             <SubmitEntityButton
               entityId={entity.id}
               enabled={sumsubEnabled}
               disabledDescription="New entity submissions are temporarily disabled while Sumsub KYC is being prepared for launch."
             />
+          ) : (
+            <EntityReviewActions entityId={entity.id} status={entity.status} kycStatus={entity.kycStatus} />
           )}
         </div>
 

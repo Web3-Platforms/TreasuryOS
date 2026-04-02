@@ -103,6 +103,17 @@ The readiness payload confirms the intended preview-safe runtime:
 - `SOLANA_SYNC_ENABLED=false`
 - `walletSync.ready=true`
 
+### 8. Dashboard canary path completed
+
+During canary preparation, the API was ready for entity approval but the dashboard did not expose the existing `POST /api/entities/:entityId/approve` path.
+
+The dashboard now includes:
+
+- entity approval and rejection actions for `under_review` entities
+- a clearer wallet detail label (`Solana Whitelist Sync`) so the UI no longer references the old devnet wording
+
+This closes the operator gap between KYC review completion and the first wallet whitelist canary.
+
 ## Step-by-step operator sequence
 
 1. Generate the signer payload locally:

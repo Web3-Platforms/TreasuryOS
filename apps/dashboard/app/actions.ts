@@ -194,6 +194,34 @@ export async function submitEntityAction(entityId: string) {
   }
 }
 
+export async function approveEntityAction(entityId: string) {
+  try {
+    await fetchApi(`entities/${entityId}/approve`, {
+      method: 'POST',
+      body: JSON.stringify({}),
+    });
+    revalidatePath(`/entities/${entityId}`);
+    revalidatePath('/entities');
+    return { success: true };
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : 'Approve action failed' };
+  }
+}
+
+export async function rejectEntityAction(entityId: string) {
+  try {
+    await fetchApi(`entities/${entityId}/reject`, {
+      method: 'POST',
+      body: JSON.stringify({}),
+    });
+    revalidatePath(`/entities/${entityId}`);
+    revalidatePath('/entities');
+    return { success: true };
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : 'Reject action failed' };
+  }
+}
+
 export async function requestWalletAction(entityId: string, walletAddress: string) {
   try {
     await fetchApi(`wallets`, {
