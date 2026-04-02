@@ -9,8 +9,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 var SquadsService_1;
 import { Injectable, Logger } from '@nestjs/common';
-import { Connection, PublicKey, TransactionMessage } from '@solana/web3.js';
-import * as multisig from "@sqds/multisig";
+import { Connection, PublicKey, TransactionMessage, } from '@solana/web3.js';
 import { loadApiGatewayEnv } from '../../config/env.js';
 import { AuthoritySignerService } from '../security/authority-signer.service.js';
 let SquadsService = SquadsService_1 = class SquadsService {
@@ -19,6 +18,7 @@ let SquadsService = SquadsService_1 = class SquadsService {
     env = loadApiGatewayEnv();
     connection;
     multisigPda = null;
+    multisigModule = null;
     constructor(authoritySignerService) {
         this.authoritySignerService = authoritySignerService;
         this.connection = new Connection(this.env.SOLANA_RPC_URL, 'confirmed');
@@ -37,11 +37,12 @@ let SquadsService = SquadsService_1 = class SquadsService {
             return;
         }
         try {
+            await this.getMultisigModule();
             this.multisigPda = new PublicKey(this.env.SQUADS_MULTISIG_ADDRESS);
             this.logger.log(`Squads Governance initialized for multisig: ${this.env.SQUADS_MULTISIG_ADDRESS}`);
         }
         catch (error) {
-            this.logger.error('Invalid Squads Multisig Address', error instanceof Error ? error.stack : String(error));
+            this.logger.error('Failed to initialize Squads governance', error instanceof Error ? error.stack : String(error));
             if (this.env.SOLANA_SYNC_ENABLED) {
                 throw error instanceof Error ? error : new Error(String(error));
             }
@@ -55,10 +56,8 @@ let SquadsService = SquadsService_1 = class SquadsService {
         if (!this.multisigPda) {
             throw new Error('Squads Governance not initialized. Check your configuration.');
         }
-        if (!creator || (!creator.publicKey && !creator.secretKey)) {
-            throw new Error('A valid creator (Keypair or Signer) is required to propose a transaction');
-        }
-        const creatorPubkey = creator.publicKey || creator; // Fallback if it's just a PublicKey
+        const multisig = await this.getMultisigModule();
+        const creatorPubkey = creator.publicKey;
         const multisigInfo = await multisig.accounts.Multisig.fromAccountAddress(this.connection, this.multisigPda);
         // Transaction index is incremented each time a new proposal is created
         const transactionIndex = BigInt(multisigInfo.transactionIndex.toString()) + 1n;
@@ -105,6 +104,22 @@ let SquadsService = SquadsService_1 = class SquadsService {
     }
     isEnabled() {
         return !!this.multisigPda;
+    }
+    async importMultisigModule() {
+        return (await import('@sqds/multisig'));
+    }
+    async getMultisigModule() {
+        if (this.multisigModule) {
+            return this.multisigModule;
+        }
+        try {
+            this.multisigModule = await this.importMultisigModule();
+            return this.multisigModule;
+        }
+        catch (error) {
+            const cause = error instanceof Error ? error.message : String(error);
+            throw new Error(`Failed to load @sqds/multisig: ${cause}`);
+        }
     }
 };
 SquadsService = SquadsService_1 = __decorate([

@@ -74,6 +74,19 @@ The Jira workbook and import artifacts were updated to reflect:
 - `harden-solana-sync-guards` implemented
 - `configure-testnet-signer-env` now active as the next rollout step
 
+### 6. Startup blocker diagnosed and fixed
+
+During live rollout verification, GitHub Actions reported a successful Railway deploy while the public API still served the old route surface and returned `404` for `/api/health/ready`.
+
+The root cause was that Railway deploys run with `railway up --detach`, so the GitHub job can succeed before the new container actually finishes booting. The new API process was crashing on startup because `SquadsService` imported `@sqds/multisig` eagerly, and that package's published ESM entrypoint is not Node 22-safe.
+
+The fix was to lazy-load the Squads SDK only when multisig is actually enabled. This preserves the current rollout shape, where:
+
+- `SQUADS_MULTISIG_ENABLED=false`
+- `SOLANA_SYNC_ENABLED=false`
+
+Local validation now confirms `npm run start:prod --workspace=@treasuryos/api-gateway` serves `GET /api/health/ready` successfully in production mode.
+
 ## Step-by-step operator sequence
 
 1. Generate the signer payload locally:
@@ -86,7 +99,8 @@ The Jira workbook and import artifacts were updated to reflect:
    - `/api/health`
    - `/api/health/live`
    - `/api/health/ready`
-7. Only after the wallet whitelist program is deployed on testnet and readiness is green should a live canary be attempted.
+7. If GitHub Actions shows the Railway deploy step as successful but `/api/health/ready` still does not change, inspect the latest Railway deployment log because detached deploy submission does not guarantee the new container booted successfully.
+8. Only after the wallet whitelist program is deployed on testnet and readiness is green should a live canary be attempted.
 
 ## Remaining external/manual requirement
 
@@ -100,4 +114,5 @@ The repository is now prepared for the runtime configuration step, but the actua
 
 - Repository-side runtime setup assets: completed
 - Wallet whitelist program deployment on testnet: completed
-- Live Railway variable cutover: next active step
+- Live Railway variable cutover: in progress
+- Repository-side startup blocker for the next Railway deploy: resolved

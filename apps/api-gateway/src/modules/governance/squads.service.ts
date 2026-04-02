@@ -1,8 +1,48 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { Connection, PublicKey, TransactionMessage, TransactionInstruction } from '@solana/web3.js';
-import * as multisig from "@sqds/multisig";
+import {
+  Connection,
+  PublicKey,
+  TransactionMessage,
+  TransactionInstruction,
+  type Signer,
+} from '@solana/web3.js';
 import { loadApiGatewayEnv } from '../../config/env.js';
 import { AuthoritySignerService } from '../security/authority-signer.service.js';
+
+type SquadsMultisigAccount = {
+  transactionIndex: bigint | { toString(): string };
+};
+
+type SquadsMultisigModule = {
+  accounts: {
+    Multisig: {
+      fromAccountAddress(
+        connection: Connection,
+        address: PublicKey,
+      ): Promise<SquadsMultisigAccount>;
+    };
+  };
+  getVaultPda(args: { multisigPda: PublicKey; index: number }): [PublicKey, number];
+  rpc: {
+    vaultTransactionCreate(args: {
+      connection: Connection;
+      feePayer: Signer;
+      multisigPda: PublicKey;
+      transactionIndex: bigint;
+      creator: PublicKey;
+      vaultIndex: number;
+      ephemeralSigners: number;
+      transactionMessage: TransactionMessage;
+    }): Promise<unknown>;
+    proposalCreate(args: {
+      connection: Connection;
+      feePayer: Signer;
+      rentPayer: Signer;
+      multisigPda: PublicKey;
+      transactionIndex: bigint;
+    }): Promise<unknown>;
+  };
+};
 
 @Injectable()
 export class SquadsService implements OnModuleInit {
@@ -10,6 +50,7 @@ export class SquadsService implements OnModuleInit {
   private readonly env = loadApiGatewayEnv();
   private connection: Connection;
   private multisigPda: PublicKey | null = null;
+  private multisigModule: SquadsMultisigModule | null = null;
 
   constructor(private readonly authoritySignerService: AuthoritySignerService) {
     this.connection = new Connection(this.env.SOLANA_RPC_URL, 'confirmed');
@@ -33,10 +74,14 @@ export class SquadsService implements OnModuleInit {
     }
 
     try {
+      await this.getMultisigModule();
       this.multisigPda = new PublicKey(this.env.SQUADS_MULTISIG_ADDRESS);
       this.logger.log(`Squads Governance initialized for multisig: ${this.env.SQUADS_MULTISIG_ADDRESS}`);
     } catch (error) {
-      this.logger.error('Invalid Squads Multisig Address', error instanceof Error ? error.stack : String(error));
+      this.logger.error(
+        'Failed to initialize Squads governance',
+        error instanceof Error ? error.stack : String(error),
+      );
 
       if (this.env.SOLANA_SYNC_ENABLED) {
         throw error instanceof Error ? error : new Error(String(error));
@@ -48,16 +93,13 @@ export class SquadsService implements OnModuleInit {
    * Proposes a transaction to the Squads Multi-Sig vault.
    * Any institutional wallet sync or high-value movement should go through this flow when enabled.
    */
-  async proposeTransaction(instructions: any[], creator: any): Promise<bigint> {
+  async proposeTransaction(instructions: TransactionInstruction[], creator: Signer): Promise<bigint> {
     if (!this.multisigPda) {
       throw new Error('Squads Governance not initialized. Check your configuration.');
     }
 
-    if (!creator || (!creator.publicKey && !creator.secretKey)) {
-        throw new Error('A valid creator (Keypair or Signer) is required to propose a transaction');
-    }
-
-    const creatorPubkey = creator.publicKey || creator; // Fallback if it's just a PublicKey
+    const multisig = await this.getMultisigModule();
+    const creatorPubkey = creator.publicKey;
 
     const multisigInfo = await multisig.accounts.Multisig.fromAccountAddress(
       this.connection,
@@ -116,5 +158,23 @@ export class SquadsService implements OnModuleInit {
 
   isEnabled(): boolean {
     return !!this.multisigPda;
+  }
+
+  protected async importMultisigModule(): Promise<SquadsMultisigModule> {
+    return (await import('@sqds/multisig')) as SquadsMultisigModule;
+  }
+
+  private async getMultisigModule(): Promise<SquadsMultisigModule> {
+    if (this.multisigModule) {
+      return this.multisigModule;
+    }
+
+    try {
+      this.multisigModule = await this.importMultisigModule();
+      return this.multisigModule;
+    } catch (error) {
+      const cause = error instanceof Error ? error.message : String(error);
+      throw new Error(`Failed to load @sqds/multisig: ${cause}`);
+    }
   }
 }
