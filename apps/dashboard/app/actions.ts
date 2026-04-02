@@ -19,14 +19,10 @@ type ScreenTransactionActionResult =
       triggeredRules: string[];
     }
   | { error: string };
-type GenerateReportActionResult =
-  | {
-      success: true;
-      month: string;
-      reportId: string;
-      status: ReportRecord['status'];
-    }
-  | { error: string };
+export type GenerateReportActionResult = {
+  error: string | null;
+  notice: string | null;
+};
 
 const ACCESS_TOKEN_COOKIE = 'treasuryos_access_token';
 const API_BASE_URL_ERROR =
@@ -440,15 +436,50 @@ export async function screenTransactionAction(input: {
   }
 }
 
-export async function generateReportAction(month: string): Promise<GenerateReportActionResult> {
+export async function generateReportAction(
+  _previousState: GenerateReportActionResult,
+  formData: FormData,
+): Promise<GenerateReportActionResult> {
+  const month = (formData.get('month') as string | null)?.trim() ?? '';
+
+  if (!month) {
+    return {
+      error: 'Select a reporting month first.',
+      notice: null,
+    };
+  }
+
   try {
     const report = await fetchApi<ReportRecord>(`reports`, {
       method: 'POST',
       body: JSON.stringify({ month }),
     });
     revalidatePath(`/reports`);
-    return { success: true, month: report.month, reportId: report.id, status: report.status };
+
+    return {
+      error: null,
+      notice: `Report for ${report.month} is available below.`,
+    };
   } catch (error) {
-    return { error: error instanceof Error ? error.message : 'Generate report failed' };
+    const message = error instanceof Error ? error.message : 'Generate report failed';
+
+    if (message.includes('401') || message === 'Unauthorized') {
+      return {
+        error: 'Your session has expired. Please sign in again.',
+        notice: null,
+      };
+    }
+
+    if (message.includes('403')) {
+      return {
+        error: 'Your account is not allowed to generate reports.',
+        notice: null,
+      };
+    }
+
+    return {
+      error: message,
+      notice: null,
+    };
   }
 }

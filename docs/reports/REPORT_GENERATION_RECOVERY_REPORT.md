@@ -45,6 +45,8 @@ Report generation writes artifacts through `PILOT_REPORTS_DIR`, so this pathing 
 - Allowed the `auditor` role to call `POST /api/reports`
 - Kept report generation read-only in spirit: auditors can generate/export reports, but they still cannot approve entities, wallets, or transaction cases
 - Reworked API repo-root discovery so report paths resolve by searching upward for the actual monorepo root instead of assuming the source-tree layout
+- Replaced the dashboard's imperative client-triggered report action with a standard form-bound server action path
+- Defaulted the report month input to the current month so the generate button is immediately usable on first load
 - Updated workflow-role documentation to reflect that auditors can now generate/export monthly reports
 - Added regression coverage for:
   - auditor-driven report generation
