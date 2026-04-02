@@ -1,6 +1,7 @@
 'use client';
 
 import { useTransition } from 'react';
+import { useRouter } from 'next/navigation';
 import { 
   reviewTransactionAction, 
   approveTransactionAction, 
@@ -9,6 +10,7 @@ import {
 } from '@/app/actions';
 
 export function TransactionReviewActions({ caseId, status }: { caseId: string; status: string }) {
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
   const handleAction = (actionType: 'review' | 'approve' | 'reject' | 'escalate') => {
@@ -34,13 +36,16 @@ export function TransactionReviewActions({ caseId, status }: { caseId: string; s
 
       if (result?.error) {
         alert(result.error);
+        return;
       }
+
+      router.refresh();
     });
   };
 
   return (
     <div style={{ display: 'flex', gap: '0.5rem' }}>
-      {status === 'pending' && (
+      {status === 'open' && (
         <button 
           onClick={() => handleAction('review')} 
           disabled={isPending}

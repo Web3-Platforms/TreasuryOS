@@ -6,6 +6,7 @@ import { AppShell } from '@/components/app-shell';
 
 export default async function ReportsPage() {
   let reports: ReportRecord[] = [];
+  let loadError: string | null = null;
   try {
     const data = await fetchApi<{ reports: ReportRecord[] }>('reports', {
       next: { revalidate: 0 },
@@ -13,6 +14,7 @@ export default async function ReportsPage() {
     reports = data.reports ?? [];
   } catch (error) {
     console.error('Failed to load reports:', error);
+    loadError = error instanceof Error ? error.message : 'Reports could not be loaded.';
   }
 
   return (
@@ -25,6 +27,12 @@ export default async function ReportsPage() {
           </div>
           <CreateReportForm />
         </header>
+
+      {loadError && (
+        <div style={{ background: '#2a1200', border: '1px solid #8a4b08', color: '#f0c36d', padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem' }}>
+          {loadError}
+        </div>
+      )}
 
       <div style={{ border: '1px solid #333', borderRadius: '8px', overflow: 'hidden' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
@@ -83,10 +91,17 @@ export default async function ReportsPage() {
                 </td>
               </tr>
             ))}
-            {reports.length === 0 && (
+            {reports.length === 0 && !loadError && (
               <tr>
                 <td colSpan={6} style={{ padding: '3rem 1rem', textAlign: 'center', color: '#888' }}>
                   No reports generated yet.
+                </td>
+              </tr>
+            )}
+            {reports.length === 0 && loadError && (
+              <tr>
+                <td colSpan={6} style={{ padding: '3rem 1rem', textAlign: 'center', color: '#f0c36d' }}>
+                  The report list could not be loaded.
                 </td>
               </tr>
             )}

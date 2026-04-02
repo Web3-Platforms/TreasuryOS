@@ -5,10 +5,28 @@ import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { fetchApi } from '@/lib/api-client';
 import { isDemoAccessAvailable, isSumsubKycEnabled } from '@/lib/feature-flags';
-import { Jurisdiction, RiskLevel, type EntityRecord } from '@treasuryos/types';
+import { Jurisdiction, RiskLevel, type EntityRecord, type ReportRecord } from '@treasuryos/types';
 
 type ActionResult = { success: true } | { error: string };
 type CreateEntityActionResult = { success: true; entityId: string } | { error: string };
+type ScreenTransactionActionResult =
+  | {
+      success: true;
+      caseId?: string;
+      caseOpened: boolean;
+      screeningDecision: string;
+      transactionReference: string;
+      triggeredRules: string[];
+    }
+  | { error: string };
+type GenerateReportActionResult =
+  | {
+      success: true;
+      month: string;
+      reportId: string;
+      status: ReportRecord['status'];
+    }
+  | { error: string };
 
 const ACCESS_TOKEN_COOKIE = 'treasuryos_access_token';
 const API_BASE_URL_ERROR =
@@ -331,14 +349,56 @@ export async function escalateTransactionAction(caseId: string, notes: string) {
   }
 }
 
-export async function generateReportAction(month: string) {
+export async function screenTransactionAction(input: {
+  amount: number;
+  asset: string;
+  destinationWallet: string;
+  entityId: string;
+  manualReviewRequested?: boolean;
+  notes?: string;
+  referenceId?: string;
+  sourceWallet: string;
+  walletId: string;
+}): Promise<ScreenTransactionActionResult> {
   try {
-    await fetchApi(`reports`, {
+    const response = await fetchApi<{
+      case?: { id: string; transactionReference: string };
+      caseOpened: boolean;
+      screeningDecision: string;
+      transactionReference?: string;
+      triggeredRules?: string[];
+    }>('transaction-cases', {
+      method: 'POST',
+      body: JSON.stringify(input),
+    });
+
+    revalidatePath('/transactions');
+
+    if (response.case?.id) {
+      revalidatePath(`/transactions/${response.case.id}`);
+    }
+
+    return {
+      success: true,
+      caseId: response.case?.id,
+      caseOpened: response.caseOpened,
+      screeningDecision: response.screeningDecision,
+      transactionReference: response.case?.transactionReference ?? response.transactionReference ?? input.referenceId ?? '',
+      triggeredRules: Array.isArray(response.triggeredRules) ? response.triggeredRules : [],
+    };
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : 'Transaction screening failed' };
+  }
+}
+
+export async function generateReportAction(month: string): Promise<GenerateReportActionResult> {
+  try {
+    const report = await fetchApi<ReportRecord>(`reports`, {
       method: 'POST',
       body: JSON.stringify({ month }),
     });
     revalidatePath(`/reports`);
-    return { success: true };
+    return { success: true, month: report.month, reportId: report.id, status: report.status };
   } catch (error) {
     return { error: error instanceof Error ? error.message : 'Generate report failed' };
   }
