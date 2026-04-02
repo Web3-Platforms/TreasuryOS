@@ -4,7 +4,7 @@ Problem:
 - TreasuryOS is close to launch, but it is not fully live-ready yet.
 - Verified platform access is now in place for GitHub, Railway, Vercel, Neon, Upstash, Supabase, Cloudflare, Sentry, and local Solana tooling.
 - Code validation is healthy for `npm run typecheck`, `npm test`, and `API_BASE_URL=http://localhost:3001/api npm run build`.
-- The main remaining step is the final go-live cutover decision.
+- The launch go-live cutover decision has now passed; the remaining work is post-launch hardening and deferred roadmap scope.
 
 Approach:
 - Treat launch as a gated sequence instead of one big deploy.
@@ -94,7 +94,7 @@ Phase 5 — Launch acceptance and cutover
     - Follow `docs/LAUNCH_CUTOVER_RUNBOOK.md`.
 
 Ready-now execution order:
-- `execute-launch-cutover`
+- Continue post-launch monitoring and deferred hardening work
 
 Notes:
 - The biggest decision is not technical but scope: whether you want the first live release to be a pilot with KYC/on-chain limits, or a full production launch with Sumsub production and a finalized Solana path.
@@ -104,4 +104,4 @@ Notes:
 - GitHub CD is no longer a launch blocker; the deploy workflow now passes on `main` with the Railway Project Token flow and the exact `@treasuryos/api-gateway` service target.
 - Sentry is not a current launch blocker because it has been explicitly waived for beta and deferred to post-launch hardening.
 - The live smoke suite passed with two expected scope warnings: no wallet/case detail data exists yet in production because KYC and downstream approvals are intentionally disabled for the first launch scope.
-- The only remaining launch action is the monitored go/no-go cutover review described in `docs/LAUNCH_CUTOVER_RUNBOOK.md`.
+- The monitored go/no-go cutover review is complete. See `docs/LAUNCH_CUTOVER_EXECUTION_REPORT.md` for the recorded outcome.

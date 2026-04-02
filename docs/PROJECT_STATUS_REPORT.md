@@ -2,7 +2,7 @@
 
 **Report Date:** April 2, 2026  
 **Project:** TreasuryOS - Compliance & Treasury Management Platform  
-**Status:** 🟢 **PILOT LAUNCH READY FOR CUTOVER**
+**Status:** 🟢 **PILOT LAUNCH CUTOVER COMPLETE**
 
 ---
 
@@ -20,7 +20,7 @@ TreasuryOS is now in a release-candidate state for its first live pilot launch.
   - Sumsub stays disabled and shown as "coming soon"
   - Solana remains preview-only with testnet as the beta cluster if on-chain sync is later enabled
   - `SOLANA_SYNC_ENABLED=false` at launch
-- The remaining launch step is operational rather than code-level: the final go/no-go release decision and monitored cutover window.
+- The go/no-go release decision and monitored cutover window are now complete; the current state is post-cutover monitoring plus deferred hardening work.
 
 ---
 
@@ -78,13 +78,13 @@ Those checks now pass together from the repository root.
 
 ---
 
-## Remaining Launch Step
+## Launch Cutover Result
 
 ### Release cutover
 
-The project still needs a final go/no-go review and monitored cutover window.
+The launch cutover has been executed and the go decision passed.
 
-Use `docs/LAUNCH_CUTOVER_RUNBOOK.md` as the source of truth for the freeze, smoke, monitoring, and rollback steps.
+Use `docs/LAUNCH_CUTOVER_RUNBOOK.md` for the operational procedure and `docs/LAUNCH_CUTOVER_EXECUTION_REPORT.md` for the recorded outcome.
 
 ---
 
@@ -102,4 +102,4 @@ These items are intentionally not part of the first launch:
 
 ## Immediate Recommended Sequence
 
-1. Push the cutover workflow fixes and use `docs/LAUNCH_CUTOVER_RUNBOOK.md` to execute the launch go/no-go review
+1. Continue post-launch monitoring and deferred hardening from the roadmap
