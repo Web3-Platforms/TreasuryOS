@@ -19,12 +19,12 @@ export function SiteHeader() {
       className="sticky top-0 z-50 px-4 pt-4 sm:px-6 lg:px-8"
     >
       <div className="mx-auto flex w-full max-w-7xl items-center justify-between rounded-full border border-white/10 bg-slate-900/60 px-4 py-3 shadow-2xl shadow-slate-950/50 backdrop-blur-xl sm:px-6 transition-all hover:bg-slate-900/70 hover:border-white/15">
-        <Link href="/" className="flex items-center gap-3">
-          <div className="relative h-10 w-10 overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-2 shadow-lg shadow-primary/10">
-            <Image src="/logo.png" alt="TreasuryOS" fill className="object-cover p-0" priority />
+        <Link href="/" className="flex items-center gap-3 shrink-0">
+          <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-2 shadow-lg shadow-primary/10" style={{ position: 'relative' }}>
+            <Image src="/logo.png" alt="TreasuryOS" fill className="object-cover p-1" priority sizes="40px" />
           </div>
-          <div>
-            <p className="text-sm font-bold tracking-tight text-white">TreasuryOS</p>
+          <div className="hidden sm:block">
+            <p className="text-sm font-bold tracking-tight text-white m-0">TreasuryOS</p>
           </div>
         </Link>
 
