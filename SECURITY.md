@@ -102,9 +102,10 @@ curl https://api.treasuryos.aicustombot.net/api/health
 ### Seed User Passwords
 
 Seed user credentials are sourced from the Railway `DEFAULT_*_PASSWORD`
-variables and are upserted into `app_users` on the first login request handled
-by a fresh API process. Treat production rotation as incomplete until a live
-login succeeds with the new password.
+variables. By default, the API can auto-upsert them on the first login request
+handled by a fresh process. Hardened environments can disable that implicit
+behavior with `SEED_DEFAULT_USERS=false` and use `npm run seed:users` as an
+intentional bootstrap step instead.
 
 Recommended production procedure:
 
@@ -112,11 +113,14 @@ Recommended production procedure:
    manager.
 2. Update `DEFAULT_ADMIN_PASSWORD`, `DEFAULT_COMPLIANCE_PASSWORD`, and
    `DEFAULT_AUDITOR_PASSWORD` in Railway.
-3. Trigger or confirm a fresh Railway deployment for the API service.
+3. If `SEED_DEFAULT_USERS=false` is set, run `npm run seed:users` against the
+   target environment after the variable update. Otherwise, trigger or confirm a
+   fresh Railway deployment for the API service so the next login can refresh
+   the stored hashes.
 4. Verify the new credentials by performing a real login against the live API.
-5. If the login still uses stale hashes after redeploy, manually sync the
-   `app_users` password hashes with the same `scrypt` algorithm used by the API
-   before declaring the rotation complete.
+5. If the login still uses stale hashes after redeploy or manual bootstrap,
+   manually sync the `app_users` password hashes with the same `scrypt`
+   algorithm used by the API before declaring the rotation complete.
 
 Do not assume that updating the Railway variables alone is sufficient.
 

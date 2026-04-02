@@ -84,6 +84,7 @@ const envSchema = z.object({
   PILOT_CUSTOMER_PROFILE: z.string().min(3).default('eu-regulated-casp'),
   PILOT_ALLOW_MANUAL_KYC_BYPASS: stringBooleanSchema.default(false),
 
+  SEED_DEFAULT_USERS: stringBooleanSchema.default(true),
   DEFAULT_ADMIN_EMAIL: z.string().email(),
   DEFAULT_ADMIN_PASSWORD: z.string().min(8),
   DEFAULT_COMPLIANCE_EMAIL: z.string().email(),

@@ -162,11 +162,11 @@ Sentry has been added to both `api-gateway` and `dashboard`.
 
 ### 2.3 Seed User Management
 
-The default seed users (`user_admin`, `user_compliance`, `user_auditor`) are upserted every time the service starts with the passwords from environment variables. This is fine for staging but you must:
+The API gateway now supports a hardened seed-user bootstrap flow:
 
-1. Set strong, unique passwords (≥16 chars, mixed case + symbols) for all three seed users
-2. Rotate credentials after each environment migration
-3. For mainnet launch, disable the auto-seeding or move it to a one-time migration
+1. Keep `SEED_DEFAULT_USERS=true` for the current pilot launch posture if you want first-login bootstrap convenience.
+2. For stricter environments, set `SEED_DEFAULT_USERS=false` and run `npm run seed:users` when you intentionally need to create or rotate the default admin/compliance/auditor accounts.
+3. Continue to use strong, unique passwords (≥16 chars, mixed case + symbols) for all three seed users and verify a live login after each rotation.
 
 ### 2.4 GitHub Actions — CD for Railway ✅ (complete in this PR)
 

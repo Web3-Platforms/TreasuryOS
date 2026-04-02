@@ -11,6 +11,7 @@ test('api gateway accepts explicit Solana testnet network labels', () => {
   const env = loadApiGatewayEnv({
     NODE_ENV: 'test',
     AUTH_TOKEN_SECRET: '12345678901234567890123456789012',
+    SEED_DEFAULT_USERS: 'true',
     DEFAULT_ADMIN_EMAIL: 'admin@example.com',
     DEFAULT_ADMIN_PASSWORD: 'password123',
     DEFAULT_COMPLIANCE_EMAIL: 'compliance@example.com',

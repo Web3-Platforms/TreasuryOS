@@ -67,6 +67,9 @@ UPSTASH_REDIS_REST_TOKEN=your-token            # For cloud deployments
 # ── Database SSL ─────────────────────────────────────────
 DATABASE_SSL=false                             # Enable for managed databases
 
+# ── Seed bootstrap hardening ─────────────────────────────
+SEED_DEFAULT_USERS=true                        # Optional hardening switch; disable after intentional bootstrap in stricter envs
+
 # ── KYC Providers ───────────────────────────────────────
 KYC_SUMSUB_ENABLED=false                        # Keep false for the first pilot launch
 SUMSUB_APP_TOKEN=your-app-token
@@ -154,6 +157,7 @@ NEXT_PUBLIC_SENTRY_DSN=https://key@sentry.io/project-id
 - The dashboard uses `API_BASE_URL`, not `NEXT_PUBLIC_API_BASE_URL`.
 - `KYC_SUMSUB_ENABLED` and `PILOT_ALLOW_MANUAL_KYC_BYPASS` are read by both the dashboard and the API so the launch posture stays consistent.
 - Leave demo access disabled unless you explicitly want a public demo login path.
+- For stricter environments, set `SEED_DEFAULT_USERS=false` after a deliberate `npm run seed:users` bootstrap so logins no longer mutate default-user password hashes implicitly.
 
 ---
 

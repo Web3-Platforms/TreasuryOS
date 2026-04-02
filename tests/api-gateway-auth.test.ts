@@ -44,6 +44,7 @@ function withApiEnv(overrides: Record<string, string> = {}) {
     PILOT_INSTITUTION_ID: 'pilot-eu-casp',
     PILOT_INSTITUTION_NAME: 'TreasuryOS Pilot Institution',
     PILOT_CUSTOMER_PROFILE: 'eu-regulated-casp',
+    SEED_DEFAULT_USERS: 'true',
     DEFAULT_ADMIN_EMAIL: 'admin@treasuryos.local',
     DEFAULT_ADMIN_PASSWORD: 'change-me-admin',
     DEFAULT_COMPLIANCE_EMAIL: 'compliance@treasuryos.local',
@@ -79,7 +80,7 @@ function withApiEnv(overrides: Record<string, string> = {}) {
   };
 }
 
-async function bootstrapApiApp() {
+async function bootstrapApiApp(options: { seedUsers?: boolean } = {}) {
   const app = await NestFactory.create(AppModule, {
     bufferLogs: true,
     rawBody: true,
@@ -91,13 +92,24 @@ async function bootstrapApiApp() {
   });
   app.setGlobalPrefix('api');
   await app.listen(0);
-  await app.get(DatabaseService).ensureSeedUsers();
+
+  if (options.seedUsers !== false) {
+    await app.get(DatabaseService).ensureSeedUsers();
+  }
 
   const address = app.getHttpServer().address() as AddressInfo;
   return {
     app,
     baseUrl: `http://127.0.0.1:${address.port}/api`,
   };
+}
+
+function runSeedUsersScript(env: NodeJS.ProcessEnv) {
+  execFileSync(process.execPath, ['./node_modules/tsx/dist/cli.mjs', 'scripts/seed-default-users.ts'], {
+    cwd: repoRoot,
+    env,
+    stdio: 'pipe',
+  });
 }
 
 async function login(baseUrl: string, email: string, password: string) {
@@ -195,6 +207,43 @@ test('auth service validates credentials and returns user info', async () => {
       authService.login({ email: 'admin@treasuryos.local', password: 'wrong-password' }, {}),
       /Invalid credentials/,
     );
+  } finally {
+    if (app) {
+      await app.close();
+    }
+
+    fixture.restore();
+  }
+});
+
+test('default users can be bootstrapped manually when auto-seeding is disabled', async () => {
+  const fixture = withApiEnv({
+    SEED_DEFAULT_USERS: 'false',
+  });
+  let app: Awaited<ReturnType<typeof bootstrapApiApp>>['app'] | undefined;
+
+  try {
+    await resetDatabase();
+    const started = await bootstrapApiApp({ seedUsers: false });
+    app = started.app;
+
+    const rejectedLogin = await fetch(`${started.baseUrl}/auth/login`, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        email: 'admin@treasuryos.local',
+        password: 'change-me-admin',
+      }),
+    });
+
+    assert.equal(rejectedLogin.status, 401);
+
+    runSeedUsersScript(process.env);
+
+    const loginResponse = await login(started.baseUrl, 'admin@treasuryos.local', 'change-me-admin');
+    assert.equal(loginResponse.user?.email, 'admin@treasuryos.local');
   } finally {
     if (app) {
       await app.close();

@@ -29,6 +29,8 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   });
 
   private seedUsersInitialized = false;
+  private seedUsersInitialization: Promise<void> | null = null;
+  private seedUsersDisabledLogged = false;
 
   private shouldUseSsl(): boolean {
     if (this.env.DATABASE_SSL) {
@@ -73,13 +75,50 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       return;
     }
 
+    if (!this.env.SEED_DEFAULT_USERS) {
+      if (!this.seedUsersDisabledLogged) {
+        this.logger.warn(
+          'Default user auto-seeding is disabled; run `npm run seed:users` when an intentional bootstrap is required.',
+        );
+        this.seedUsersDisabledLogged = true;
+      }
+      return;
+    }
+
+    await this.initializeSeedUsers('auto');
+  }
+
+  async seedDefaultUsers() {
+    await this.initializeSeedUsers('manual');
+  }
+
+  private async initializeSeedUsers(mode: 'auto' | 'manual') {
+    if (this.seedUsersInitialized) {
+      return;
+    }
+
+    if (!this.seedUsersInitialization) {
+      this.seedUsersInitialization = this.runSeedUserInitialization(mode).finally(() => {
+        this.seedUsersInitialization = null;
+      });
+    }
+
+    await this.seedUsersInitialization;
+  }
+
+  private async runSeedUserInitialization(mode: 'auto' | 'manual') {
     try {
       await this.upsertSeedUsers();
       this.seedUsersInitialized = true;
-      this.logger.log('Seed users initialized successfully');
+      this.logger.log(
+        mode === 'manual'
+          ? 'Seed users bootstrapped successfully'
+          : 'Seed users initialized successfully',
+      );
     } catch (error) {
+      const action = mode === 'manual' ? 'bootstrap seed users' : 'initialize seed users';
       this.logger.error(
-        `Failed to initialize seed users: ${error instanceof Error ? error.message : String(error)}`,
+        `Failed to ${action}: ${error instanceof Error ? error.message : String(error)}`,
         error instanceof Error ? error.stack : '',
       );
       throw error;
