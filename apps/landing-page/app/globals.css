@@ -1,17 +1,21 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 :root {
-  --background: #020617;
-  --foreground: #f8fafc;
-  --primary: #2563eb;
+  --background: #06101e;
+  --foreground: #f7f9fc;
+  --surface: rgba(11, 23, 43, 0.78);
+  --surface-elevated: rgba(15, 28, 52, 0.92);
+  --primary: #69a4ff;
+  --primary-strong: #3b82f6;
   --primary-foreground: #ffffff;
-  --secondary: #0f172a;
-  --secondary-foreground: #f1f5f9;
-  --muted: #1e293b;
-  --muted-foreground: #94a3b8;
-  --accent: #6366f1;
+  --secondary: #0d1a30;
+  --secondary-foreground: #dbe7ff;
+  --muted: #10203a;
+  --muted-foreground: #9eabc5;
+  --accent: #8b5cf6;
   --accent-foreground: #ffffff;
-  --border: #1e293b;
+  --border: rgba(157, 176, 212, 0.18);
+  --ring: rgba(105, 164, 255, 0.28);
 }
 
 @theme {
@@ -28,47 +32,67 @@
   --color-border: var(--border);
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: 'Inter', sans-serif;
+  min-height: 100vh;
   overflow-x: hidden;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: 'Inter', sans-serif;
 }
 
-@layer utilities {
-  .bg-radial-grid {
-    background-size: 40px 40px;
-    background-image: 
-      radial-gradient(circle, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
-  }
-  .glass {
-    background: rgba(15, 23, 42, 0.4);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-  }
-  .mesh-gradient {
-    background: radial-gradient(at 0% 0%, rgba(37, 99, 235, 0.1) 0, transparent 40%),
-                radial-gradient(at 100% 0%, rgba(99, 102, 241, 0.1) 0, transparent 40%),
-                radial-gradient(at 100% 100%, rgba(37, 99, 235, 0.05) 0, transparent 40%),
-                radial-gradient(at 0% 100%, rgba(99, 102, 241, 0.05) 0, transparent 40%);
-  }
-  .animate-gradient {
-    background-size: 300% 300%;
-    animation: gradient-move 10s ease infinite;
-  }
-}
-
-@keyframes gradient-move {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+::selection {
+  background: rgba(105, 164, 255, 0.28);
 }
 
 @layer base {
   * {
     @apply border-border;
   }
-  body {
-    @apply bg-background text-foreground selection:bg-primary/30;
+
+  a,
+  button,
+  input,
+  textarea {
+    @apply outline-none;
+  }
+}
+
+@layer components {
+  .shell-container {
+    @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
+  }
+
+  .section-space {
+    @apply py-20 sm:py-24 lg:py-28;
+  }
+
+  .surface-panel {
+    background: linear-gradient(180deg, rgba(18, 31, 55, 0.92) 0%, rgba(10, 19, 37, 0.86) 100%);
+    box-shadow: 0 32px 100px -48px rgba(15, 23, 42, 0.95);
+    @apply rounded-[2rem] border border-white/10 backdrop-blur-xl;
+  }
+
+  .eyebrow {
+    @apply inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-primary;
+  }
+
+  .button-primary {
+    @apply inline-flex items-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-white;
+  }
+
+  .button-secondary {
+    @apply inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition hover:border-white/20 hover:bg-white/10;
+  }
+
+  .label-text {
+    @apply text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400;
+  }
+
+  .input-shell {
+    @apply w-full rounded-[1.4rem] border border-white/10 bg-slate-950/60 px-5 py-4 text-base text-white placeholder:text-slate-500 focus:border-primary/40 focus:ring-4 focus:ring-[var(--ring)];
   }
 }
