@@ -361,6 +361,107 @@ test('pilot manual KYC bypass approves an entity and unlocks wallet requests whe
   }
 });
 
+test('editing an approved entity resets verification and allows pilot reapproval', async () => {
+  const fixture = withApiEnv({ PILOT_ALLOW_MANUAL_KYC_BYPASS: 'true' });
+  let app: Awaited<ReturnType<typeof bootstrapApiApp>>['app'] | undefined;
+
+  try {
+    await resetDatabase();
+    const started = await bootstrapApiApp();
+    app = started.app;
+
+    const complianceLogin = await login(started.baseUrl, 'compliance@treasuryos.local', 'change-me-compliance');
+
+    const createEntityResponse = await fetch(`${started.baseUrl}/entities`, {
+      method: 'POST',
+      headers: {
+        authorization: `Bearer ${complianceLogin.accessToken}`,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        legalName: 'Editable Pilot Entity GmbH',
+        jurisdiction: 'EU',
+        riskLevel: 'medium',
+      }),
+    });
+    assert.equal(createEntityResponse.status, 201);
+    const createdEntity = await createEntityResponse.json();
+
+    const initialApproveResponse = await fetch(`${started.baseUrl}/entities/${createdEntity.id}/approve`, {
+      method: 'POST',
+      headers: {
+        authorization: `Bearer ${complianceLogin.accessToken}`,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({ notes: 'Initial pilot approval' }),
+    });
+    assert.equal(initialApproveResponse.status, 201);
+
+    const updateEntityResponse = await fetch(`${started.baseUrl}/entities/${createdEntity.id}`, {
+      method: 'PATCH',
+      headers: {
+        authorization: `Bearer ${complianceLogin.accessToken}`,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        legalName: 'Editable Pilot Entity Holdings GmbH',
+        notes: 'Updated entity profile before resubmission',
+        riskLevel: 'high',
+      }),
+    });
+    assert.equal(updateEntityResponse.status, 200);
+    const updatedEntity = await updateEntityResponse.json();
+    assert.equal(updatedEntity.status, 'draft');
+    assert.equal(updatedEntity.kycStatus, 'Pending');
+    assert.equal(updatedEntity.legalName, 'Editable Pilot Entity Holdings GmbH');
+    assert.equal(updatedEntity.riskLevel, 'high');
+    assert.equal(updatedEntity.kycApplicantId, undefined);
+    assert.equal(updatedEntity.latestKycReviewAnswer, undefined);
+    assert.equal(updatedEntity.reviewedAt, undefined);
+    assert.equal(updatedEntity.submittedAt, undefined);
+
+    const auditResponse = await fetch(`${started.baseUrl}/audit/events?limit=25`, {
+      headers: {
+        authorization: `Bearer ${complianceLogin.accessToken}`,
+      },
+    });
+    assert.equal(auditResponse.status, 200);
+    const auditPayload = await auditResponse.json() as {
+      events: Array<{
+        action: string;
+        metadata?: Record<string, unknown>;
+        resourceId: string;
+      }>;
+    };
+    const updateAudit = auditPayload.events.find(
+      (event) => event.action === 'entity.updated' && event.resourceId === createdEntity.id,
+    );
+    assert.ok(updateAudit);
+    assert.equal(updateAudit.metadata?.workflowReset, true);
+    assert.equal(updateAudit.metadata?.previousStatus, 'approved');
+    assert.equal(updateAudit.metadata?.previousKycStatus, 'Approved');
+
+    const reapproveResponse = await fetch(`${started.baseUrl}/entities/${createdEntity.id}/approve`, {
+      method: 'POST',
+      headers: {
+        authorization: `Bearer ${complianceLogin.accessToken}`,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({ notes: 'Re-approved after entity update' }),
+    });
+    assert.equal(reapproveResponse.status, 201);
+    const reapprovedEntity = await reapproveResponse.json();
+    assert.equal(reapprovedEntity.status, 'approved');
+    assert.equal(reapprovedEntity.kycStatus, 'Approved');
+  } finally {
+    if (app) {
+      await app.close();
+    }
+
+    fixture.restore();
+  }
+});
+
 test('rbac, onboarding, wallet governance, transaction review, and reporting work end to end when Sumsub is enabled', async () => {
   const fixture = withApiEnv({ KYC_SUMSUB_ENABLED: 'true' });
   const originalFetch = globalThis.fetch;
@@ -786,7 +887,7 @@ test('rbac, onboarding, wallet governance, transaction review, and reporting wor
     const generateReportResponse = await fetch(`${started.baseUrl}/reports`, {
       method: 'POST',
       headers: {
-        authorization: `Bearer ${complianceLogin.accessToken}`,
+        authorization: `Bearer ${auditorLogin.accessToken}`,
         'content-type': 'application/json',
       },
       body: JSON.stringify({

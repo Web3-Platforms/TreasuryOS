@@ -37,7 +37,7 @@ export class ReportsController {
   }
 
   @Post()
-  @Roles(UserRole.Admin, UserRole.ComplianceOfficer)
+  @Roles(UserRole.Admin, UserRole.ComplianceOfficer, UserRole.Auditor)
   generateMonthlyReport(@Body() body: unknown, @Req() request: ApiRequest) {
     return this.reportsService.generateMonthlyReport(body, extractActor(request));
   }

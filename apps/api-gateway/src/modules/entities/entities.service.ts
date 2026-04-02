@@ -133,40 +133,60 @@ export class EntitiesService {
     return entity;
   }
 
-  async updateDraft(entityId: string, input: UpdateDraftDto, actor: AuthenticatedUser) {
+  async updateEntity(entityId: string, input: UpdateDraftDto, actor: AuthenticatedUser) {
     const patch = updateDraftSchema.parse(input);
 
-    const updatedEntity = await this.database.withTransaction(async (client) => {
-      const entity = await this.entitiesRepository.findById(entityId, client);
+    const { entity: updatedEntity, previousKycStatus, previousStatus, workflowReset } =
+      await this.database.withTransaction(async (client) => {
+        const entity = await this.requireEntityFromStore(entityId, client);
+        const previousStatus = entity.status;
+        const previousKycStatus = entity.kycStatus;
 
-      if (!entity) {
-        throw new NotFoundException(`Entity ${entityId} not found`);
-      }
+        if (patch.jurisdiction && patch.jurisdiction !== Jurisdiction.EU) {
+          throw new BadRequestException('Phase 0 only supports EU entities');
+        }
 
-      if (entity.status !== EntityStatus.Draft) {
-        throw new ConflictException('Only draft entities can be edited');
-      }
+        entity.legalName = patch.legalName ?? entity.legalName;
+        entity.jurisdiction = patch.jurisdiction ?? entity.jurisdiction;
+        entity.riskLevel = patch.riskLevel ?? entity.riskLevel;
+        entity.notes = patch.notes ?? entity.notes;
+        entity.lastUpdatedAt = new Date().toISOString();
 
-      if (patch.jurisdiction && patch.jurisdiction !== Jurisdiction.EU) {
-        throw new BadRequestException('Phase 0 only supports EU entities');
-      }
+        const workflowReset = entity.status !== EntityStatus.Draft;
 
-      entity.legalName = patch.legalName ?? entity.legalName;
-      entity.jurisdiction = patch.jurisdiction ?? entity.jurisdiction;
-      entity.riskLevel = patch.riskLevel ?? entity.riskLevel;
-      entity.notes = patch.notes ?? entity.notes;
-      entity.lastUpdatedAt = new Date().toISOString();
+        if (workflowReset) {
+          this.resetEntityVerificationState(entity);
+        }
 
-      await this.entitiesRepository.save(entity, client);
-      return entity;
-    });
+        await this.entitiesRepository.save(entity, client);
+        return {
+          entity,
+          previousKycStatus,
+          previousStatus,
+          workflowReset,
+        };
+      });
 
     await this.auditService.record({
       action: 'entity.updated',
       actor,
       resourceType: 'entity',
       resourceId: updatedEntity.id,
-      summary: `Entity draft ${updatedEntity.legalName} was updated`,
+      summary: workflowReset
+        ? `Entity ${updatedEntity.legalName} was updated and moved back to draft for renewed approval`
+        : `Entity draft ${updatedEntity.legalName} was updated`,
+      metadata: workflowReset
+        ? {
+            previousKycStatus,
+            previousStatus,
+            workflowReset: true,
+          }
+        : undefined,
+    });
+    await this.queueService.enqueue(this.env.REDIS_QUEUE_NAME, {
+      entityId: updatedEntity.id,
+      type: 'entity.updated',
+      workflowReset,
     });
 
     return updatedEntity;
@@ -298,6 +318,19 @@ export class EntitiesService {
     }
 
     return true;
+  }
+
+  private resetEntityVerificationState(entity: EntityRecord) {
+    entity.status = EntityStatus.Draft;
+    entity.kycStatus = KycStatus.Pending;
+    entity.submittedAt = undefined;
+    entity.reviewedAt = undefined;
+    entity.kycApplicantId = undefined;
+    entity.kycLevelName = undefined;
+    entity.kycCorrelationId = undefined;
+    entity.latestKycWebhookType = undefined;
+    entity.latestKycReviewAnswer = undefined;
+    entity.lastKycEventAt = undefined;
   }
 
   async rejectEntity(entityId: string, input: EntityDecisionDto, actor: AuthenticatedUser) {

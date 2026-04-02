@@ -5,7 +5,48 @@ import { fileURLToPath } from 'node:url';
 import { z } from 'zod';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const repoRoot = path.resolve(__dirname, '../../../../');
+
+function isRepoRootCandidate(candidatePath: string) {
+  return (
+    fs.existsSync(path.join(candidatePath, 'apps')) &&
+    fs.existsSync(path.join(candidatePath, 'package-lock.json')) &&
+    fs.existsSync(path.join(candidatePath, 'railway.json'))
+  );
+}
+
+function searchUpwardForRepoRoot(startPath: string) {
+  let currentPath = path.resolve(startPath);
+
+  while (true) {
+    if (isRepoRootCandidate(currentPath)) {
+      return currentPath;
+    }
+
+    const parentPath = path.dirname(currentPath);
+
+    if (parentPath === currentPath) {
+      return null;
+    }
+
+    currentPath = parentPath;
+  }
+}
+
+export function resolveApiGatewayRepoRoot(options?: {
+  currentFileDir?: string;
+  currentWorkingDirectory?: string;
+}) {
+  const currentFileDir = options?.currentFileDir ?? __dirname;
+  const currentWorkingDirectory = options?.currentWorkingDirectory ?? process.cwd();
+
+  return (
+    searchUpwardForRepoRoot(currentWorkingDirectory) ??
+    searchUpwardForRepoRoot(currentFileDir) ??
+    path.resolve(currentFileDir, '../../../../')
+  );
+}
+
+const repoRoot = resolveApiGatewayRepoRoot();
 
 const stringBooleanSchema = z.preprocess((value) => {
   if (typeof value === 'boolean') {

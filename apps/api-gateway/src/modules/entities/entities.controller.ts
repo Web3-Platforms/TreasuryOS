@@ -44,8 +44,8 @@ export class EntitiesController {
 
   @Patch(':entityId')
   @Roles(UserRole.Admin, UserRole.ComplianceOfficer)
-  updateDraft(@Param('entityId') entityId: string, @Body() body: UpdateDraftDto, @Req() request: ApiRequest) {
-    return this.entitiesService.updateDraft(entityId, body, extractActor(request));
+  updateEntity(@Param('entityId') entityId: string, @Body() body: UpdateDraftDto, @Req() request: ApiRequest) {
+    return this.entitiesService.updateEntity(entityId, body, extractActor(request));
   }
 
   @Post(':entityId/submit')

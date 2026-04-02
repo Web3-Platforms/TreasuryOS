@@ -19,6 +19,7 @@
 
 - inspect audit evidence
 - inspect reports
+- generate and export read-only monthly reports
 - no approval authority
 
 ## Workflow States

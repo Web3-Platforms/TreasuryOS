@@ -8,3 +8,7 @@ const entityDraftCreatorRoles = new Set<UserRole>([
 export function canCreateEntityDraft(user: Pick<AuthenticatedUser, 'roles'> | null | undefined) {
   return Boolean(user?.roles.some((role) => entityDraftCreatorRoles.has(role)));
 }
+
+export function canEditEntityInfo(user: Pick<AuthenticatedUser, 'roles'> | null | undefined) {
+  return canCreateEntityDraft(user);
+}

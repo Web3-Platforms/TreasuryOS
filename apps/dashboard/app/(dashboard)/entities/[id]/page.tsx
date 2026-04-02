@@ -1,19 +1,30 @@
 import { fetchApi } from '@/lib/api-client';
 import { AppShell } from '@/components/app-shell';
 import { isPilotManualKycBypassEnabled, isSumsubKycEnabled } from '@/lib/feature-flags';
-import type { EntityRecord, WalletRecord } from '@treasuryos/types';
+import { getCurrentUser } from '@/lib/current-user';
+import { canEditEntityInfo } from '@/lib/rbac';
+import type { AuthenticatedUser, EntityRecord, WalletRecord } from '@treasuryos/types';
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import { EntityReviewActions } from '@/components/entity-review-actions';
 import { SubmitEntityButton } from '@/components/submit-entity-button';
 import { RequestWalletForm } from '@/components/request-wallet-form';
+import { EditEntityForm } from '@/components/edit-entity-form';
 
 export default async function EntityDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const sumsubEnabled = isSumsubKycEnabled();
   const manualKycBypassEnabled = isPilotManualKycBypassEnabled();
+  let user: AuthenticatedUser;
   let entity: EntityRecord | null = null;
   let wallets: WalletRecord[] = [];
-  
+
+  try {
+    user = await getCurrentUser();
+  } catch {
+    redirect('/login');
+  }
+
   try {
     entity = await fetchApi<EntityRecord>(`entities/${id}`);
     const walletsData = await fetchApi<{ wallets: WalletRecord[] }>(`wallets?entityId=${id}`);
@@ -44,6 +55,7 @@ export default async function EntityDetailPage({ params }: { params: Promise<{ i
   const showSubmitButton = canSubmit && !canUseManualKycBypass;
   const showManualBypassNotice = canUseManualKycBypass && entity.kycStatus !== 'Approved';
   const showComingSoonKyc = !sumsubEnabled && !entity.kycApplicantId && entity.status === 'draft';
+  const showEditEntityForm = canEditEntityInfo(user);
   const kycStatusLabel = showComingSoonKyc ? 'Coming soon' : entity.kycStatus;
   const kycStatusBackground = showComingSoonKyc
     ? '#5c3b00'
@@ -112,6 +124,14 @@ export default async function EntityDetailPage({ params }: { params: Promise<{ i
             <dd style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{entity.notes || 'None'}</dd>
           </dl>
         </div>
+
+        {showEditEntityForm && (
+          <EditEntityForm
+            entity={entity}
+            manualKycBypassEnabled={manualKycBypassEnabled}
+            sumsubEnabled={sumsubEnabled}
+          />
+        )}
 
         <div style={{ background: '#111', border: '1px solid #333', borderRadius: '8px', padding: '1.5rem' }}>
           <h2 style={{ fontSize: '1.25rem', marginTop: 0, marginBottom: '1rem', borderBottom: '1px solid #333', paddingBottom: '0.5rem' }}>

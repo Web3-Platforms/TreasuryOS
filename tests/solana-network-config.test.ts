@@ -1,7 +1,10 @@
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 import test from 'node:test';
 
-import { loadApiGatewayEnv } from '../apps/api-gateway/src/config/env.js';
+import { loadApiGatewayEnv, resolveApiGatewayRepoRoot } from '../apps/api-gateway/src/config/env.js';
 import { loadKycServiceEnv } from '../apps/kyc-service/src/config/env.js';
 
 test('api gateway accepts explicit Solana testnet network labels', () => {
@@ -39,4 +42,26 @@ test('kyc service defaults Solana network to devnet but accepts testnet override
     PROGRAM_ID_COMPLIANCE_REGISTRY: 'ASG5VS1jFQSsLfyuACNvfK2oFsoBd4TQjJBK1uvznorm',
   });
   assert.equal(testnetEnv.SOLANA_NETWORK, 'testnet');
+});
+
+test('api gateway repo root resolution finds the monorepo root from compiled dist paths', () => {
+  const repoRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'treasuryos-env-root-'));
+  try {
+    fs.mkdirSync(path.join(repoRoot, 'apps', 'api-gateway', 'dist', 'apps', 'api-gateway', 'src', 'config'), {
+      recursive: true,
+    });
+    fs.writeFileSync(path.join(repoRoot, 'package-lock.json'), '');
+    fs.writeFileSync(path.join(repoRoot, 'railway.json'), '{}');
+    const compiledConfigDir = path.join(repoRoot, 'apps/api-gateway/dist/apps/api-gateway/src/config');
+    const nestedWorkingDirectory = path.join(repoRoot, 'apps/api-gateway');
+
+    const resolved = resolveApiGatewayRepoRoot({
+      currentFileDir: compiledConfigDir,
+      currentWorkingDirectory: nestedWorkingDirectory,
+    });
+
+    assert.equal(resolved, repoRoot);
+  } finally {
+    fs.rmSync(repoRoot, { recursive: true, force: true });
+  }
 });

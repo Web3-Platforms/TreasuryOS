@@ -166,6 +166,55 @@ export async function createEntityAction(formData: FormData): Promise<CreateEnti
   }
 }
 
+export async function updateEntityAction(entityId: string, formData: FormData): Promise<ActionResult> {
+  const legalName = (formData.get('legalName') as string | null)?.trim() ?? '';
+  const jurisdiction = ((formData.get('jurisdiction') as string | null)?.trim() ?? Jurisdiction.EU) as Jurisdiction;
+  const riskLevel = ((formData.get('riskLevel') as string | null)?.trim() ?? RiskLevel.Medium) as RiskLevel;
+  const notes = (formData.get('notes') as string | null)?.trim() ?? '';
+
+  if (legalName.length < 2) {
+    return { error: 'Legal name must be at least 2 characters long.' };
+  }
+
+  if (jurisdiction !== Jurisdiction.EU) {
+    return { error: 'The current pilot launch only supports EU entities.' };
+  }
+
+  try {
+    await fetchApi<EntityRecord>(`entities/${entityId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({
+        legalName,
+        jurisdiction,
+        notes,
+        riskLevel,
+      }),
+    });
+
+    revalidatePath('/entities');
+    revalidatePath(`/entities/${entityId}`);
+    revalidatePath('/transactions');
+
+    return { success: true };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Update entity failed';
+
+    if (message.includes('403')) {
+      return { error: 'You do not have permission to edit entity information.' };
+    }
+
+    if (message.includes('401')) {
+      return { error: 'Your session has expired. Please sign in again.' };
+    }
+
+    if (message.includes('400')) {
+      return { error: message.replace(/^API Error 400:\s*/, '') || 'Update entity failed.' };
+    }
+
+    return { error: message };
+  }
+}
+
 export async function demoLoginAction(): Promise<ActionResult> {
   if (!isDemoAccessAvailable()) {
     return { error: 'Demo access is not available right now.' };
