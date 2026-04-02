@@ -35,12 +35,14 @@ export declare enum WalletStatus {
     Submitted = "submitted",
     UnderReview = "under_review",
     Approved = "approved",
+    ProposalPending = "proposal_pending",
     Rejected = "rejected",
     Synced = "synced",
     SyncFailed = "sync_failed"
 }
 export declare enum ChainSyncStatus {
     Pending = "pending",
+    ProposalPending = "proposal_pending",
     Sent = "sent",
     Skipped = "skipped",
     Failed = "failed"
@@ -222,7 +224,7 @@ export interface WalletWhitelistSyncResult {
     signature: string;
 }
 export declare const entityWorkflowStates: readonly [EntityStatus.Draft, EntityStatus.Submitted, EntityStatus.KycPending, EntityStatus.UnderReview, EntityStatus.Approved, EntityStatus.Rejected];
-export declare const walletWorkflowStates: readonly [WalletStatus.Submitted, WalletStatus.UnderReview, WalletStatus.Approved, WalletStatus.Rejected, WalletStatus.Synced, WalletStatus.SyncFailed];
+export declare const walletWorkflowStates: readonly [WalletStatus.Submitted, WalletStatus.UnderReview, WalletStatus.Approved, WalletStatus.ProposalPending, WalletStatus.Rejected, WalletStatus.Synced, WalletStatus.SyncFailed];
 export declare const transactionCaseWorkflowStates: readonly [TransactionCaseStatus.Open, TransactionCaseStatus.UnderReview, TransactionCaseStatus.Approved, TransactionCaseStatus.Rejected, TransactionCaseStatus.Escalated];
 export declare const reportWorkflowStates: readonly [ReportJobStatus.Queued, ReportJobStatus.Generated, ReportJobStatus.Failed];
 export declare const pilotRolePermissions: Record<UserRole, string[]>;

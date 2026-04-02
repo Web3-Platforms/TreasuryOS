@@ -4,6 +4,7 @@ import { SquadsService } from '../governance/squads.service.js';
 import { WalletSyncReadinessService } from './wallet-sync-readiness.service.js';
 export type WalletSyncOutcome = {
     chainSyncStatus: ChainSyncStatus;
+    executionPath: 'direct' | 'preview' | 'squads';
     signature?: string;
     syncError?: string;
     whitelistEntry: string;

@@ -197,6 +197,8 @@ export class WalletsService {
 
       if (syncResult.chainSyncStatus === ChainSyncStatus.Sent) {
         record.status = WalletStatus.Synced;
+      } else if (syncResult.chainSyncStatus === ChainSyncStatus.ProposalPending) {
+        record.status = WalletStatus.ProposalPending;
       } else if (syncResult.chainSyncStatus === ChainSyncStatus.Failed) {
         record.status = WalletStatus.SyncFailed;
       } else {
@@ -212,10 +214,14 @@ export class WalletsService {
       actor,
       resourceType: 'wallet',
       resourceId: wallet.id,
-      summary: `Wallet ${wallet.walletAddress} was approved`,
+      summary:
+        wallet.chainSyncStatus === ChainSyncStatus.ProposalPending
+          ? `Wallet ${wallet.walletAddress} was approved and is awaiting Squads proposal execution`
+          : `Wallet ${wallet.walletAddress} was approved`,
       metadata: {
         chainSyncStatus: wallet.chainSyncStatus,
         chainTxSignature: wallet.chainTxSignature ?? null,
+        executionPath: syncResult.executionPath,
         whitelistEntry: wallet.whitelistEntry ?? null,
       },
     });
@@ -224,6 +230,7 @@ export class WalletsService {
       walletId: wallet.id,
       entityId: wallet.entityId,
       chainSyncStatus: wallet.chainSyncStatus,
+      executionPath: syncResult.executionPath,
     });
 
     return wallet;

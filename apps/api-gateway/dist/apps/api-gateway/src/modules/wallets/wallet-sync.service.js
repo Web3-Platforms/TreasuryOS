@@ -45,6 +45,7 @@ let WalletSyncService = WalletSyncService_1 = class WalletSyncService {
         if (!this.env.SOLANA_SYNC_ENABLED) {
             return {
                 chainSyncStatus: ChainSyncStatus.Skipped,
+                executionPath: 'preview',
                 whitelistEntry: preview.whitelistEntry,
             };
         }
@@ -62,7 +63,8 @@ let WalletSyncService = WalletSyncService_1 = class WalletSyncService {
                 }
                 const proposalIndex = await this.squadsService.proposeTransaction([instruction], authoritySigner);
                 return {
-                    chainSyncStatus: ChainSyncStatus.Pending,
+                    chainSyncStatus: ChainSyncStatus.ProposalPending,
+                    executionPath: 'squads',
                     signature: `squads-proposal-${proposalIndex}`,
                     whitelistEntry: whitelistEntry.toBase58(),
                 };
@@ -73,6 +75,7 @@ let WalletSyncService = WalletSyncService_1 = class WalletSyncService {
             const signature = await sendAndConfirmTransaction(connection, transaction, [authoritySigner], { commitment: 'confirmed' });
             return {
                 chainSyncStatus: ChainSyncStatus.Sent,
+                executionPath: 'direct',
                 signature,
                 whitelistEntry: whitelistEntry.toBase58(),
             };
@@ -81,6 +84,7 @@ let WalletSyncService = WalletSyncService_1 = class WalletSyncService {
             this.logger.error(`Sync failed for wallet ${wallet.id}`, error instanceof Error ? error.stack : String(error));
             return {
                 chainSyncStatus: ChainSyncStatus.Failed,
+                executionPath: this.env.SQUADS_MULTISIG_ENABLED ? 'squads' : 'direct',
                 syncError: error instanceof Error ? error.message : String(error),
                 whitelistEntry: preview.whitelistEntry,
             };

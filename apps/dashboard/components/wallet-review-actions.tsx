@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { reviewWalletAction, approveWalletAction, rejectWalletAction } from '../app/actions';
-import type { WalletStatus } from '@treasuryos/types';
+import { WalletStatus } from '@treasuryos/types';
 
 interface WalletReviewActionsProps {
   walletId: string;
@@ -32,6 +32,11 @@ export function WalletReviewActions({ walletId, status }: WalletReviewActionsPro
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'flex-end' }}>
       {error && (
         <div style={{ color: '#ff4d4f', fontSize: '0.875rem' }}>{error}</div>
+      )}
+      {status === WalletStatus.ProposalPending && (
+        <div style={{ color: '#f0c36d', fontSize: '0.875rem', maxWidth: '320px', textAlign: 'right' }}>
+          Wallet approval is complete, but the Squads proposal still needs on-chain approval and execution.
+        </div>
       )}
       <div style={{ display: 'flex', gap: '1rem' }}>
         {status === 'submitted' && (

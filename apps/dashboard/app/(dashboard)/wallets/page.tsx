@@ -1,6 +1,6 @@
 import { fetchApi } from '@/lib/api-client';
 import { AppShell } from '@/components/app-shell';
-import type { WalletRecord } from '@treasuryos/types';
+import { ChainSyncStatus, WalletStatus, type WalletRecord } from '@treasuryos/types';
 import Link from 'next/link';
 
 export default async function WalletsPage() {
@@ -48,9 +48,14 @@ export default async function WalletsPage() {
                     <td style={{ padding: '1rem' }}>
                       <span style={{ 
                         padding: '0.25rem 0.5rem', 
-                        background: wallet.status === 'approved' || wallet.status === 'synced' ? '#0f5132' 
-                                  : wallet.status === 'rejected' ? '#842029' 
-                                  : '#333', 
+                        background:
+                          wallet.status === WalletStatus.Approved || wallet.status === WalletStatus.Synced
+                            ? '#0f5132'
+                            : wallet.status === WalletStatus.ProposalPending
+                              ? '#5c3b00'
+                              : wallet.status === WalletStatus.Rejected
+                                ? '#842029'
+                                : '#333', 
                         borderRadius: '4px', 
                         fontSize: '0.875rem' 
                       }}>
@@ -60,9 +65,15 @@ export default async function WalletsPage() {
                     <td style={{ padding: '1rem' }}>
                       <span style={{ 
                         padding: '0.25rem 0.5rem', 
-                        background: wallet.chainSyncStatus === 'sent' ? '#0f5132' 
-                                  : wallet.chainSyncStatus === 'failed' ? '#842029' 
-                                  : wallet.chainSyncStatus === 'skipped' ? '#333'
+                        background:
+                          wallet.chainSyncStatus === ChainSyncStatus.Sent
+                            ? '#0f5132'
+                            : wallet.chainSyncStatus === ChainSyncStatus.ProposalPending
+                              ? '#5c3b00'
+                              : wallet.chainSyncStatus === ChainSyncStatus.Failed
+                                ? '#842029'
+                                : wallet.chainSyncStatus === ChainSyncStatus.Skipped
+                                  ? '#333'
                                   : '#5c636a', 
                         borderRadius: '4px', 
                         fontSize: '0.875rem' 
@@ -72,7 +83,7 @@ export default async function WalletsPage() {
                     </td>
                     <td style={{ padding: '1rem' }}>
                       <Link href={`/wallets/${wallet.id}`} style={{ color: '#0d6efd', textDecoration: 'none', fontWeight: 500 }}>
-                        Review &rarr;
+                        {wallet.status === WalletStatus.ProposalPending ? 'Track Proposal →' : 'Review →'}
                       </Link>
                     </td>
                   </tr>

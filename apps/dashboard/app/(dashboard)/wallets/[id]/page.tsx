@@ -1,6 +1,6 @@
 import { fetchApi } from '@/lib/api-client';
 import { AppShell } from '@/components/app-shell';
-import type { WalletRecord } from '@treasuryos/types';
+import { ChainSyncStatus, WalletStatus, type WalletRecord } from '@treasuryos/types';
 import Link from 'next/link';
 import { WalletReviewActions } from '@/components/wallet-review-actions';
 
@@ -26,6 +26,18 @@ export default async function WalletDetailPage({ params }: { params: Promise<{ i
     );
   }
 
+  const isProposalPending =
+    wallet.status === WalletStatus.ProposalPending ||
+    wallet.chainSyncStatus === ChainSyncStatus.ProposalPending;
+  const syncStatusBackground =
+    wallet.chainSyncStatus === ChainSyncStatus.Sent
+      ? '#0f5132'
+      : wallet.chainSyncStatus === ChainSyncStatus.ProposalPending
+        ? '#5c3b00'
+        : wallet.chainSyncStatus === ChainSyncStatus.Failed
+          ? '#842029'
+          : '#333';
+
   return (
     <AppShell>
       <div style={{ padding: '2rem', maxWidth: '800px' }}>
@@ -37,7 +49,14 @@ export default async function WalletDetailPage({ params }: { params: Promise<{ i
           <div>
             <h1 style={{ margin: '0 0 0.5rem 0' }}>Wallet Detail</h1>
             <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-              <span style={{ padding: '0.25rem 0.5rem', background: '#333', borderRadius: '4px', fontSize: '0.875rem' }}>
+              <span
+                style={{
+                  padding: '0.25rem 0.5rem',
+                  background: wallet.status === WalletStatus.ProposalPending ? '#5c3b00' : '#333',
+                  borderRadius: '4px',
+                  fontSize: '0.875rem',
+                }}
+              >
                 {wallet.status}
               </span>
               <span style={{ color: '#888', fontSize: '0.875rem' }}>ID: {wallet.id}</span>
@@ -85,12 +104,17 @@ export default async function WalletDetailPage({ params }: { params: Promise<{ i
           <h2 style={{ fontSize: '1.25rem', marginTop: 0, marginBottom: '1rem', borderBottom: '1px solid #333', paddingBottom: '0.5rem' }}>
             Solana Whitelist Sync
           </h2>
+          {isProposalPending && (
+            <div style={{ marginBottom: '1rem', padding: '0.875rem 1rem', borderRadius: '8px', background: '#2a1200', border: '1px solid #8a4b08', color: '#f0c36d' }}>
+              This wallet is waiting for Squads multisig approval and execution. It should not be treated as fully synced until the proposal is executed on-chain.
+            </div>
+          )}
           <dl style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '1rem', margin: 0 }}>
             <dt style={{ color: '#aaa', fontWeight: 500 }}>Sync Status</dt>
             <dd style={{ margin: 0 }}>
               <span style={{ 
                 padding: '0.25rem 0.5rem', 
-                background: wallet.chainSyncStatus === 'sent' ? '#0f5132' : wallet.chainSyncStatus === 'failed' ? '#842029' : '#333', 
+                background: syncStatusBackground, 
                 borderRadius: '4px', 
                 fontSize: '0.875rem' 
               }}>
@@ -103,7 +127,7 @@ export default async function WalletDetailPage({ params }: { params: Promise<{ i
               {wallet.whitelistEntry || 'Pending approval'}
             </dd>
 
-            <dt style={{ color: '#aaa', fontWeight: 500 }}>Tx Signature</dt>
+            <dt style={{ color: '#aaa', fontWeight: 500 }}>{isProposalPending ? 'Proposal Reference' : 'Tx Signature'}</dt>
             <dd style={{ margin: 0, fontFamily: 'monospace', color: '#888', wordBreak: 'break-all' }}>
               {wallet.chainTxSignature || 'N/A'}
             </dd>

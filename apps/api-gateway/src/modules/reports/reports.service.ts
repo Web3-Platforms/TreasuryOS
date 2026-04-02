@@ -238,8 +238,8 @@ export class ReportsService {
     );
 
     const walletsResult = await this.database.pool.query(
-      'SELECT id FROM wallets WHERE COALESCE(reviewed_at, updated_at) >= $1 AND COALESCE(reviewed_at, updated_at) < $2 AND status IN ($3, $4)',
-      [startIso, endIso, WalletStatus.Approved, WalletStatus.Synced]
+      'SELECT id FROM wallets WHERE COALESCE(reviewed_at, updated_at) >= $1 AND COALESCE(reviewed_at, updated_at) < $2 AND status IN ($3, $4, $5)',
+      [startIso, endIso, WalletStatus.Approved, WalletStatus.ProposalPending, WalletStatus.Synced]
     );
 
     const casesResult = await this.database.pool.query(
@@ -293,7 +293,7 @@ export class ReportsService {
         '',
         'approved_wallet_count',
         String(metrics.approvedWalletCount),
-        'Wallets approved or synced during the reporting month',
+        'Wallets approved, pending governance execution, or synced during the reporting month',
       ],
       ['summary', '', '', 'total_case_count', String(metrics.totalCaseCount), 'Transaction cases opened during the reporting month'],
       ['summary', '', '', 'open_case_count', String(metrics.openCaseCount), 'Cases still unresolved at export time'],

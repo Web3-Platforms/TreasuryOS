@@ -13,7 +13,7 @@ import { fileURLToPath } from 'node:url';
 import { NestFactory } from '@nestjs/core';
 import jwt from 'jsonwebtoken';
 import { Keypair } from '@solana/web3.js';
-import { ChainSyncStatus, UserRole } from '@treasuryos/types';
+import { ChainSyncStatus, UserRole, WalletStatus } from '@treasuryos/types';
 import { Pool } from 'pg';
 
 import { AppModule } from '../apps/api-gateway/src/app.module.js';
@@ -214,6 +214,7 @@ test('entity submission returns service unavailable when Sumsub KYC is disabled'
     app = started.app;
 
     const complianceLogin = await login(started.baseUrl, 'compliance@treasuryos.local', 'change-me-compliance');
+    const auditorLogin = await login(started.baseUrl, 'auditor@treasuryos.local', 'change-me-auditor');
 
     const createEntityResponse = await fetch(`${started.baseUrl}/entities`, {
       method: 'POST',
@@ -268,6 +269,7 @@ test('pilot manual KYC bypass approves an entity and unlocks wallet requests whe
     app = started.app;
 
     const complianceLogin = await login(started.baseUrl, 'compliance@treasuryos.local', 'change-me-compliance');
+    const auditorLogin = await login(started.baseUrl, 'auditor@treasuryos.local', 'change-me-auditor');
 
     const createEntityResponse = await fetch(`${started.baseUrl}/entities`, {
       method: 'POST',
@@ -371,6 +373,7 @@ test('editing an approved entity resets verification and allows pilot reapproval
     app = started.app;
 
     const complianceLogin = await login(started.baseUrl, 'compliance@treasuryos.local', 'change-me-compliance');
+    const auditorLogin = await login(started.baseUrl, 'auditor@treasuryos.local', 'change-me-auditor');
 
     const createEntityResponse = await fetch(`${started.baseUrl}/entities`, {
       method: 'POST',
@@ -453,6 +456,180 @@ test('editing an approved entity resets verification and allows pilot reapproval
     const reapprovedEntity = await reapproveResponse.json();
     assert.equal(reapprovedEntity.status, 'approved');
     assert.equal(reapprovedEntity.kycStatus, 'Approved');
+  } finally {
+    if (app) {
+      await app.close();
+    }
+
+    fixture.restore();
+  }
+});
+
+test('wallet approval moves into proposal_pending when Squads proposal creation is used', async () => {
+  const fixture = withApiEnv({
+    PILOT_ALLOW_MANUAL_KYC_BYPASS: 'true',
+    SQUADS_MULTISIG_ENABLED: 'true',
+    SQUADS_MULTISIG_ADDRESS: Keypair.generate().publicKey.toBase58(),
+  });
+  let app: Awaited<ReturnType<typeof bootstrapApiApp>>['app'] | undefined;
+
+  try {
+    await resetDatabase();
+    const started = await bootstrapApiApp();
+    app = started.app;
+
+    const complianceLogin = await login(started.baseUrl, 'compliance@treasuryos.local', 'change-me-compliance');
+    const auditorLogin = await login(started.baseUrl, 'auditor@treasuryos.local', 'change-me-auditor');
+
+    const createEntityResponse = await fetch(`${started.baseUrl}/entities`, {
+      method: 'POST',
+      headers: {
+        authorization: `Bearer ${complianceLogin.accessToken}`,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        legalName: 'Squads Pending Wallet Entity GmbH',
+        jurisdiction: 'EU',
+        riskLevel: 'medium',
+      }),
+    });
+    assert.equal(createEntityResponse.status, 201);
+    const createdEntity = await createEntityResponse.json();
+
+    const approveEntityResponse = await fetch(`${started.baseUrl}/entities/${createdEntity.id}/approve`, {
+      method: 'POST',
+      headers: {
+        authorization: `Bearer ${complianceLogin.accessToken}`,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        notes: 'Pilot bypass approval for governance test',
+      }),
+    });
+    assert.equal(approveEntityResponse.status, 201);
+
+    const walletAddress = Keypair.generate().publicKey.toBase58();
+    const requestWalletResponse = await fetch(`${started.baseUrl}/wallets`, {
+      method: 'POST',
+      headers: {
+        authorization: `Bearer ${complianceLogin.accessToken}`,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        entityId: createdEntity.id,
+        walletAddress,
+        label: 'Governance pending wallet',
+      }),
+    });
+    assert.equal(requestWalletResponse.status, 201);
+    const requestedWallet = await requestWalletResponse.json();
+    assert.equal(requestedWallet.status, WalletStatus.Submitted);
+    assert.equal(requestedWallet.chainSyncStatus, ChainSyncStatus.Pending);
+
+    const reviewWalletResponse = await fetch(`${started.baseUrl}/wallets/${requestedWallet.id}/review`, {
+      method: 'POST',
+      headers: {
+        authorization: `Bearer ${complianceLogin.accessToken}`,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        notes: 'Move wallet into review before governance submission',
+      }),
+    });
+    assert.equal(reviewWalletResponse.status, 201);
+
+    const walletSyncService = app.get(WalletSyncService);
+    walletSyncService.syncApprovedWallet = async () => ({
+      chainSyncStatus: ChainSyncStatus.ProposalPending,
+      executionPath: 'squads',
+      signature: 'squads-proposal-7',
+      whitelistEntry: '4kU8iv2wUSr9mt1C5iT68f1b7xWQ7HToTQBWaoZ5iXfP',
+    });
+
+    const approveWalletResponse = await fetch(`${started.baseUrl}/wallets/${requestedWallet.id}/approve`, {
+      method: 'POST',
+      headers: {
+        authorization: `Bearer ${complianceLogin.accessToken}`,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        notes: 'Approve into Squads proposal path',
+      }),
+    });
+    assert.equal(approveWalletResponse.status, 201);
+    const approvedWallet = await approveWalletResponse.json();
+    assert.equal(approvedWallet.status, WalletStatus.ProposalPending);
+    assert.equal(approvedWallet.chainSyncStatus, ChainSyncStatus.ProposalPending);
+    assert.equal(approvedWallet.chainTxSignature, 'squads-proposal-7');
+
+    const auditResponse = await fetch(`${started.baseUrl}/audit/events?limit=25`, {
+      headers: {
+        authorization: `Bearer ${complianceLogin.accessToken}`,
+      },
+    });
+    assert.equal(auditResponse.status, 200);
+    const auditPayload = await auditResponse.json() as {
+      events: Array<{
+        action: string;
+        metadata?: Record<string, unknown>;
+        resourceId: string;
+      }>;
+    };
+    const walletApprovalAudit = auditPayload.events.find(
+      (event) => event.action === 'wallet.approved' && event.resourceId === requestedWallet.id,
+    );
+    assert.ok(walletApprovalAudit);
+    assert.equal(walletApprovalAudit.metadata?.chainSyncStatus, ChainSyncStatus.ProposalPending);
+    assert.equal(walletApprovalAudit.metadata?.executionPath, 'squads');
+
+    const screeningResponse = await fetch(`${started.baseUrl}/transaction-cases`, {
+      method: 'POST',
+      headers: {
+        authorization: `Bearer ${complianceLogin.accessToken}`,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        amount: 1250,
+        asset: 'USDC',
+        destinationWallet: Keypair.generate().publicKey.toBase58(),
+        entityId: createdEntity.id,
+        referenceId: 'tx-squads-pending-1',
+        sourceWallet: walletAddress,
+      }),
+    });
+    assert.equal(screeningResponse.status, 409);
+    const screeningError = await screeningResponse.json() as { message?: string | string[] };
+    const screeningMessage = Array.isArray(screeningError.message)
+      ? screeningError.message.join(' ')
+      : screeningError.message ?? '';
+    assert.match(screeningMessage, /waiting for multisig proposal execution/i);
+
+    const reportMonth = new Date().toISOString().slice(0, 7);
+    const generateReportResponse = await fetch(`${started.baseUrl}/reports`, {
+      method: 'POST',
+      headers: {
+        authorization: `Bearer ${auditorLogin.accessToken}`,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        month: reportMonth,
+      }),
+    });
+    assert.equal(generateReportResponse.status, 201);
+    const generatedReport = await generateReportResponse.json();
+    assert.equal(generatedReport.metrics.approvedWalletCount, 1);
+
+    const downloadReportResponse = await fetch(`${started.baseUrl}/reports/${generatedReport.id}/download`, {
+      headers: {
+        authorization: `Bearer ${auditorLogin.accessToken}`,
+      },
+    });
+    assert.equal(downloadReportResponse.status, 200);
+    const reportCsv = await downloadReportResponse.text();
+    assert.match(
+      reportCsv,
+      /approved_wallet_count,1,("?)(Wallets approved, pending governance execution, or synced during the reporting month)\1/,
+    );
   } finally {
     if (app) {
       await app.close();
@@ -669,6 +846,7 @@ test('rbac, onboarding, wallet governance, transaction review, and reporting wor
     const walletSyncService = app.get(WalletSyncService);
     walletSyncService.syncApprovedWallet = async () => ({
       chainSyncStatus: ChainSyncStatus.Sent,
+      executionPath: 'direct',
       signature: '5N4P6xZ5YJ7aH8K9mQ2rS3tU4vW5xY6z7A8b9C0d1E2F3G4H5J6K7L8M9N',
       whitelistEntry: '9GpQFBNjN5qE6MfkW3UN2oWUtYr4A1v1C3m4v1Adq2Yx',
     });

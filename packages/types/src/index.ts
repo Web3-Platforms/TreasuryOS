@@ -40,6 +40,7 @@ export enum WalletStatus {
   Submitted = 'submitted',
   UnderReview = 'under_review',
   Approved = 'approved',
+  ProposalPending = 'proposal_pending',
   Rejected = 'rejected',
   Synced = 'synced',
   SyncFailed = 'sync_failed',
@@ -47,6 +48,7 @@ export enum WalletStatus {
 
 export enum ChainSyncStatus {
   Pending = 'pending',
+  ProposalPending = 'proposal_pending',
   Sent = 'sent',
   Skipped = 'skipped',
   Failed = 'failed',
@@ -257,6 +259,7 @@ export const walletWorkflowStates = [
   WalletStatus.Submitted,
   WalletStatus.UnderReview,
   WalletStatus.Approved,
+  WalletStatus.ProposalPending,
   WalletStatus.Rejected,
   WalletStatus.Synced,
   WalletStatus.SyncFailed,

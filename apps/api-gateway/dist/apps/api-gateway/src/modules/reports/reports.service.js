@@ -181,7 +181,7 @@ let ReportsService = class ReportsService {
         const startIso = window.start.toISOString();
         const endIso = window.endExclusive.toISOString();
         const entitiesResult = await this.database.pool.query('SELECT id FROM entities WHERE created_at >= $1 AND created_at < $2', [startIso, endIso]);
-        const walletsResult = await this.database.pool.query('SELECT id FROM wallets WHERE COALESCE(reviewed_at, updated_at) >= $1 AND COALESCE(reviewed_at, updated_at) < $2 AND status IN ($3, $4)', [startIso, endIso, WalletStatus.Approved, WalletStatus.Synced]);
+        const walletsResult = await this.database.pool.query('SELECT id FROM wallets WHERE COALESCE(reviewed_at, updated_at) >= $1 AND COALESCE(reviewed_at, updated_at) < $2 AND status IN ($3, $4, $5)', [startIso, endIso, WalletStatus.Approved, WalletStatus.ProposalPending, WalletStatus.Synced]);
         const casesResult = await this.database.pool.query('SELECT id, case_status, triggered_rules, amount, asset, source_wallet, destination_wallet FROM transaction_cases WHERE created_at >= $1 AND created_at < $2', [startIso, endIso]);
         const monthlyEntities = entitiesResult.rows;
         const monthlyApprovedWallets = walletsResult.rows;
@@ -219,7 +219,7 @@ let ReportsService = class ReportsService {
                 '',
                 'approved_wallet_count',
                 String(metrics.approvedWalletCount),
-                'Wallets approved or synced during the reporting month',
+                'Wallets approved, pending governance execution, or synced during the reporting month',
             ],
             ['summary', '', '', 'total_case_count', String(metrics.totalCaseCount), 'Transaction cases opened during the reporting month'],
             ['summary', '', '', 'open_case_count', String(metrics.openCaseCount), 'Cases still unresolved at export time'],

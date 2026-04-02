@@ -38,6 +38,7 @@
 - `submitted`
 - `under_review`
 - `approved`
+- `proposal_pending`
 - `rejected`
 - `synced`
 - `sync_failed`

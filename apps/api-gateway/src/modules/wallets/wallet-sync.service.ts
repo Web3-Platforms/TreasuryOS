@@ -10,6 +10,7 @@ import { WalletSyncReadinessService } from './wallet-sync-readiness.service.js';
 
 export type WalletSyncOutcome = {
   chainSyncStatus: ChainSyncStatus;
+  executionPath: 'direct' | 'preview' | 'squads';
   signature?: string;
   syncError?: string;
   whitelistEntry: string;
@@ -48,6 +49,7 @@ export class WalletSyncService {
     if (!this.env.SOLANA_SYNC_ENABLED) {
       return {
         chainSyncStatus: ChainSyncStatus.Skipped,
+        executionPath: 'preview',
         whitelistEntry: preview.whitelistEntry,
       };
     }
@@ -76,7 +78,8 @@ export class WalletSyncService {
 
         const proposalIndex = await this.squadsService.proposeTransaction([instruction], authoritySigner);
         return {
-          chainSyncStatus: ChainSyncStatus.Pending,
+          chainSyncStatus: ChainSyncStatus.ProposalPending,
+          executionPath: 'squads',
           signature: `squads-proposal-${proposalIndex}`,
           whitelistEntry: whitelistEntry.toBase58(),
         };
@@ -95,6 +98,7 @@ export class WalletSyncService {
 
       return {
         chainSyncStatus: ChainSyncStatus.Sent,
+        executionPath: 'direct',
         signature,
         whitelistEntry: whitelistEntry.toBase58(),
       };
@@ -102,6 +106,7 @@ export class WalletSyncService {
       this.logger.error(`Sync failed for wallet ${wallet.id}`, error instanceof Error ? error.stack : String(error));
       return {
         chainSyncStatus: ChainSyncStatus.Failed,
+        executionPath: this.env.SQUADS_MULTISIG_ENABLED ? 'squads' : 'direct',
         syncError: error instanceof Error ? error.message : String(error),
         whitelistEntry: preview.whitelistEntry,
       };

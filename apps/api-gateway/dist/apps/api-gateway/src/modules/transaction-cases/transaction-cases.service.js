@@ -328,15 +328,18 @@ let TransactionCasesService = class TransactionCasesService {
             }
             return wallet;
         }
-        const matchedWallet = wallets.find((record) => (record.walletAddress === sourceWallet || record.walletAddress === destinationWallet) &&
-            (record.status === WalletStatus.Approved || record.status === WalletStatus.Synced));
+        const matchedWallet = wallets.find((record) => record.walletAddress === sourceWallet || record.walletAddress === destinationWallet);
         if (!matchedWallet) {
             throw new ConflictException('Transaction screening requires an approved or synced entity wallet');
         }
+        this.ensureWalletReady(matchedWallet);
         return matchedWallet;
     }
     ensureWalletReady(wallet) {
         if (wallet.status !== WalletStatus.Approved && wallet.status !== WalletStatus.Synced) {
+            if (wallet.status === WalletStatus.ProposalPending) {
+                throw new ConflictException('Transaction screening requires an approved or synced entity wallet. This wallet is still waiting for multisig proposal execution.');
+            }
             throw new ConflictException('Transaction screening requires an approved or synced entity wallet');
         }
     }
