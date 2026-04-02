@@ -44,6 +44,7 @@ This file documents the exact API-service variables needed for the first beta te
 - `AUTHORITY_KEYPAIR_JSON=<single-line signer json>`
 - `SOLANA_SYNC_ENABLED=false`
 - `SQUADS_MULTISIG_ENABLED=false`
+- `PILOT_ALLOW_MANUAL_KYC_BYPASS=false`
 
 ### 3. Runtime verification path
 
@@ -114,6 +115,23 @@ The dashboard now includes:
 
 This closes the operator gap between KYC review completion and the first wallet whitelist canary.
 
+### 9. Pilot-only manual KYC bypass
+
+To unblock the first Solana canary before live Sumsub launch, the repository now supports a temporary internal-only flag:
+
+- `PILOT_ALLOW_MANUAL_KYC_BYPASS`
+
+When this flag is set to `true` while `KYC_SUMSUB_ENABLED=false`:
+
+- the API can approve an entity without a live Sumsub applicant
+- the dashboard entity detail page shows an explicit pilot approval path
+- the approval audit event is marked with `manualKycBypass=true`
+
+This flag must be mirrored across both surfaces:
+
+- Railway API variables
+- Vercel dashboard env vars
+
 ## Step-by-step operator sequence
 
 1. Generate the signer payload locally:
@@ -121,20 +139,21 @@ This closes the operator gap between KYC review completion and the first wallet 
 2. Copy the output into Railway as `AUTHORITY_KEYPAIR_JSON`.
 3. Apply the values from `infra/railway/api-gateway.testnet.env.example`.
 4. Keep `SOLANA_SYNC_ENABLED=false`.
-5. Redeploy the API service.
-6. Verify:
+5. If the first canary needs to run before live Sumsub launch, temporarily set `PILOT_ALLOW_MANUAL_KYC_BYPASS=true` in both Railway and Vercel.
+6. Redeploy the API service and the dashboard.
+7. Verify:
    - `/api/health`
    - `/api/health/live`
    - `/api/health/ready`
-7. If GitHub Actions shows the Railway deploy step as successful but `/api/health/ready` still does not change, inspect the latest Railway deployment log because detached deploy submission does not guarantee the new container booted successfully.
-8. Only after the wallet whitelist program is deployed on testnet and readiness is green should a live canary be attempted.
+8. If GitHub Actions shows the Railway deploy step as successful but `/api/health/ready` still does not change, inspect the latest Railway deployment log because detached deploy submission does not guarantee the new container booted successfully.
+9. Only after the wallet whitelist program is deployed on testnet and readiness is green should a live canary be attempted.
 
 ## Remaining external/manual requirement
 
 The runtime cutover is now complete. The next external/manual action is the first controlled canary, which requires:
 
 - switching `SOLANA_SYNC_ENABLED` from `false` to `true` for a controlled redeploy
-- approving exactly one prepared wallet request through the normal product flow
+- approving exactly one prepared wallet request through the normal product flow or the temporary pilot bypass flow
 - verifying the resulting Solana signature, database sync fields, and explorer record before any wider rollout
 
 ## Status

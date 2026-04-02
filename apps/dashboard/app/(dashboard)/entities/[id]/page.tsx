@@ -1,6 +1,6 @@
 import { fetchApi } from '@/lib/api-client';
 import { AppShell } from '@/components/app-shell';
-import { isSumsubKycEnabled } from '@/lib/feature-flags';
+import { isPilotManualKycBypassEnabled, isSumsubKycEnabled } from '@/lib/feature-flags';
 import type { EntityRecord, WalletRecord } from '@treasuryos/types';
 import Link from 'next/link';
 import { EntityReviewActions } from '@/components/entity-review-actions';
@@ -10,6 +10,7 @@ import { RequestWalletForm } from '@/components/request-wallet-form';
 export default async function EntityDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const sumsubEnabled = isSumsubKycEnabled();
+  const manualKycBypassEnabled = isPilotManualKycBypassEnabled();
   let entity: EntityRecord | null = null;
   let wallets: WalletRecord[] = [];
   
@@ -35,6 +36,13 @@ export default async function EntityDetailPage({ params }: { params: Promise<{ i
 
   const canSubmit = entity.status === 'draft';
   const canRequestWallet = entity.status === 'approved' && entity.kycStatus === 'Approved';
+  const canUseManualKycBypass =
+    manualKycBypassEnabled &&
+    !sumsubEnabled &&
+    entity.status !== 'approved' &&
+    entity.status !== 'rejected';
+  const showSubmitButton = canSubmit && !canUseManualKycBypass;
+  const showManualBypassNotice = canUseManualKycBypass && entity.kycStatus !== 'Approved';
   const showComingSoonKyc = !sumsubEnabled && !entity.kycApplicantId && entity.status === 'draft';
   const kycStatusLabel = showComingSoonKyc ? 'Coming soon' : entity.kycStatus;
   const kycStatusBackground = showComingSoonKyc
@@ -63,14 +71,19 @@ export default async function EntityDetailPage({ params }: { params: Promise<{ i
             </div>
           </div>
           
-          {canSubmit ? (
+          {showSubmitButton ? (
             <SubmitEntityButton
               entityId={entity.id}
               enabled={sumsubEnabled}
               disabledDescription="New entity submissions are temporarily disabled while Sumsub KYC is being prepared for launch."
             />
           ) : (
-            <EntityReviewActions entityId={entity.id} status={entity.status} kycStatus={entity.kycStatus} />
+            <EntityReviewActions
+              entityId={entity.id}
+              status={entity.status}
+              kycStatus={entity.kycStatus}
+              allowManualBypass={canUseManualKycBypass}
+            />
           )}
         </div>
 
@@ -107,6 +120,12 @@ export default async function EntityDetailPage({ params }: { params: Promise<{ i
           {!sumsubEnabled && (
             <p style={{ marginTop: 0, marginBottom: '1rem', color: '#f0c36d' }}>
               Sumsub KYC is coming soon. Existing KYC records remain visible, but new submissions are disabled for now.
+            </p>
+          )}
+          {showManualBypassNotice && (
+            <p style={{ marginTop: 0, marginBottom: '1rem', color: '#8ad1ff' }}>
+              Pilot manual KYC bypass is enabled for the testnet canary. Operators can approve this entity internally
+              without a live Sumsub applicant.
             </p>
           )}
           <dl style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '1rem', margin: 0 }}>

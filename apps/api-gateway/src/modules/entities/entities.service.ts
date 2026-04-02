@@ -236,25 +236,45 @@ export class EntitiesService {
 
     const updatedEntity = await this.database.withTransaction(async (client) => {
       const entity = await this.requireEntityFromStore(entityId, client);
+      const manualPilotBypass = this.isPilotManualKycBypassEnabled(entity);
+      const now = new Date().toISOString();
 
-      if (!canApproveEntity(entity.status) || entity.kycStatus !== KycStatus.Approved) {
+      if (!manualPilotBypass && (!canApproveEntity(entity.status) || entity.kycStatus !== KycStatus.Approved)) {
         throw new ConflictException('Entity is not ready for approval');
       }
 
+      if (manualPilotBypass) {
+        entity.kycStatus = KycStatus.Approved;
+        entity.latestKycReviewAnswer = entity.latestKycReviewAnswer ?? 'GREEN';
+        entity.lastKycEventAt = entity.lastKycEventAt ?? now;
+      }
+
       entity.status = EntityStatus.Approved;
-      entity.reviewedAt = new Date().toISOString();
+      entity.reviewedAt = now;
       entity.lastUpdatedAt = entity.reviewedAt;
       entity.notes = decision.notes ?? entity.notes;
       await this.entitiesRepository.save(entity, client);
       return entity;
     });
 
+    const approvedViaManualPilotBypass =
+      this.env.PILOT_ALLOW_MANUAL_KYC_BYPASS &&
+      !this.env.KYC_SUMSUB_ENABLED &&
+      updatedEntity.kycApplicantId === undefined;
+
     await this.auditService.record({
       action: 'entity.approved',
       actor,
       resourceType: 'entity',
       resourceId: updatedEntity.id,
-      summary: `Entity ${updatedEntity.legalName} was approved`,
+      summary: approvedViaManualPilotBypass
+        ? `Entity ${updatedEntity.legalName} was approved via the pilot manual KYC bypass`
+        : `Entity ${updatedEntity.legalName} was approved`,
+      metadata: approvedViaManualPilotBypass
+        ? {
+            manualKycBypass: true,
+          }
+        : undefined,
     });
     await this.queueService.enqueue(this.env.REDIS_QUEUE_NAME, {
       type: 'entity.approved',
@@ -262,6 +282,22 @@ export class EntitiesService {
     });
 
     return updatedEntity;
+  }
+
+  private isPilotManualKycBypassEnabled(entity: EntityRecord) {
+    if (!this.env.PILOT_ALLOW_MANUAL_KYC_BYPASS || this.env.KYC_SUMSUB_ENABLED) {
+      return false;
+    }
+
+    if (entity.status === EntityStatus.Approved) {
+      throw new ConflictException('Entity is already approved');
+    }
+
+    if (entity.status === EntityStatus.Rejected) {
+      throw new ConflictException('Rejected entities cannot use the pilot manual KYC bypass');
+    }
+
+    return true;
   }
 
   async rejectEntity(entityId: string, input: EntityDecisionDto, actor: AuthenticatedUser) {

@@ -258,6 +258,109 @@ test('entity submission returns service unavailable when Sumsub KYC is disabled'
   }
 });
 
+test('pilot manual KYC bypass approves an entity and unlocks wallet requests when Sumsub is disabled', async () => {
+  const fixture = withApiEnv({ PILOT_ALLOW_MANUAL_KYC_BYPASS: 'true' });
+  let app: Awaited<ReturnType<typeof bootstrapApiApp>>['app'] | undefined;
+
+  try {
+    await resetDatabase();
+    const started = await bootstrapApiApp();
+    app = started.app;
+
+    const complianceLogin = await login(started.baseUrl, 'compliance@treasuryos.local', 'change-me-compliance');
+
+    const createEntityResponse = await fetch(`${started.baseUrl}/entities`, {
+      method: 'POST',
+      headers: {
+        authorization: `Bearer ${complianceLogin.accessToken}`,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        legalName: 'Pilot Canary GmbH',
+        jurisdiction: 'EU',
+        riskLevel: 'medium',
+      }),
+    });
+    assert.equal(createEntityResponse.status, 201);
+    const createdEntity = await createEntityResponse.json();
+    assert.equal(createdEntity.status, 'draft');
+    assert.equal(createdEntity.kycStatus, 'Pending');
+
+    const approveResponse = await fetch(`${started.baseUrl}/entities/${createdEntity.id}/approve`, {
+      method: 'POST',
+      headers: {
+        authorization: `Bearer ${complianceLogin.accessToken}`,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        notes: 'Pilot manual KYC bypass for the first Solana canary',
+      }),
+    });
+    assert.equal(approveResponse.status, 201);
+    const approvedEntity = await approveResponse.json();
+    assert.equal(approvedEntity.status, 'approved');
+    assert.equal(approvedEntity.kycStatus, 'Approved');
+    assert.equal(approvedEntity.latestKycReviewAnswer, 'GREEN');
+    assert.equal(typeof approvedEntity.reviewedAt, 'string');
+
+    const entityDetailResponse = await fetch(`${started.baseUrl}/entities/${createdEntity.id}`, {
+      headers: {
+        authorization: `Bearer ${complianceLogin.accessToken}`,
+      },
+    });
+    assert.equal(entityDetailResponse.status, 200);
+    const entityDetail = await entityDetailResponse.json();
+    assert.equal(entityDetail.status, 'approved');
+    assert.equal(entityDetail.kycStatus, 'Approved');
+
+    const walletRequestResponse = await fetch(`${started.baseUrl}/wallets`, {
+      method: 'POST',
+      headers: {
+        authorization: `Bearer ${complianceLogin.accessToken}`,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        entityId: createdEntity.id,
+        walletAddress: Keypair.generate().publicKey.toBase58(),
+        label: 'Pilot treasury wallet',
+      }),
+    });
+    assert.equal(walletRequestResponse.status, 201);
+    const requestedWallet = await walletRequestResponse.json();
+    assert.equal(requestedWallet.status, 'submitted');
+    assert.equal(requestedWallet.chainSyncStatus, 'pending');
+    assert.ok(requestedWallet.whitelistEntry);
+
+    const auditResponse = await fetch(`${started.baseUrl}/audit/events?limit=25`, {
+      headers: {
+        authorization: `Bearer ${complianceLogin.accessToken}`,
+      },
+    });
+    assert.equal(auditResponse.status, 200);
+    const auditPayload = await auditResponse.json() as {
+      events: Array<{
+        action: string;
+        metadata?: Record<string, unknown>;
+        resourceId: string;
+        summary: string;
+      }>;
+    };
+    const bypassAudit = auditPayload.events.find(
+      (event) => event.action === 'entity.approved' && event.resourceId === createdEntity.id,
+    );
+
+    assert.ok(bypassAudit);
+    assert.equal(bypassAudit.metadata?.manualKycBypass, true);
+    assert.match(bypassAudit.summary, /pilot manual kyc bypass/i);
+  } finally {
+    if (app) {
+      await app.close();
+    }
+
+    fixture.restore();
+  }
+});
+
 test('rbac, onboarding, wallet governance, transaction review, and reporting work end to end when Sumsub is enabled', async () => {
   const fixture = withApiEnv({ KYC_SUMSUB_ENABLED: 'true' });
   const originalFetch = globalThis.fetch;

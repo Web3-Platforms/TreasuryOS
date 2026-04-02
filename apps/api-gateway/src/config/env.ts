@@ -41,6 +41,7 @@ const envSchema = z.object({
   PILOT_INSTITUTION_ID: z.string().min(3).default('pilot-eu-casp'),
   PILOT_INSTITUTION_NAME: z.string().min(3).default('TreasuryOS Pilot Institution'),
   PILOT_CUSTOMER_PROFILE: z.string().min(3).default('eu-regulated-casp'),
+  PILOT_ALLOW_MANUAL_KYC_BYPASS: stringBooleanSchema.default(false),
 
   DEFAULT_ADMIN_EMAIL: z.string().email(),
   DEFAULT_ADMIN_PASSWORD: z.string().min(8),

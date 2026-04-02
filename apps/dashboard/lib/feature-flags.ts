@@ -11,6 +11,10 @@ export function isSumsubKycEnabled(env: NodeJS.ProcessEnv = process.env) {
   return normalizeBoolean(env.KYC_SUMSUB_ENABLED);
 }
 
+export function isPilotManualKycBypassEnabled(env: NodeJS.ProcessEnv = process.env) {
+  return normalizeBoolean(env.PILOT_ALLOW_MANUAL_KYC_BYPASS);
+}
+
 function hasNonEmptyValue(value: string | undefined) {
   return typeof value === 'string' && value.trim().length > 0;
 }

@@ -25,6 +25,7 @@
 | SOLANA_SIGNING_MODE | `filesystem`/`environment` | Selects signer source |
 | AUTHORITY_KEYPAIR_JSON | JSON array | Railway-injected Solana signer |
 | SOLANA_SYNC_ENABLED | `true`/`false` | Enables real on-chain wallet sync |
+| PILOT_ALLOW_MANUAL_KYC_BYPASS | `true`/`false` | Temporary internal-only KYC bypass for the first canary |
 | SUPABASE_URL | HTTPS URL | File storage |
 | SUPABASE_JWT_SECRET | base64 string | JWT validation |
 | SUPABASE_SERVICE_KEY | string | Service access |
@@ -168,6 +169,7 @@ SOLANA_SIGNING_MODE=environment
 AUTHORITY_KEYPAIR_JSON=<single-line-json-array>
 SOLANA_SYNC_ENABLED=false
 SQUADS_MULTISIG_ENABLED=false
+PILOT_ALLOW_MANUAL_KYC_BYPASS=false
 ```
 
 Generate `AUTHORITY_KEYPAIR_JSON` with:
@@ -175,6 +177,8 @@ Generate `AUTHORITY_KEYPAIR_JSON` with:
 ```bash
 npm run solana:keypair:export -- ~/.config/solana/id.json
 ```
+
+If you use the manual pilot bypass for the first canary, set `PILOT_ALLOW_MANUAL_KYC_BYPASS=true` in both Railway and Vercel, then redeploy both surfaces together.
 
 ---
 

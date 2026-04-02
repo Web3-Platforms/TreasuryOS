@@ -88,6 +88,7 @@ PILOT_REPORTS_DIR=data/reports                 # Reports storage directory
 PILOT_INSTITUTION_ID=pilot-eu-casp
 PILOT_INSTITUTION_NAME=TreasuryOS Pilot Institution
 PILOT_CUSTOMER_PROFILE=eu-regulated-casp
+PILOT_ALLOW_MANUAL_KYC_BYPASS=false           # Temporary internal-only KYC bypass for first canary
 
 # ── Railway (Auto-injected) ────────────────────────────
 RAILWAY_ENVIRONMENT=production                 # Read-only, auto-set
@@ -105,15 +106,18 @@ For the first real Solana beta rollout, use this API-service sequence:
    - `SOLANA_NETWORK=testnet`
    - `PROGRAM_ID_WALLET_WHITELIST=<real testnet program id>`
    - `SOLANA_SIGNING_MODE=environment`
-   - `AUTHORITY_KEYPAIR_JSON=<single-line json array>`
-   - `SOLANA_SYNC_ENABLED=false`
-   - `SQUADS_MULTISIG_ENABLED=false`
-4. Redeploy while sync stays disabled.
-5. Verify:
-   - `GET /api/health`
-   - `GET /api/health/live`
-   - `GET /api/health/ready`
-6. Only after readiness is green and the deployed program is confirmed should `SOLANA_SYNC_ENABLED=true` be considered.
+    - `AUTHORITY_KEYPAIR_JSON=<single-line json array>`
+    - `SOLANA_SYNC_ENABLED=false`
+    - `SQUADS_MULTISIG_ENABLED=false`
+    - `PILOT_ALLOW_MANUAL_KYC_BYPASS=false`
+ 4. Redeploy while sync stays disabled.
+ 5. If you need the first canary before live Sumsub is enabled, temporarily set `PILOT_ALLOW_MANUAL_KYC_BYPASS=true`
+    in both Railway and Vercel, then redeploy both surfaces.
+ 6. Verify:
+    - `GET /api/health`
+    - `GET /api/health/live`
+    - `GET /api/health/ready`
+ 7. Only after readiness is green and the deployed program is confirmed should `SOLANA_SYNC_ENABLED=true` be considered.
 
 ---
 
@@ -132,6 +136,9 @@ API_BASE_URL=https://api.example.com/api
 # Keep false for the pilot launch unless Sumsub is intentionally enabled.
 KYC_SUMSUB_ENABLED=false
 
+# Temporary internal-only switch for the first Solana canary while Sumsub remains disabled.
+PILOT_ALLOW_MANUAL_KYC_BYPASS=false
+
 # Demo access only works when all three values are provided.
 DEMO_ACCESS_ENABLED=false
 DEMO_ACCESS_EMAIL=demo@example.com
@@ -145,7 +152,7 @@ NEXT_PUBLIC_SENTRY_DSN=https://key@sentry.io/project-id
 ### Notes
 
 - The dashboard uses `API_BASE_URL`, not `NEXT_PUBLIC_API_BASE_URL`.
-- `KYC_SUMSUB_ENABLED` is read by both the dashboard and the API so the launch posture stays consistent.
+- `KYC_SUMSUB_ENABLED` and `PILOT_ALLOW_MANUAL_KYC_BYPASS` are read by both the dashboard and the API so the launch posture stays consistent.
 - Leave demo access disabled unless you explicitly want a public demo login path.
 
 ---
