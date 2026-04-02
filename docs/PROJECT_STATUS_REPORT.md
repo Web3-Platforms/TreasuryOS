@@ -50,6 +50,7 @@ This means:
 - The root Vercel production dashboard environment is restored to `API_BASE_URL=https://api.treasuryos.aicustombot.net/api`
 - Scheduled uptime monitoring is active through the `TreasuryOS Uptime` GitHub Actions workflow
 - GitHub CD is active on `main`, and run `#87` now succeeds with Railway Project Token auth and the exact `@treasuryos/api-gateway` service target
+- The cutover runbook now exists at `docs/LAUNCH_CUTOVER_RUNBOOK.md`, and the pending GitHub workflow updates align CI with the required dashboard `API_BASE_URL` plus the branded-domain uptime checks
 - Production variable names are now confirmed on Railway for `@treasuryos/api-gateway` and on the root-linked Vercel project `treasury-os`; `apps/dashboard/.vercel` points to a separate stale `dashboard` project with no env vars and should not be used for production checks
 - Sentry is explicitly waived for the beta launch and is no longer treated as a current release blocker
 - The final live smoke pass is green on the branded API and dashboard custom domains with two scope warnings because production currently has no wallets or transaction cases
@@ -83,6 +84,8 @@ Those checks now pass together from the repository root.
 
 The project still needs a final go/no-go review and monitored cutover window.
 
+Use `docs/LAUNCH_CUTOVER_RUNBOOK.md` as the source of truth for the freeze, smoke, monitoring, and rollback steps.
+
 ---
 
 ## Deferred to Post-Launch
@@ -99,4 +102,4 @@ These items are intentionally not part of the first launch:
 
 ## Immediate Recommended Sequence
 
-1. Execute the launch go/no-go review and cut over
+1. Push the cutover workflow fixes and use `docs/LAUNCH_CUTOVER_RUNBOOK.md` to execute the launch go/no-go review

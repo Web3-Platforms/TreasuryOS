@@ -15,8 +15,9 @@ concurrency:
 
 env:
   APP_URL: https://treasuryos.aicustombot.net
-  # Use Railway's healthy service domain until Cloudflare routes the custom API hostname correctly.
-  API_HEALTH_URL: https://treasuryosapi-gateway-production.up.railway.app/api/health
+  APP_LOGIN_URL: https://treasuryos.aicustombot.net/login
+  API_HEALTH_URL: https://api.treasuryos.aicustombot.net/api/health
+  BROWSER_UA: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36
 
 jobs:
   uptime:
@@ -26,11 +27,39 @@ jobs:
       - name: Check dashboard redirect and login page
         run: |
           set -euo pipefail
-          headers="$(curl -IsS --max-time 20 "$APP_URL")"
-          echo "$headers"
-          echo "$headers" | grep -E '^HTTP/[0-9.]+ 307|^HTTP/2 307'
-          echo "$headers" | grep -i '^location: /login'
-          curl -fsSL --max-time 20 "$APP_URL/login" | grep -q 'TreasuryOS Pilot Login'
+          root_headers="$(mktemp)"
+          login_headers="$(mktemp)"
+          login_body="$(mktemp)"
+          trap 'rm -f "$root_headers" "$login_headers" "$login_body"' EXIT
+
+          curl -sS --max-time 20 \
+            -A "$BROWSER_UA" \
+            -H 'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8' \
+            -H 'Accept-Language: en-US,en;q=0.9' \
+            -D "$root_headers" \
+            -o /dev/null \
+            "$APP_URL"
+
+          cat "$root_headers"
+
+          if grep -qi '^cf-mitigated: challenge' "$root_headers"; then
+            echo 'Cloudflare challenged the root request; validating the direct login page instead.'
+          else
+            grep -E '^HTTP/[0-9.]+ 307|^HTTP/2 307' "$root_headers"
+            grep -i '^location: /login' "$root_headers"
+          fi
+
+          curl -sS --max-time 20 \
+            -A "$BROWSER_UA" \
+            -H 'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8' \
+            -H 'Accept-Language: en-US,en;q=0.9' \
+            -D "$login_headers" \
+            -o "$login_body" \
+            "$APP_LOGIN_URL"
+
+          cat "$login_headers"
+          grep -E '^HTTP/[0-9.]+ 200|^HTTP/2 200' "$login_headers"
+          grep -q 'TreasuryOS Pilot Login' "$login_body"
 
       - name: Check API health
         run: |

@@ -30,6 +30,7 @@ env:
   PROGRAM_ID_WALLET_WHITELIST: FXFMG4hzBcuRu33mVXyTHESH7FnsmUD6Fajr17FugbRt
   AUTHORITY_KEYPAIR_PATH: /tmp/ci-solana-id.json
   SOLANA_SYNC_ENABLED: "false"
+  API_BASE_URL: http://localhost:3001/api
   NEXT_PUBLIC_API_BASE_URL: http://localhost:3001
 
 jobs:

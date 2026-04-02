@@ -13,7 +13,7 @@ This document outlines the strategic roadmap for evolving the TreasuryOS MVP int
 - [x] **Sentry Beta Waiver**: Sentry is explicitly waived for the beta launch and should be revisited during post-beta hardening.
 - [x] **Production Env Verification**: GitHub secrets, Railway API variable names, and the root Vercel `treasury-os` dashboard variable names are now verified for the pilot scope.
 - [x] **Final Live Smoke Pass**: The branded API plus live dashboard smoke pass completed with `19` checks passed, `0` failed, and `2` scope warnings for currently empty wallet/case data.
-- [ ] **Go/No-Go Cutover**: Execute the monitored release window.
+- [ ] **Go/No-Go Cutover**: Execute the monitored release window using `docs/LAUNCH_CUTOVER_RUNBOOK.md`.
 
 ## Phase 1: Security & Infrastructure (In Progress)
 - [x] **Signer Refactor**: Centralized Solana authority loading for filesystem and Railway-injected signer material.
