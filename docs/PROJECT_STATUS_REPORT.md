@@ -43,6 +43,7 @@ This means:
 - Railway API deployment path is working
 - Production database migrations are applied
 - Railway API health is green at `https://treasuryosapi-gateway-production.up.railway.app/api/health`
+- The public landing page is live at `https://www.treasuryos.xyz`
 - The dashboard custom domain is live at `https://treasuryos.aicustombot.net`
 - The API custom domain is now live at `https://api.treasuryos.aicustombot.net/api/health`
 - The root Vercel production dashboard environment is restored to `API_BASE_URL=https://api.treasuryos.aicustombot.net/api`
