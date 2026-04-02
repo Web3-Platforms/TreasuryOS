@@ -108,3 +108,19 @@ Interpretation:
 
 Until the public record stops resolving to Cloudflare edge IPs and exposes the
 Railway target path, the branded API domain will remain blocked.
+
+## Final Verification Result
+
+After the Cloudflare record was corrected, the branded API route became healthy.
+
+Final verification:
+
+- public DNS now exposes the Railway target path for `api.treasuryos.aicustombot.net`
+- `https://api.treasuryos.aicustombot.net/api/health` returns `HTTP/2 200`
+- the root Vercel production `API_BASE_URL` was re-pulled and confirmed as `https://api.treasuryos.aicustombot.net/api`
+- the latest production dashboard deployment is ready on commit `cb5ee0e`
+
+This launch gate is now resolved.
+
+The next launch action is no longer DNS repair. It is the final go/no-go
+cutover step.

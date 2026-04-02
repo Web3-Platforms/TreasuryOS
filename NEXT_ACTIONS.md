@@ -9,10 +9,10 @@ This document outlines the strategic roadmap for evolving the TreasuryOS MVP int
 - [x] **Push Release Commits**: The validated local release-hardening commits are now on `origin/main`.
 - [x] **Uptime Monitoring Activation**: GitHub Actions now has the active `TreasuryOS Uptime` workflow from `.github/workflows/uptime.yml`.
 - [x] **GitHub CD Verified**: `.github/workflows/cd.yml` now succeeds from `main` with Railway Project Token auth and the exact `@treasuryos/api-gateway` service target.
-- [ ] **Cloudflare API DNS**: Set `api.treasuryos.aicustombot.net` as a `CNAME` to `treasuryosapi-gateway-production.up.railway.app` and start with `DNS only` so the branded API domain can pass TLS.
+- [x] **Cloudflare API DNS**: `api.treasuryos.aicustombot.net` now resolves to `treasuryosapi-gateway-production.up.railway.app`, and the branded API health endpoint returns `200`.
 - [x] **Sentry Beta Waiver**: Sentry is explicitly waived for the beta launch and should be revisited during post-beta hardening.
 - [x] **Production Env Verification**: GitHub secrets, Railway API variable names, and the root Vercel `treasury-os` dashboard variable names are now verified for the pilot scope.
-- [ ] **Final Live Smoke Pass**: Re-run launch smoke checks after config freeze.
+- [x] **Final Live Smoke Pass**: The branded API plus live dashboard smoke pass completed with `19` checks passed, `0` failed, and `2` scope warnings for currently empty wallet/case data.
 - [ ] **Go/No-Go Cutover**: Execute the monitored release window.
 
 ## Phase 1: Security & Infrastructure (In Progress)

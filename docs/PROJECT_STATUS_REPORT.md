@@ -1,8 +1,8 @@
 # TreasuryOS - Project Status Report
 
-**Report Date:** April 1, 2026  
+**Report Date:** April 2, 2026  
 **Project:** TreasuryOS - Compliance & Treasury Management Platform  
-**Status:** 🟡 **PILOT LAUNCH RELEASE CANDIDATE**
+**Status:** 🟢 **PILOT LAUNCH READY FOR CUTOVER**
 
 ---
 
@@ -20,7 +20,7 @@ TreasuryOS is now in a release-candidate state for its first live pilot launch.
   - Sumsub stays disabled and shown as "coming soon"
   - Solana remains preview-only
   - `SOLANA_SYNC_ENABLED=false` at launch
-- The remaining blockers are operational rather than code-level: API-domain DNS cutover, Sentry DSN/project setup, final live smoke checks, and the go/no-go release decision.
+- The remaining launch step is operational rather than code-level: the final go/no-go release decision and monitored cutover window.
 
 ---
 
@@ -44,12 +44,13 @@ This means:
 - Production database migrations are applied
 - Railway API health is green at `https://treasuryosapi-gateway-production.up.railway.app/api/health`
 - The dashboard custom domain is live at `https://treasuryos.aicustombot.net`
-- The API custom domain still fails TLS/Cloudflare routing at `https://api.treasuryos.aicustombot.net/api/health`
-- Directly connecting the branded API host to `treasuryosapi-gateway-production.up.railway.app` returns `200`, which confirms Railway is already serving the custom hostname correctly and Cloudflare is the remaining fault domain
+- The API custom domain is now live at `https://api.treasuryos.aicustombot.net/api/health`
+- The root Vercel production dashboard environment is restored to `API_BASE_URL=https://api.treasuryos.aicustombot.net/api`
 - Scheduled uptime monitoring is active through the `TreasuryOS Uptime` GitHub Actions workflow
 - GitHub CD is active on `main`, and run `#87` now succeeds with Railway Project Token auth and the exact `@treasuryos/api-gateway` service target
 - Production variable names are now confirmed on Railway for `@treasuryos/api-gateway` and on the root-linked Vercel project `treasury-os`; `apps/dashboard/.vercel` points to a separate stale `dashboard` project with no env vars and should not be used for production checks
 - Sentry is explicitly waived for the beta launch and is no longer treated as a current release blocker
+- The final live smoke pass is green on the branded API and dashboard custom domains with two scope warnings because production currently has no wallets or transaction cases
 
 ### Code and application state
 
@@ -74,21 +75,9 @@ Those checks now pass together from the repository root.
 
 ---
 
-## Remaining Launch Blockers
+## Remaining Launch Step
 
-### 1. API custom-domain routing
-
-- Railway has a healthy direct service URL at `https://treasuryosapi-gateway-production.up.railway.app/api/health`
-- `https://api.treasuryos.aicustombot.net/api/health` currently fails TLS/Cloudflare routing
-- Direct custom-host-to-Railway testing succeeds against `treasuryosapi-gateway-production.up.railway.app`, so Railway is not the remaining problem
-- Cloudflare still needs a `CNAME` for `api.treasuryos.aicustombot.net` pointing to `treasuryosapi-gateway-production.up.railway.app`
-- The safest first pass is `DNS only` until the branded health check returns `200`
-
-### 2. Final live smoke pass
-
-The final live smoke pass still needs to be re-run against the chosen pilot-launch scope after configuration is frozen.
-
-### 3. Release cutover
+### Release cutover
 
 The project still needs a final go/no-go review and monitored cutover window.
 
@@ -108,6 +97,4 @@ These items are intentionally not part of the first launch:
 
 ## Immediate Recommended Sequence
 
-1. Fix the API custom-domain Cloudflare/TLS route
-2. Re-run the final live smoke pass
-3. Execute the launch go/no-go review and cut over
+1. Execute the launch go/no-go review and cut over
