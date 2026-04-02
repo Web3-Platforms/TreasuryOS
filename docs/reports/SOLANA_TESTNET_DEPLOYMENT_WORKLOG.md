@@ -66,7 +66,7 @@ The dedicated authority wallet retains upgrade authority and is the same wallet 
 
 ## Next step
 
-Configure the Railway API runtime with:
+The Railway API runtime is now configured and verified with:
 
 - `SOLANA_RPC_URL=https://api.testnet.solana.com`
 - `SOLANA_NETWORK=testnet`
@@ -76,7 +76,18 @@ Configure the Railway API runtime with:
 - `SOLANA_SYNC_ENABLED=false`
 - `SQUADS_MULTISIG_ENABLED=false`
 
-Then redeploy the API service and verify `/api/health/ready` before attempting the first canary.
+Verification result:
+
+- `GET /api/health/ready` returns `200` on:
+  - `https://api.treasuryos.aicustombot.net/api/health/ready`
+  - `https://treasuryosapi-gateway-production.up.railway.app/api/health/ready`
+
+The next step is the first controlled canary:
+
+1. set `SOLANA_SYNC_ENABLED=true`
+2. redeploy the API service
+3. approve one prepared wallet
+4. confirm the Solana signature and synced database fields
 
 ## Deploy command used
 

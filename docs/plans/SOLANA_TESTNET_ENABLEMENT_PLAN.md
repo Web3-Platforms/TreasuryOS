@@ -17,10 +17,11 @@ Move TreasuryOS from Solana preview-only mode to real on-chain execution on **te
 - The wallet whitelist program is now deployed on testnet at:
   - `3ZaNXXp99xnWYYcaCJMJWnBfMxj2K4QpHkADV8D7321c`
 - The API gateway production-start path was smoke-tested locally after fixing an eager Squads SDK import that crashed Node 22 startup even when multisig was disabled.
+- The live Railway runtime now returns `GET /api/health/ready` successfully with preview-safe testnet settings on both the custom domain and the Railway domain.
 - The remaining external work for real enablement is still:
-  - redeploy the latest API code to Railway
-  - verify `GET /api/health/ready` on the live API
-  - inject or confirm the real signer secret in Railway before the first canary
+  - flip `SOLANA_SYNC_ENABLED=true` for one controlled canary redeploy
+  - approve one wallet through the normal product flow
+  - verify the Solana signature, sync fields, and explorer record before any wider rollout
 
 For the current codebase, the first realistic meaning of "real transaction" is:
 
@@ -71,7 +72,7 @@ This plan does **not** assume a general-purpose treasury asset transfer engine a
 - `SOLANA_SYNC_ENABLED` defaults to `false`
 - the API env defaults still point to `devnet` unless explicitly overridden
 - `apps/kyc-service/src/sync/onchain-sync.service.ts` is still `dryRun: true`
-- the repository does not yet prove a live testnet deployment of the whitelist program
+- the repository does not yet prove a live testnet wallet-approval transaction from the API gateway
 - current tests do not exercise a real testnet transaction against a funded signer and deployed program
 - Railway deploy submission can appear green before the new container boots, so live verification must check the runtime surface and not only the GitHub Actions result
 

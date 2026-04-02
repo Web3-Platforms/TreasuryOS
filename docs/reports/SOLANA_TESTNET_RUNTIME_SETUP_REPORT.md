@@ -7,7 +7,7 @@ Task:
 
 ## Summary
 
-This step implemented the repository-side assets needed to move TreasuryOS toward real Solana testnet execution without committing secrets or prematurely enabling live sync.
+This step implemented the repository-side assets and verified the live Railway runtime needed to move TreasuryOS toward real Solana testnet execution without committing secrets or prematurely enabling live sync.
 
 The shared wallet-whitelist program is now successfully deployed on testnet at:
 
@@ -72,7 +72,8 @@ These docs now describe the new helper script, the Railway env template, and the
 The Jira workbook and import artifacts were updated to reflect:
 
 - `harden-solana-sync-guards` implemented
-- `configure-testnet-signer-env` now active as the next rollout step
+- `configure-testnet-signer-env` completed
+- `run-testnet-wallet-canary` now active as the next rollout step
 
 ### 6. Startup blocker diagnosed and fixed
 
@@ -86,6 +87,21 @@ The fix was to lazy-load the Squads SDK only when multisig is actually enabled. 
 - `SOLANA_SYNC_ENABLED=false`
 
 Local validation now confirms `npm run start:prod --workspace=@treasuryos/api-gateway` serves `GET /api/health/ready` successfully in production mode.
+
+### 7. Live runtime verified
+
+After pushing the startup fix, the live API now returns `200` from `GET /api/health/ready` on both:
+
+- `https://api.treasuryos.aicustombot.net/api/health/ready`
+- `https://treasuryosapi-gateway-production.up.railway.app/api/health/ready`
+
+The readiness payload confirms the intended preview-safe runtime:
+
+- `SOLANA_NETWORK=testnet`
+- `SOLANA_RPC_URL=https://api.testnet.solana.com`
+- `SOLANA_SIGNING_MODE=environment`
+- `SOLANA_SYNC_ENABLED=false`
+- `walletSync.ready=true`
 
 ## Step-by-step operator sequence
 
@@ -104,15 +120,16 @@ Local validation now confirms `npm run start:prod --workspace=@treasuryos/api-ga
 
 ## Remaining external/manual requirement
 
-The repository is now prepared for the runtime configuration step, but the actual Railway cutover still requires:
+The runtime cutover is now complete. The next external/manual action is the first controlled canary, which requires:
 
-- generating the `AUTHORITY_KEYPAIR_JSON` payload from the dedicated testnet authority keypair
-- manual entry of the signer secret and remaining runtime values into Railway
-- redeploying the API service and verifying readiness
+- switching `SOLANA_SYNC_ENABLED` from `false` to `true` for a controlled redeploy
+- approving exactly one prepared wallet request through the normal product flow
+- verifying the resulting Solana signature, database sync fields, and explorer record before any wider rollout
 
 ## Status
 
 - Repository-side runtime setup assets: completed
 - Wallet whitelist program deployment on testnet: completed
-- Live Railway variable cutover: in progress
+- Live Railway variable cutover: completed and verified
 - Repository-side startup blocker for the next Railway deploy: resolved
+- Next active rollout step: first wallet-approval canary
