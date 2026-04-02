@@ -225,7 +225,7 @@ The `vercel.json` configures:
 - **Build command**: `npm run build -w @treasuryos/dashboard`
 - **Output directory**: `apps/dashboard/.next`
 - **Framework**: Next.js
-- **Security headers**: `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`
+- **Security headers**: global dashboard browser hardening via `vercel.json`, including a minimal CSP, HSTS, Permissions-Policy, cross-origin isolation headers, `X-Frame-Options`, `X-Content-Type-Options`, and `Referrer-Policy`
 
 ### Step 2 — Set Environment Variables
 

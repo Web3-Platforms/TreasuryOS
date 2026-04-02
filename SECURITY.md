@@ -254,6 +254,13 @@ environment.
 - [ ] The API Gateway is not accessible on any port other than 443 (HTTPS)
 - [ ] TLS certificates are valid and auto-renewing (Railway + Vercel handle this)
 
+### Browser Surface
+
+- [ ] `curl -I https://treasuryos.aicustombot.net` shows the dashboard browser security headers
+- [ ] The dashboard returns `Content-Security-Policy`, `Permissions-Policy`, and `Strict-Transport-Security`
+- [ ] The dashboard returns `Cross-Origin-Opener-Policy`, `Cross-Origin-Resource-Policy`, and `Origin-Agent-Cluster`
+- [ ] The dashboard remains non-embeddable (`X-Frame-Options: DENY` and `frame-ancestors 'none'`)
+
 ### Database
 
 - [ ] `DATABASE_SSL=true` is set in Railway
