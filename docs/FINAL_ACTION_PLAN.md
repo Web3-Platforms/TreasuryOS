@@ -18,7 +18,7 @@ Current verified state:
 - Infrastructure state: production DB migrations are applied, Railway API health is green at `https://treasuryosapi-gateway-production.up.railway.app/api/health`, and `treasuryos.aicustombot.net` is live on Vercel.
 - API domain state: `https://api.treasuryos.aicustombot.net/api/health` now returns `200`, so the branded API path is healthy end to end.
 - Launch mitigation state: the temporary direct-Railway fallback is removed; Vercel production `API_BASE_URL` is restored to `https://api.treasuryos.aicustombot.net/api`.
-- Observability state: `.github/workflows/uptime.yml` is active on GitHub, and the cutover prep updates align it with the branded API custom domain plus a Cloudflare-tolerant dashboard login check.
+- Observability state: `.github/workflows/uptime.yml` is active on GitHub, checks the branded API custom domain, and uses the public dashboard Vercel alias for synthetic monitoring because Cloudflare challenges GitHub-hosted runners on the branded dashboard domain.
 - GitHub CD state: the main-branch deploy workflow is active, and run `#87` now succeeds with Railway Project Token auth plus the exact live service target `@treasuryos/api-gateway`. The migration job is also unblocked and currently skips cleanly when no migration files changed.
 - Production config state: GitHub secret presence, Railway API variable names, and the root-linked Vercel dashboard variable names are now verified for the pilot path. The `apps/dashboard/.vercel` link points to a separate stale `dashboard` project and should not be used for production env checks.
 - Sentry state: application code is wired for Sentry, and Sentry is explicitly waived for the beta launch. DSN provisioning is deferred until post-beta hardening.

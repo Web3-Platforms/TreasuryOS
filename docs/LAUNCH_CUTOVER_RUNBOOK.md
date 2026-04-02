@@ -24,12 +24,13 @@ This runbook is the operational guide for that release window.
 
 ## Automation fixes included before cutover
 
-Two release-safety workflow fixes were made during cutover prep:
+Three release-safety workflow fixes were made during cutover prep:
 
 1. `.github/workflows/ci.yml` now supplies `API_BASE_URL=http://localhost:3001/api` so the dashboard build no longer fails in CI while collecting route config.
-2. `.github/workflows/uptime.yml` now checks the branded API custom domain and tolerates Cloudflare bot challenges on the dashboard root by validating the direct `/login` page when needed.
+2. `.github/workflows/uptime.yml` now checks the branded API custom domain instead of the older direct Railway fallback URL.
+3. GitHub-hosted runners are challenged by Cloudflare on the branded dashboard custom domain, so the synthetic GitHub uptime check uses the public Vercel alias `https://treasury-os-five.vercel.app` for dashboard availability while the manual cutover gate still checks `https://treasuryos.aicustombot.net`.
 
-These changes should be pushed before the cutover window so GitHub reflects the corrected automation state.
+These changes are now on `main`, so GitHub reflects the corrected automation state.
 
 ## Go / no-go checklist
 
@@ -63,6 +64,7 @@ Do not announce launch until every item below is true.
    - `TreasuryOS CD` green on the release commit
    - `TreasuryOS CI` green on the release commit
    - `TreasuryOS Uptime` green on its next run or manually re-triggered after the workflow fix lands
+   - Manual branded-domain checks on `https://treasuryos.aicustombot.net` still pass, because GitHub synthetic uptime uses the Vercel alias rather than the Cloudflare-protected custom domain
 
 4. Perform a final operator smoke path.
    - Load the dashboard login page
@@ -81,6 +83,7 @@ Do not announce launch until every item below is true.
 ## Live monitoring targets
 
 - Dashboard: `https://treasuryos.aicustombot.net/login`
+- GitHub synthetic dashboard target: `https://treasury-os-five.vercel.app/login`
 - API health: `https://api.treasuryos.aicustombot.net/api/health`
 - Landing page: `https://www.treasuryos.xyz`
 - GitHub Actions:
