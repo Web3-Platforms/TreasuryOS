@@ -85,6 +85,7 @@ This keeps Next.js aligned with the actual workspace and avoids the misleading r
 - `apps/landing-page/components/marketing/site-header.tsx`
 - `apps/landing-page/components/marketing/site-shell.tsx`
 - `apps/landing-page/lib/marketing-content.tsx`
+- `apps/landing-page/vercel.json`
 
 ## Files updated
 
@@ -103,6 +104,17 @@ The redesign was validated with both landing-specific and repo-wide checks:
 - `npm run typecheck`
 - `npm test`
 - `API_BASE_URL=http://localhost:3001/api npm run build`
+
+## Deployment follow-up
+
+After the redesign commit was pushed, the `landing-page` Vercel project failed because it inherited the repository-root `vercel.json`, which is intentionally configured for the dashboard deployment.
+
+The fix was to add `apps/landing-page/vercel.json` with landing-specific install and build commands:
+
+- `cd ../.. && npm ci --include=dev`
+- `npm run build`
+
+This keeps the install step rooted at the monorepo while letting the actual Next.js build run from the landing app directory, which matches Vercel's expected `.next` output location for the project.
 
 ## Smoke checks
 
