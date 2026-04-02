@@ -6,6 +6,7 @@ import { Connection, Transaction, sendAndConfirmTransaction } from '@solana/web3
 import { loadApiGatewayEnv } from '../../config/env.js';
 import { AuthoritySignerService } from '../security/authority-signer.service.js';
 import { SquadsService } from '../governance/squads.service.js';
+import { WalletSyncReadinessService } from './wallet-sync-readiness.service.js';
 
 export type WalletSyncOutcome = {
   chainSyncStatus: ChainSyncStatus;
@@ -21,9 +22,11 @@ export class WalletSyncService {
 
   constructor(
     @Inject(AuthoritySignerService)
-    private readonly authoritySignerService: AuthoritySignerService,
+    private readonly authoritySignerService: Pick<AuthoritySignerService, 'getSigner'>,
     @Inject(SquadsService)
-    private readonly squadsService: SquadsService,
+    private readonly squadsService: Pick<SquadsService, 'isEnabled' | 'proposeTransaction'>,
+    @Inject(WalletSyncReadinessService)
+    private readonly walletSyncReadinessService: Pick<WalletSyncReadinessService, 'assertLiveSyncReady'>,
   ) {}
 
   createPreview(institutionId: string, walletAddress: string) {
@@ -50,6 +53,8 @@ export class WalletSyncService {
     }
 
     try {
+      await this.walletSyncReadinessService.assertLiveSyncReady();
+
       const client = this.createClient();
       const authoritySigner = this.authoritySignerService.getSigner();
       const authorityPubkey = authoritySigner.publicKey;
@@ -62,7 +67,13 @@ export class WalletSyncService {
       );
 
       // Check for Multi-Sig Governance
-      if (this.env.SQUADS_MULTISIG_ENABLED && this.squadsService.isEnabled()) {
+      if (this.env.SQUADS_MULTISIG_ENABLED) {
+        if (!this.squadsService.isEnabled()) {
+          throw new Error(
+            'Squads multisig is enabled but the governance service is not initialized. Refusing direct execution fallback.',
+          );
+        }
+
         const proposalIndex = await this.squadsService.proposeTransaction([instruction], authoritySigner);
         return {
           chainSyncStatus: ChainSyncStatus.Pending,

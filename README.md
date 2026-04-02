@@ -24,7 +24,8 @@ npm run dev:dashboard
 
 The documentation has been fully structured to help you navigate the system's architecture, deployments, and components. Here is an overview:
 
-*   **[Comprehensive Report (`docs/COMPREHENSIVE_REPORT.md`)](docs/COMPREHENSIVE_REPORT.md)** - *START HERE!* An extensive overview of the entire stack, workflows, environments, and functional capabilities delivered during the MVP run.
+*   **[Comprehensive Report (`docs/reports/COMPREHENSIVE_REPORT.md`)](docs/reports/COMPREHENSIVE_REPORT.md)** - *START HERE!* An extensive overview of the entire stack, workflows, environments, and functional capabilities delivered during the MVP run.
+*   **[Reports Archive (`docs/reports/`)](docs/reports/)** - Implementation reports, launch reports, validation records, and rollout notes.
 *   **[Architecture (`docs/architecture/`)](docs/architecture/)** - Diagrams, application structures, risk assessments, and technical workflows. 
 *   **[Deployment Guidelines (`docs/deployment/`)](docs/deployment/)** - Operational guides, setup notes, and security hardening tips for Cloudflare, Neon Postgres, Railway, and Upstash.
 *   **[History & Archival Plans (`docs/history/`)](docs/history/)** - Former MVP execution plans, walkthroughs, task checklists, and historical implementation logs.

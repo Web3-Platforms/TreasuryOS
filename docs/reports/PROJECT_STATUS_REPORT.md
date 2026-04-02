@@ -84,7 +84,7 @@ Those checks now pass together from the repository root.
 
 The launch cutover has been executed and the go decision passed.
 
-Use `docs/LAUNCH_CUTOVER_RUNBOOK.md` for the operational procedure and `docs/LAUNCH_CUTOVER_EXECUTION_REPORT.md` for the recorded outcome.
+Use `docs/LAUNCH_CUTOVER_RUNBOOK.md` for the operational procedure and `docs/reports/LAUNCH_CUTOVER_EXECUTION_REPORT.md` for the recorded outcome.
 
 ---
 

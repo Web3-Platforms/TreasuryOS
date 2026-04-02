@@ -4,6 +4,7 @@ import { AuthoritySignerService } from '../security/authority-signer.service.js'
 export declare class SquadsService implements OnModuleInit {
     private readonly authoritySignerService;
     private readonly logger;
+    private readonly env;
     private connection;
     private multisigPda;
     constructor(authoritySignerService: AuthoritySignerService);

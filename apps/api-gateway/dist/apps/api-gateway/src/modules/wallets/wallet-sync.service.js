@@ -18,14 +18,17 @@ import { Connection, Transaction, sendAndConfirmTransaction } from '@solana/web3
 import { loadApiGatewayEnv } from '../../config/env.js';
 import { AuthoritySignerService } from '../security/authority-signer.service.js';
 import { SquadsService } from '../governance/squads.service.js';
+import { WalletSyncReadinessService } from './wallet-sync-readiness.service.js';
 let WalletSyncService = WalletSyncService_1 = class WalletSyncService {
     authoritySignerService;
     squadsService;
+    walletSyncReadinessService;
     logger = new Logger(WalletSyncService_1.name);
     env = loadApiGatewayEnv();
-    constructor(authoritySignerService, squadsService) {
+    constructor(authoritySignerService, squadsService, walletSyncReadinessService) {
         this.authoritySignerService = authoritySignerService;
         this.squadsService = squadsService;
+        this.walletSyncReadinessService = walletSyncReadinessService;
     }
     createPreview(institutionId, walletAddress) {
         if (!isValidSolanaAddress(walletAddress)) {
@@ -46,13 +49,17 @@ let WalletSyncService = WalletSyncService_1 = class WalletSyncService {
             };
         }
         try {
+            await this.walletSyncReadinessService.assertLiveSyncReady();
             const client = this.createClient();
             const authoritySigner = this.authoritySignerService.getSigner();
             const authorityPubkey = authoritySigner.publicKey;
             // Build the instruction
             const { whitelistEntry, instruction } = client.buildAddWalletInstruction(this.env.PILOT_INSTITUTION_ID, wallet.walletAddress, authorityPubkey);
             // Check for Multi-Sig Governance
-            if (this.env.SQUADS_MULTISIG_ENABLED && this.squadsService.isEnabled()) {
+            if (this.env.SQUADS_MULTISIG_ENABLED) {
+                if (!this.squadsService.isEnabled()) {
+                    throw new Error('Squads multisig is enabled but the governance service is not initialized. Refusing direct execution fallback.');
+                }
                 const proposalIndex = await this.squadsService.proposeTransaction([instruction], authoritySigner);
                 return {
                     chainSyncStatus: ChainSyncStatus.Pending,
@@ -82,7 +89,7 @@ let WalletSyncService = WalletSyncService_1 = class WalletSyncService {
     createClient() {
         return new WalletWhitelistClient(this.env.PROGRAM_ID_WALLET_WHITELIST, {
             url: this.env.SOLANA_RPC_URL,
-            network: 'devnet',
+            network: this.env.SOLANA_NETWORK,
             commitment: 'confirmed',
         });
     }
@@ -91,8 +98,8 @@ WalletSyncService = WalletSyncService_1 = __decorate([
     Injectable(),
     __param(0, Inject(AuthoritySignerService)),
     __param(1, Inject(SquadsService)),
-    __metadata("design:paramtypes", [AuthoritySignerService,
-        SquadsService])
+    __param(2, Inject(WalletSyncReadinessService)),
+    __metadata("design:paramtypes", [Object, Object, Object])
 ], WalletSyncService);
 export { WalletSyncService };
 //# sourceMappingURL=wallet-sync.service.js.map

@@ -15,15 +15,61 @@ import { buildInfo } from '../../common/build-info.js';
 import { loadApiGatewayEnv } from '../../config/env.js';
 import { Public } from '../auth/public.decorator.js';
 import { DatabaseService } from '../database/database.service.js';
+import { WalletSyncReadinessService } from '../wallets/wallet-sync-readiness.service.js';
 let HealthController = class HealthController {
     databaseService;
-    constructor(databaseService) {
+    walletSyncReadinessService;
+    constructor(databaseService, walletSyncReadinessService) {
         this.databaseService = databaseService;
+        this.walletSyncReadinessService = walletSyncReadinessService;
     }
     async getHealth() {
         const env = loadApiGatewayEnv();
+        await this.assertDatabaseReady();
+        return {
+            ...this.buildBasePayload(),
+            scope: {
+                customerProfile: env.PILOT_CUSTOMER_PROFILE,
+                institutionId: env.PILOT_INSTITUTION_ID,
+                queueName: env.REDIS_QUEUE_NAME,
+            },
+            walletSync: this.walletSyncReadinessService.getStartupReadiness(),
+        };
+    }
+    getLive() {
+        return this.buildBasePayload();
+    }
+    async getReady() {
+        await this.assertDatabaseReady();
+        const walletSync = await this.walletSyncReadinessService.getReadiness();
+        if (!walletSync.ready) {
+            throw new ServiceUnavailableException({
+                status: 'error',
+                message: 'Wallet sync readiness failed',
+                checks: {
+                    database: 'ok',
+                    walletSync,
+                },
+            });
+        }
+        return {
+            ...this.buildBasePayload(),
+            checks: {
+                database: 'ok',
+                walletSync,
+            },
+        };
+    }
+    buildBasePayload() {
+        return {
+            status: 'ok',
+            service: buildInfo.service,
+            version: buildInfo.version,
+            timestamp: new Date().toISOString(),
+        };
+    }
+    async assertDatabaseReady() {
         try {
-            // Test database connectivity
             await this.databaseService.getPool().query('SELECT 1');
         }
         catch (error) {
@@ -33,17 +79,6 @@ let HealthController = class HealthController {
                 error: error instanceof Error ? error.message : String(error),
             });
         }
-        return {
-            status: 'ok',
-            service: buildInfo.service,
-            version: buildInfo.version,
-            timestamp: new Date().toISOString(),
-            scope: {
-                customerProfile: env.PILOT_CUSTOMER_PROFILE,
-                institutionId: env.PILOT_INSTITUTION_ID,
-                queueName: env.REDIS_QUEUE_NAME,
-            },
-        };
     }
 };
 __decorate([
@@ -53,10 +88,25 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
 ], HealthController.prototype, "getHealth", null);
+__decorate([
+    Public(),
+    Get('live'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], HealthController.prototype, "getLive", null);
+__decorate([
+    Public(),
+    Get('ready'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], HealthController.prototype, "getReady", null);
 HealthController = __decorate([
     Controller('health'),
     __param(0, Inject(DatabaseService)),
-    __metadata("design:paramtypes", [DatabaseService])
+    __param(1, Inject(WalletSyncReadinessService)),
+    __metadata("design:paramtypes", [Object, Object])
 ], HealthController);
 export { HealthController };
 //# sourceMappingURL=health.controller.js.map

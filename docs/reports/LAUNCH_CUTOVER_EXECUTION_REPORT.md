@@ -36,7 +36,7 @@ The public launch surfaces responded correctly during the live cutover pass:
 
 - GitHub synthetic uptime now uses the public Vercel alias documented in `docs/LAUNCH_CUTOVER_RUNBOOK.md` because Cloudflare challenges GitHub-hosted runners on the branded dashboard domain.
 - The branded dashboard custom domain still passed the manual `curl` checks during this cutover pass.
-- Reporter recovery remains documented in `docs/REPORTER_RAILWAY_CHECK_REPORT.md`; the public launch gate in this cutover window is driven primarily by the dashboard, branded API, landing page, and GitHub automation state.
+- Reporter recovery remains documented in `docs/reports/REPORTER_RAILWAY_CHECK_REPORT.md`; the public launch gate in this cutover window is driven primarily by the dashboard, branded API, landing page, and GitHub automation state.
 
 ## Remaining manual confirmation
 

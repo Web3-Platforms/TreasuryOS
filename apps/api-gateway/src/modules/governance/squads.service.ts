@@ -7,32 +7,40 @@ import { AuthoritySignerService } from '../security/authority-signer.service.js'
 @Injectable()
 export class SquadsService implements OnModuleInit {
   private readonly logger = new Logger(SquadsService.name);
+  private readonly env = loadApiGatewayEnv();
   private connection: Connection;
   private multisigPda: PublicKey | null = null;
 
   constructor(private readonly authoritySignerService: AuthoritySignerService) {
-    const env = loadApiGatewayEnv();
-    this.connection = new Connection(env.SOLANA_RPC_URL, 'confirmed');
+    this.connection = new Connection(this.env.SOLANA_RPC_URL, 'confirmed');
   }
 
   async onModuleInit() {
-    const env = loadApiGatewayEnv();
-
-    if (!env.SQUADS_MULTISIG_ENABLED) {
+    if (!this.env.SQUADS_MULTISIG_ENABLED) {
       this.logger.log('Squads Multi-Sig governance is disabled.');
       return;
     }
 
-    if (!env.SQUADS_MULTISIG_ADDRESS) {
-      this.logger.error('SQUADS_MULTISIG_ADDRESS is missing. Governance logic will fail.');
+    if (!this.env.SQUADS_MULTISIG_ADDRESS) {
+      const message = 'SQUADS_MULTISIG_ADDRESS is missing. Governance logic will fail.';
+      this.logger.error(message);
+
+      if (this.env.SOLANA_SYNC_ENABLED) {
+        throw new Error(message);
+      }
+
       return;
     }
 
     try {
-      this.multisigPda = new PublicKey(env.SQUADS_MULTISIG_ADDRESS);
-      this.logger.log(`Squads Governance initialized for multisig: ${env.SQUADS_MULTISIG_ADDRESS}`);
+      this.multisigPda = new PublicKey(this.env.SQUADS_MULTISIG_ADDRESS);
+      this.logger.log(`Squads Governance initialized for multisig: ${this.env.SQUADS_MULTISIG_ADDRESS}`);
     } catch (error) {
       this.logger.error('Invalid Squads Multisig Address', error instanceof Error ? error.stack : String(error));
+
+      if (this.env.SOLANA_SYNC_ENABLED) {
+        throw error instanceof Error ? error : new Error(String(error));
+      }
     }
   }
 

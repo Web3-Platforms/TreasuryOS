@@ -33,6 +33,12 @@ declare const envSchema: z.ZodObject<{
     SUMSUB_SECRET_KEY: z.ZodOptional<z.ZodString>;
     SUMSUB_WEBHOOK_SECRET: z.ZodOptional<z.ZodString>;
     SOLANA_RPC_URL: z.ZodDefault<z.ZodString>;
+    SOLANA_NETWORK: z.ZodDefault<z.ZodEnum<{
+        custom: "custom";
+        devnet: "devnet";
+        testnet: "testnet";
+        "mainnet-beta": "mainnet-beta";
+    }>>;
     PROGRAM_ID_WALLET_WHITELIST: z.ZodString;
     AUTHORITY_KEYPAIR_PATH: z.ZodOptional<z.ZodString>;
     AUTHORITY_KEYPAIR_JSON: z.ZodOptional<z.ZodString>;

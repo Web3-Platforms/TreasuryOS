@@ -22,6 +22,9 @@
 |----------|--------|---------|
 | REDIS_URL | Redis URI | Caching & queues |
 | SOLANA_NETWORK | `devnet`/`testnet`/`mainnet-beta`/`custom` | Solana cluster label |
+| SOLANA_SIGNING_MODE | `filesystem`/`environment` | Selects signer source |
+| AUTHORITY_KEYPAIR_JSON | JSON array | Railway-injected Solana signer |
+| SOLANA_SYNC_ENABLED | `true`/`false` | Enables real on-chain wallet sync |
 | SUPABASE_URL | HTTPS URL | File storage |
 | SUPABASE_JWT_SECRET | base64 string | JWT validation |
 | SUPABASE_SERVICE_KEY | string | Service access |
@@ -156,6 +159,23 @@ AUTH_TOKEN_SECRET  (same as dev, but use strong random)
 DATABASE_URL       (managed database URL from Railway)
 ```
 
+### API Gateway beta testnet snippet
+```env
+SOLANA_RPC_URL=https://api.testnet.solana.com
+SOLANA_NETWORK=testnet
+PROGRAM_ID_WALLET_WHITELIST=<real-testnet-program-id>
+SOLANA_SIGNING_MODE=environment
+AUTHORITY_KEYPAIR_JSON=<single-line-json-array>
+SOLANA_SYNC_ENABLED=false
+SQUADS_MULTISIG_ENABLED=false
+```
+
+Generate `AUTHORITY_KEYPAIR_JSON` with:
+
+```bash
+npm run solana:keypair:export -- ~/.config/solana/id.json
+```
+
 ---
 
 ## Quick Copy-Paste Templates
@@ -224,3 +244,4 @@ REPORTER_PORT=3004
 - Use strong random secrets (32+ chars)
 - Enable error tracking (Sentry)
 - Enable caching (Redis/Upstash)
+- Verify `GET /api/health/ready` before enabling `SOLANA_SYNC_ENABLED=true`

@@ -19,7 +19,7 @@ Current baseline caveats:
 
 ## High-level architecture
 
-- This is an npm workspaces monorepo (`apps/*`, `packages/*`) targeting Node 22 and npm 10. The root `README.md` points people to `docs/COMPREHENSIVE_REPORT.md`, `docs/architecture/`, and `docs/deployment/` for system-level context.
+- This is an npm workspaces monorepo (`apps/*`, `packages/*`) targeting Node 22 and npm 10. The root `README.md` points people to `docs/reports/COMPREHENSIVE_REPORT.md`, `docs/architecture/`, and `docs/deployment/` for system-level context.
 - `apps/dashboard` is a Next.js 16 App Router frontend. Most data access is server-side: pages call `fetchApi()` from `apps/dashboard/lib/api-client.ts`, and mutations live in `apps/dashboard/app/actions.ts` as server actions.
 - `apps/api-gateway` is the main backend. It is a NestJS application composed of feature modules under `src/modules/` for auth, entities, KYC, wallets, transaction cases, reports, audit, storage, governance, security, platform, database, and health. `src/main.ts` applies helmet, the global validation pipe, CORS, and the `/api` prefix, while `src/app.module.ts` wires global throttling and structured request logging.
 - Dashboard auth is a cookie-to-bearer flow. The login server action posts to the API gateway, stores the returned `treasuryos_access_token` cookie, `apps/dashboard/proxy.ts` protects non-public routes, and `apps/dashboard/lib/api-client.ts` forwards the cookie as `Authorization: Bearer ...`. The API gateway then resolves `request.currentUser` through the global JWT/Supabase strategy and role guards.

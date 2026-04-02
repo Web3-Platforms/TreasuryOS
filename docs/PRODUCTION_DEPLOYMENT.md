@@ -128,6 +128,18 @@ All services expose `/api/health` endpoint:
 - Returns 500 if service encountered errors
 - Railway monitors this for deployment health
 
+The API gateway also exposes:
+- `/api/health/live` for process liveness
+- `/api/health/ready` for dependency readiness, including Solana wallet-sync checks when live sync is enabled
+
+For the Solana beta testnet path:
+1. keep `SOLANA_SYNC_ENABLED=false`
+2. set `SOLANA_RPC_URL=https://api.testnet.solana.com`
+3. set `SOLANA_NETWORK=testnet`
+4. set `PROGRAM_ID_WALLET_WHITELIST` to the real deployed testnet program id
+5. generate `AUTHORITY_KEYPAIR_JSON` with `npm run solana:keypair:export -- ~/.config/solana/id.json`
+6. confirm `/api/health/ready` is green before any canary approval
+
 ### Error Handling Features
 
 1. **Startup Errors** - Exit with code 1 on bootstrap failure

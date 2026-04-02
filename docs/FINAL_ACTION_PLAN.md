@@ -104,4 +104,4 @@ Notes:
 - GitHub CD is no longer a launch blocker; the deploy workflow now passes on `main` with the Railway Project Token flow and the exact `@treasuryos/api-gateway` service target.
 - Sentry is not a current launch blocker because it has been explicitly waived for beta and deferred to post-launch hardening.
 - The live smoke suite passed with two expected scope warnings: no wallet/case detail data exists yet in production because KYC and downstream approvals are intentionally disabled for the first launch scope.
-- The monitored go/no-go cutover review is complete. See `docs/LAUNCH_CUTOVER_EXECUTION_REPORT.md` for the recorded outcome.
+- The monitored go/no-go cutover review is complete. See `docs/reports/LAUNCH_CUTOVER_EXECUTION_REPORT.md` for the recorded outcome.

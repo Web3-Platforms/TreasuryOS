@@ -93,6 +93,28 @@ PILOT_CUSTOMER_PROFILE=eu-regulated-casp
 RAILWAY_ENVIRONMENT=production                 # Read-only, auto-set
 ```
 
+### Beta testnet Railway sequence
+
+For the first real Solana beta rollout, use this API-service sequence:
+
+1. Generate a one-line Railway secret from a local Solana CLI keypair:
+   - `npm run solana:keypair:export -- ~/.config/solana/id.json`
+2. Use the template at `infra/railway/api-gateway.testnet.env.example`.
+3. Set these API variables in Railway:
+   - `SOLANA_RPC_URL=https://api.testnet.solana.com`
+   - `SOLANA_NETWORK=testnet`
+   - `PROGRAM_ID_WALLET_WHITELIST=<real testnet program id>`
+   - `SOLANA_SIGNING_MODE=environment`
+   - `AUTHORITY_KEYPAIR_JSON=<single-line json array>`
+   - `SOLANA_SYNC_ENABLED=false`
+   - `SQUADS_MULTISIG_ENABLED=false`
+4. Redeploy while sync stays disabled.
+5. Verify:
+   - `GET /api/health`
+   - `GET /api/health/live`
+   - `GET /api/health/ready`
+6. Only after readiness is green and the deployed program is confirmed should `SOLANA_SYNC_ENABLED=true` be considered.
+
 ---
 
 ## 🖥️ 2. Dashboard (Vercel)

@@ -5,16 +5,17 @@
 ### Deployment & Configuration
 
 1. **[PRODUCTION_DEPLOYMENT.md](PRODUCTION_DEPLOYMENT.md)** ⭐ START HERE
-2. **[LANDING_PAGE_REPORT.md](LANDING_PAGE_REPORT.md)** ⭐ NEW: Landing Page & Lead Capture Overview
+2. **[reports/README.md](reports/README.md)** ⭐ Reports archive index
+3. **[LANDING_PAGE_REPORT.md](reports/LANDING_PAGE_REPORT.md)** ⭐ Landing Page & Lead Capture Overview
    - Implementation summary
    - Bug & Risk report
    - Security hardening strategy
-3. **[LANDING_PAGE_REDESIGN_PROCESS.md](LANDING_PAGE_REDESIGN_PROCESS.md)** ⭐ NEW: Redesign Overview
-4. **[LANDING_PAGE_REFINEMENT.md](LANDING_PAGE_REFINEMENT.md)** ⭐ Refinement & CI/CD Overview
-5. **[LANDING_PAGE_REDESIGN_V3.md](LANDING_PAGE_REDESIGN_V3.md)** ⭐ NEW: V3 Institutional Redesign
+4. **[LANDING_PAGE_REDESIGN_PROCESS.md](LANDING_PAGE_REDESIGN_PROCESS.md)** ⭐ Redesign Overview
+5. **[LANDING_PAGE_REFINEMENT.md](LANDING_PAGE_REFINEMENT.md)** ⭐ Refinement & CI/CD Overview
+6. **[LANDING_PAGE_REDESIGN_V3.md](LANDING_PAGE_REDESIGN_V3.md)** ⭐ V3 Institutional Redesign
    - Ground-up visual transformation
    - Bento grid & Obsidian design system
-6. **[ENVIRONMENT_VARIABLES.md](ENVIRONMENT_VARIABLES.md)** ⭐ REQUIRED FOR SETUP
+7. **[ENVIRONMENT_VARIABLES.md](ENVIRONMENT_VARIABLES.md)** ⭐ REQUIRED FOR SETUP
    - Complete environment variable reference
    - Required vs optional for each service
    - Security best practices
@@ -22,13 +23,13 @@
    - Local development examples
    - Validation rules explained
 
-3. **[ENV_VAR_QUICK_REFERENCE.md](ENV_VAR_QUICK_REFERENCE.md)** ⭐ QUICK LOOKUP
+8. **[ENV_VAR_QUICK_REFERENCE.md](ENV_VAR_QUICK_REFERENCE.md)** ⭐ QUICK LOOKUP
    - Quick reference tables
    - Copy-paste .env templates
    - Common connection strings
    - Port resolution strategy
 
-4. **[SERVICES_QUICK_REFERENCE.md](SERVICES_QUICK_REFERENCE.md)** ⭐ COMMANDS
+9. **[SERVICES_QUICK_REFERENCE.md](SERVICES_QUICK_REFERENCE.md)** ⭐ COMMANDS
    - Start any service locally
    - Build commands
    - Health check tests

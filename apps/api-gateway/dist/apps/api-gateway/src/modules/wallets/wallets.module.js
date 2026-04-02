@@ -11,6 +11,7 @@ import { EntitiesModule } from '../entities/entities.module.js';
 import { PlatformModule } from '../platform/platform.module.js';
 import { WalletsRepository } from './wallets.repository.js';
 import { WalletsController } from './wallets.controller.js';
+import { WalletSyncReadinessService } from './wallet-sync-readiness.service.js';
 import { WalletSyncService } from './wallet-sync.service.js';
 import { WalletsService } from './wallets.service.js';
 let WalletsModule = class WalletsModule {
@@ -19,8 +20,8 @@ WalletsModule = __decorate([
     Module({
         imports: [DatabaseModule, AuditModule, PlatformModule, EntitiesModule],
         controllers: [WalletsController],
-        providers: [WalletSyncService, WalletsRepository, WalletsService],
-        exports: [WalletSyncService, WalletsService, WalletsRepository],
+        providers: [WalletSyncReadinessService, WalletSyncService, WalletsRepository, WalletsService],
+        exports: [WalletSyncReadinessService, WalletSyncService, WalletsService, WalletsRepository],
     })
 ], WalletsModule);
 export { WalletsModule };
