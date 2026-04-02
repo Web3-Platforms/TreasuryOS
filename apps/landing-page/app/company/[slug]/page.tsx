@@ -9,6 +9,7 @@ import { PageHero } from '@/components/marketing/page-hero';
 import { SectionHeader } from '@/components/marketing/section-header';
 import { SiteShell } from '@/components/marketing/site-shell';
 import { companyPages, contactTracks, portalUrl } from '@/lib/marketing-content';
+import { buildPageMetadata } from '@/lib/site-metadata';
 
 const companySlugs = ['about', 'approach', 'contact'] as const;
 
@@ -24,22 +25,27 @@ export async function generateMetadata({
   const { slug } = await params;
 
   if (slug === 'contact') {
-    return {
+    return buildPageMetadata({
       title: 'Contact',
       description: 'Book a TreasuryOS workshop, architecture review, or launch-planning conversation.',
-    };
+      path: '/company/contact',
+    });
   }
 
   const page = companyPages[slug];
 
   if (!page) {
-    return { title: 'Company' };
+    return buildPageMetadata({
+      title: 'Company',
+      path: '/company',
+    });
   }
 
-  return {
+  return buildPageMetadata({
     title: page.title,
     description: page.description,
-  };
+    path: `/company/${slug}`,
+  });
 }
 
 export default async function CompanyDetailPage({

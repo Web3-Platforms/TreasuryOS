@@ -8,6 +8,7 @@ import { PageHero } from '@/components/marketing/page-hero';
 import { SectionHeader } from '@/components/marketing/section-header';
 import { SiteShell } from '@/components/marketing/site-shell';
 import { portalUrl, productPages } from '@/lib/marketing-content';
+import { buildPageMetadata } from '@/lib/site-metadata';
 
 export function generateStaticParams() {
   return Object.keys(productPages).map((slug) => ({ slug }));
@@ -22,13 +23,17 @@ export async function generateMetadata({
   const product = productPages[slug];
 
   if (!product) {
-    return { title: 'Product' };
+    return buildPageMetadata({
+      title: 'Product',
+      path: '/products',
+    });
   }
 
-  return {
+  return buildPageMetadata({
     title: product.title,
     description: product.description,
-  };
+    path: `/products/${slug}`,
+  });
 }
 
 export default async function ProductDetailPage({

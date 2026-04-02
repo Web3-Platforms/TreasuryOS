@@ -7,12 +7,14 @@ import { PageHero } from '@/components/marketing/page-hero';
 import { SectionHeader } from '@/components/marketing/section-header';
 import { SiteShell } from '@/components/marketing/site-shell';
 import { portalUrl, productSummaries } from '@/lib/marketing-content';
+import { buildPageMetadata } from '@/lib/site-metadata';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPageMetadata({
   title: 'Products',
   description:
     'Explore the TreasuryOS product suite for treasury control, compliance command, and reporting workflows designed for institutional teams.',
-};
+  path: '/products',
+});
 
 export default function ProductsPage() {
   return (

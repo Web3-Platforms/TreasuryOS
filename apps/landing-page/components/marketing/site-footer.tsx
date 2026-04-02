@@ -10,8 +10,8 @@ export function SiteFooter() {
         <div className="grid gap-12 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)_minmax(0,0.8fr)_minmax(0,0.8fr)]">
           <div className="max-w-md">
             <Link href="/" className="flex items-center gap-3">
-              <div className="relative h-11 w-11 overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-2">
-                <Image src="/logo.png" alt="TreasuryOS" fill className="object-contain p-1" />
+              <div className="relative h-11 w-11 shrink-0 flex items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-1">
+                <Image src="/logo.png" alt="TreasuryOS" width={44} height={44} className="object-cover" />
               </div>
               <div>
                 <p className="text-base font-semibold text-white">TreasuryOS</p>

@@ -2,47 +2,63 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ArrowUpRight, Menu, X } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 import { portalUrl, primaryNavigation } from '@/lib/marketing-content';
 
 export function SiteHeader() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   return (
     <motion.header 
       initial={{ y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-      className="sticky top-0 z-50 px-4 pt-4 sm:px-6 lg:px-8"
+      transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+      className="sticky top-0 z-50 px-4 pt-4 transition-all duration-500 sm:px-6 lg:px-8"
     >
-      <div className="mx-auto flex w-full max-w-7xl items-center justify-between rounded-full border border-white/10 bg-slate-900/60 px-4 py-3 shadow-2xl shadow-slate-950/50 backdrop-blur-xl sm:px-6 transition-all hover:bg-slate-900/70 hover:border-white/15">
-        <Link href="/" className="flex items-center gap-3 shrink-0">
-          <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-2 shadow-lg shadow-primary/10" style={{ position: 'relative' }}>
-            <Image src="/logo.png" alt="TreasuryOS" fill className="object-cover p-1" priority sizes="40px" />
+      <div 
+        className={`mx-auto flex flex-row items-center justify-between w-full max-w-7xl rounded-full border transition-all duration-500 px-6 py-3 shadow-2xl backdrop-blur-2xl ${
+          isScrolled 
+            ? 'border-white/20 bg-slate-900/80 shadow-black/40 py-2' 
+            : 'border-white/10 bg-slate-900/40 shadow-slate-950/20'
+        }`}
+      >
+        <Link href="/" className="flex flex-row items-center gap-3 shrink-0 ml-2">
+          <div className="relative h-10 w-10 shrink-0 flex items-center justify-center overflow-hidden rounded-2xl border border-white/5 bg-white/5 shadow-inner">
+            <Image src="/logo.png" alt="TreasuryOS" width={40} height={40} className="object-cover p-1.5" priority />
           </div>
           <div className="hidden sm:block">
             <p className="text-sm font-bold tracking-tight text-white m-0">TreasuryOS</p>
           </div>
         </Link>
 
-        <nav className="hidden items-center gap-8 lg:flex">
+        {/* Explicitly using flex-row and space-x for fallback reliability */}
+        <nav className="hidden lg:flex flex-row items-center justify-center gap-x-8 px-4">
           {primaryNavigation.map((item) => (
-            <Link key={item.href} href={item.href} className="text-sm font-medium tracking-wide text-slate-300 transition-colors hover:text-white hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]">
+            <Link key={item.href} href={item.href} className="px-3 py-2 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-300 transition-all hover:text-white hover:drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">
               {item.label}
             </Link>
           ))}
         </nav>
 
-        <div className="hidden items-center gap-3 lg:flex">
-          <Link href="/company/contact" className="button-secondary px-5 py-2.5 text-sm tracking-wide">
+        <div className="hidden lg:flex flex-row items-center gap-3 mr-2">
+          <Link href="/company/contact" className="button-secondary px-6 py-2.5 !text-[10px] uppercase tracking-[0.2em] font-bold">
             Book intro
           </Link>
-          <Link href={portalUrl} className="button-primary px-5 py-2.5 text-sm tracking-wide" target="_blank" rel="noreferrer">
+          <Link href={portalUrl} className="button-primary px-6 py-2.5 !text-[10px] uppercase tracking-[0.2em] font-bold" target="_blank" rel="noreferrer">
             Open platform
-            <ArrowUpRight className="h-4 w-4" />
+            <ArrowUpRight className="h-3.5 w-3.5" />
           </Link>
         </div>
 

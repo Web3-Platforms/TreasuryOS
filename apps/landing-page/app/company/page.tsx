@@ -7,12 +7,14 @@ import { PageHero } from '@/components/marketing/page-hero';
 import { SectionHeader } from '@/components/marketing/section-header';
 import { SiteShell } from '@/components/marketing/site-shell';
 import { companyPages, companySummaries } from '@/lib/marketing-content';
+import { buildPageMetadata } from '@/lib/site-metadata';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPageMetadata({
   title: 'Company',
   description:
     'Learn how TreasuryOS thinks about product design, rollout discipline, and institutional implementation.',
-};
+  path: '/company',
+});
 
 export default function CompanyPage() {
   return (
