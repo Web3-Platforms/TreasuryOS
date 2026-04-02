@@ -82,3 +82,29 @@ The beta launch decision is now:
 
 So this Cloudflare record is now the single remaining hard launch gate before
 the final live smoke pass.
+
+## Recheck After Attempted Cloudflare Update
+
+I re-checked the public record after the attempted Cloudflare change.
+
+Current public DNS result across major resolvers:
+
+- `1.1.1.1` returns Cloudflare edge A records
+- `8.8.8.8` returns Cloudflare edge A records
+- `9.9.9.9` returns Cloudflare edge A records
+- no public `CNAME` is currently visible for `api.treasuryos.aicustombot.net`
+
+The branded API endpoint still fails before HTTP with:
+
+```text
+LibreSSL: sslv3 alert handshake failure
+```
+
+Interpretation:
+
+- the required `DNS only` result is not live yet
+- Cloudflare is still proxying this hostname, or
+- another `api` DNS record is still taking precedence
+
+Until the public record stops resolving to Cloudflare edge IPs and exposes the
+Railway target path, the branded API domain will remain blocked.
