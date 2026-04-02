@@ -7,15 +7,17 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var OnchainSyncService_1;
 import { Injectable, Logger } from '@nestjs/common';
 import { ComplianceRegistryClient } from '@treasuryos/sdk';
+import { loadKycServiceEnv } from '../config/env.js';
 let OnchainSyncService = OnchainSyncService_1 = class OnchainSyncService {
     logger = new Logger(OnchainSyncService_1.name);
+    env = loadKycServiceEnv();
     async syncKycToChain(entityId, status) {
         const rpcConfig = {
-            url: process.env.SOLANA_RPC_URL,
-            network: process.env.SOLANA_NETWORK ?? 'devnet',
+            url: this.env.SOLANA_RPC_URL,
+            network: this.env.SOLANA_NETWORK,
             commitment: 'confirmed',
         };
-        const client = new ComplianceRegistryClient(process.env.PROGRAM_ID_COMPLIANCE_REGISTRY, rpcConfig);
+        const client = new ComplianceRegistryClient(this.env.PROGRAM_ID_COMPLIANCE_REGISTRY, rpcConfig);
         const [entityPda] = client.deriveEntityRecord(entityId);
         this.logger.log(`Prepared on-chain sync for ${entityId} at ${entityPda.toBase58()} with status ${status}`);
         return {

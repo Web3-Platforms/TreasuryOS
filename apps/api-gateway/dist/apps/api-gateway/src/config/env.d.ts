@@ -13,6 +13,7 @@ declare const envSchema: z.ZodObject<{
     PILOT_INSTITUTION_ID: z.ZodDefault<z.ZodString>;
     PILOT_INSTITUTION_NAME: z.ZodDefault<z.ZodString>;
     PILOT_CUSTOMER_PROFILE: z.ZodDefault<z.ZodString>;
+    PILOT_ALLOW_MANUAL_KYC_BYPASS: z.ZodDefault<z.ZodPipe<z.ZodTransform<unknown, unknown>, z.ZodBoolean>>;
     DEFAULT_ADMIN_EMAIL: z.ZodString;
     DEFAULT_ADMIN_PASSWORD: z.ZodString;
     DEFAULT_COMPLIANCE_EMAIL: z.ZodString;

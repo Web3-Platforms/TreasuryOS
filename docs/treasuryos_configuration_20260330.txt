@@ -1,0 +1,74 @@
+{
+  "projectData": {
+    "name": "treasuryos",
+    "key": "TRS",
+    "type": "software",
+    "style": "TEAM_MANAGED_PROJECT",
+    "accessLevel": "FREE",
+    "template": "jsw.scrum",
+    "isExistingProject": false
+  },
+  "dateTimeProperties": {
+    "dateFormat": "dd/MMM/yy h:mm a",
+    "timeZone": "Africa/Cairo",
+    "locale": "en_US"
+  },
+  "fieldMappings": {
+    "Summary": {
+      "fieldName": "Summary",
+      "fieldId": "summary",
+      "fieldType": "summary",
+      "dataParser": null
+    },
+    "Issue Type": {
+      "fieldName": "Issue Type",
+      "fieldId": "issuetype",
+      "fieldType": "issuetype",
+      "dataParser": null
+    },
+    "Priority": {
+      "fieldName": "Priority",
+      "fieldId": "priority",
+      "fieldType": "priority",
+      "dataParser": null
+    },
+    "Status": {
+      "fieldName": "Status",
+      "fieldId": "status",
+      "fieldType": "status",
+      "dataParser": null
+    },
+    "Assignee": {
+      "fieldName": "Assignee",
+      "fieldId": "assignee",
+      "fieldType": "assignee",
+      "dataParser": null
+    },
+    "Reporter": {
+      "fieldName": "Reporter",
+      "fieldId": "reporter",
+      "fieldType": "reporter",
+      "dataParser": null
+    },
+    "Components": {
+      "fieldId": null,
+      "fieldName": "Components",
+      "fieldType": "com.atlassian.jira.plugin.system.customfieldtypes:select"
+    },
+    "Labels": {
+      "fieldName": "Labels",
+      "fieldId": "labels",
+      "fieldType": "labels",
+      "dataParser": null
+    },
+    "Description": {
+      "fieldName": "Description",
+      "fieldId": "description",
+      "fieldType": "description",
+      "dataParser": null
+    }
+  },
+  "linkMappings": {},
+  "userMappings": {},
+  "userRoles": {}
+}

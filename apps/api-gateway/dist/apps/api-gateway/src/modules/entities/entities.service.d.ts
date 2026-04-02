@@ -24,6 +24,7 @@ export declare class EntitiesService {
     updateDraft(entityId: string, input: UpdateDraftDto, actor: AuthenticatedUser): Promise<EntityRecord>;
     submitEntity(entityId: string, actor: AuthenticatedUser): Promise<EntityRecord>;
     approveEntity(entityId: string, input: EntityDecisionDto, actor: AuthenticatedUser): Promise<EntityRecord>;
+    private isPilotManualKycBypassEnabled;
     rejectEntity(entityId: string, input: EntityDecisionDto, actor: AuthenticatedUser): Promise<EntityRecord>;
     applyVerifiedKycWebhook(payload: SumsubWebhookPayload, digestMetadata: {
         digest: string;

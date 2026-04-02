@@ -13,6 +13,12 @@ declare const envSchema: z.ZodObject<{
     JUMIO_API_SECRET: z.ZodOptional<z.ZodString>;
     JUMIO_WORKFLOW_ID: z.ZodOptional<z.ZodString>;
     SOLANA_RPC_URL: z.ZodString;
+    SOLANA_NETWORK: z.ZodDefault<z.ZodEnum<{
+        devnet: "devnet";
+        testnet: "testnet";
+        "mainnet-beta": "mainnet-beta";
+        custom: "custom";
+    }>>;
     PROGRAM_ID_COMPLIANCE_REGISTRY: z.ZodString;
 }, z.core.$strip>;
 export type KycServiceEnv = Omit<z.infer<typeof envSchema>, 'PORT'> & {
