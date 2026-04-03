@@ -1,5 +1,6 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import type { AiAdvisoryEnvelope, EntityRecord } from '@treasuryos/types';
+import type { AiAdvisoryEnvelope, AiAdvisoryFeedbackRecord, AuthenticatedUser, EntityRecord } from '@treasuryos/types';
+import { z } from 'zod';
 
 import { createResourceId } from '../../common/ids.js';
 import { loadApiGatewayEnv } from '../../config/env.js';
@@ -7,9 +8,20 @@ import { AuditService } from '../audit/audit.service.js';
 import { EntitiesRepository } from '../entities/entities.repository.js';
 import { TransactionCasesRepository } from '../transaction-cases/transaction-cases.repository.js';
 import { WalletsRepository } from '../wallets/wallets.repository.js';
-import { AI_PROVIDER, type AiProvider } from './ai-provider.interface.js';
+import { AI_PROVIDER, type AiProvider, AiProviderError } from './ai-provider.interface.js';
 import { AiAdvisoriesRepository } from './ai-advisories.repository.js';
+import { AiFeedbackRepository } from './ai-feedback.repository.js';
 import { AiRedactionService } from './ai-redaction.service.js';
+import { DeterministicAiProvider } from './deterministic-ai.provider.js';
+
+const aiFeedbackSchema = z.object({
+  disposition: z.enum(['accepted', 'edited', 'dismissed']),
+  helpfulness: z.enum(['helpful', 'not_helpful']),
+  note: z.string().trim().max(2000).optional(),
+});
+const FALLBACK_RETRY_WINDOW_MS = 60_000;
+const RECENT_FALLBACK_NOTICE =
+  'The OpenAI-compatible provider was recently unavailable, so TreasuryOS is temporarily reusing the most recent deterministic fallback advisory.';
 
 @Injectable()
 export class AiService {
@@ -20,8 +32,12 @@ export class AiService {
     private readonly aiProvider: AiProvider,
     @Inject(AiAdvisoriesRepository)
     private readonly aiAdvisoriesRepository: AiAdvisoriesRepository,
+    @Inject(AiFeedbackRepository)
+    private readonly aiFeedbackRepository: AiFeedbackRepository,
     @Inject(AiRedactionService)
     private readonly aiRedactionService: AiRedactionService,
+    @Inject(DeterministicAiProvider)
+    private readonly deterministicAiProvider: DeterministicAiProvider,
     @Inject(TransactionCasesRepository)
     private readonly transactionCasesRepository: TransactionCasesRepository,
     @Inject(EntitiesRepository)
@@ -52,20 +68,80 @@ export class AiService {
       transactionCase,
       wallet,
     });
+    const providerPolicy = this.aiProvider.getPolicy();
+    const deterministicPolicy = this.deterministicAiProvider.getPolicy();
     const existing = await this.aiAdvisoriesRepository.findByResource({
       advisoryType: 'transaction_case_summary',
       resourceId: transactionCase.id,
       resourceType: 'transaction_case',
     });
 
-    if (existing && existing.sourceHash === redacted.sourceHash) {
+    if (
+      existing &&
+      existing.sourceHash === redacted.sourceHash &&
+      existing.provider === providerPolicy.provider &&
+      existing.model === providerPolicy.model &&
+      existing.promptVersion === providerPolicy.promptVersion &&
+      !existing.fallbackUsed
+    ) {
       return {
         enabled: true,
         advisory: existing,
       };
     }
 
-    const generated = await this.aiProvider.generateTransactionCaseAdvisory(redacted.context);
+    const recentFallbackAgeMs = existing ? Date.now() - Date.parse(existing.updatedAt) : Number.POSITIVE_INFINITY;
+    if (
+      existing &&
+      existing.sourceHash === redacted.sourceHash &&
+      existing.fallbackUsed &&
+      this.env.AI_PROVIDER === 'openai-compatible' &&
+      this.env.AI_ADVISORY_FALLBACK === 'deterministic' &&
+      existing.provider === deterministicPolicy.provider &&
+      existing.model === deterministicPolicy.model &&
+      existing.promptVersion === deterministicPolicy.promptVersion &&
+      Number.isFinite(recentFallbackAgeMs) &&
+      recentFallbackAgeMs < FALLBACK_RETRY_WINDOW_MS
+    ) {
+      return {
+        enabled: true,
+        advisory: existing,
+        notice: RECENT_FALLBACK_NOTICE,
+      };
+    }
+
+    let generated;
+
+    try {
+      generated = await this.aiProvider.generateTransactionCaseAdvisory(redacted.context);
+    } catch (error) {
+      if (!(error instanceof AiProviderError)) {
+        throw error;
+      }
+
+      await this.auditService.record({
+        action: 'ai_advisory.generation_failed',
+        actorEmail: 'system@treasuryos.local',
+        actorId: 'system',
+        metadata: {
+          code: error.details.code,
+          provider: error.details.provider,
+          statusCode: error.details.statusCode,
+          transactionCaseId: transactionCase.id,
+          transactionReference: transactionCase.transactionReference,
+        },
+        resourceId: transactionCase.id,
+        resourceType: 'transaction_case',
+        summary: `AI advisory generation failed for transaction case ${transactionCase.transactionReference}`,
+      });
+
+      return {
+        enabled: true,
+        advisory: null,
+        reason: error.details.operatorMessage,
+      };
+    }
+
     const now = new Date().toISOString();
     const savedAdvisory = await this.aiAdvisoriesRepository.save({
       id: existing?.id ?? createResourceId('aiadv'),
@@ -78,6 +154,10 @@ export class AiService {
       checklist: generated.checklist,
       confidence: generated.confidence,
       model: generated.model,
+      provider: generated.provider,
+      promptVersion: generated.promptVersion,
+      fallbackUsed: generated.fallbackUsed,
+      providerLatencyMs: generated.providerLatencyMs,
       redactionProfile: redacted.redactionProfile,
       sourceHash: redacted.sourceHash,
       generatedAt: now,
@@ -90,7 +170,11 @@ export class AiService {
       actorId: 'system',
       metadata: {
         advisoryType: savedAdvisory.advisoryType,
+        fallbackUsed: savedAdvisory.fallbackUsed,
         model: savedAdvisory.model,
+        promptVersion: savedAdvisory.promptVersion,
+        provider: savedAdvisory.provider,
+        providerLatencyMs: savedAdvisory.providerLatencyMs,
         redactionProfile: savedAdvisory.redactionProfile,
         transactionCaseId: transactionCase.id,
         transactionReference: transactionCase.transactionReference,
@@ -103,7 +187,75 @@ export class AiService {
     return {
       enabled: true,
       advisory: savedAdvisory,
+      notice: generated.notice,
     };
+  }
+
+  async submitAdvisoryFeedback(
+    advisoryId: string,
+    input: {
+      helpfulness: string;
+      disposition: string;
+      note?: string;
+    },
+    actor: AuthenticatedUser,
+  ): Promise<AiAdvisoryFeedbackRecord> {
+    const parsedInput = aiFeedbackSchema.parse({
+      ...input,
+      note: input.note?.trim() || undefined,
+    });
+    const advisory = await this.requireAdvisory(advisoryId);
+    const now = new Date().toISOString();
+
+    const feedback = await this.aiFeedbackRepository.save({
+      id: createResourceId('aifb'),
+      advisoryId: advisory.id,
+      advisoryModel: advisory.model,
+      advisoryPromptVersion: advisory.promptVersion,
+      advisoryProvider: advisory.provider,
+      advisorySourceHash: advisory.sourceHash,
+      advisoryType: advisory.advisoryType,
+      actorEmail: actor.email,
+      actorId: actor.id,
+      createdAt: now,
+      disposition: parsedInput.disposition,
+      helpfulness: parsedInput.helpfulness,
+      note: parsedInput.note,
+      resourceId: advisory.resourceId,
+      resourceType: advisory.resourceType,
+      updatedAt: now,
+    });
+
+    await this.auditService.record({
+      action: 'ai_feedback.recorded',
+      actor,
+      metadata: {
+        advisoryId: advisory.id,
+        advisoryModel: advisory.model,
+        advisoryPromptVersion: advisory.promptVersion,
+        advisoryProvider: advisory.provider,
+        advisoryResourceId: advisory.resourceId,
+        advisoryResourceType: advisory.resourceType,
+        disposition: feedback.disposition,
+        feedbackId: feedback.id,
+        helpfulness: feedback.helpfulness,
+      },
+      resourceId: advisory.id,
+      resourceType: 'ai_advisory',
+      summary: `AI feedback recorded for advisory ${advisory.id}`,
+    });
+
+    return feedback;
+  }
+
+  private async requireAdvisory(advisoryId: string) {
+    const advisory = await this.aiAdvisoriesRepository.findById(advisoryId);
+
+    if (!advisory) {
+      throw new NotFoundException(`AI advisory ${advisoryId} not found`);
+    }
+
+    return advisory;
   }
 
   private async requireCase(caseId: string) {

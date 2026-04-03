@@ -118,7 +118,13 @@ const envSchema = z.object({
 
   // ── AI advisories ────────────────────────────────────────────
   AI_ADVISORY_ENABLED: stringBooleanSchema.default(false),
+  AI_PROVIDER: z.enum(['deterministic', 'openai-compatible']).default('deterministic'),
   AI_ADVISORY_MODEL: z.string().min(3).default('deterministic-case-advisor-v1'),
+  AI_PROVIDER_API_KEY: z.string().min(1).optional(),
+  AI_PROVIDER_BASE_URL: z.string().url().default('https://api.openai.com/v1'),
+  AI_PROVIDER_TIMEOUT_MS: z.coerce.number().int().min(1000).max(60000).default(10000),
+  AI_PROMPT_VERSION: z.string().min(3).max(120).default('tx-case-v2'),
+  AI_ADVISORY_FALLBACK: z.enum(['deterministic', 'disabled']).default('deterministic'),
 
   // ── KYC ──────────────────────────────────────────────────────
   KYC_SUMSUB_ENABLED: stringBooleanSchema.default(false),
@@ -242,6 +248,20 @@ function validateApiGatewayEnv(env: ParsedApiGatewayEnv) {
     ) {
       issues.push(
         'Configure Upstash REST credentials or a non-loopback REDIS_URL when REDIS_QUEUE_ENABLED is true in production.',
+      );
+    }
+  }
+
+  if (env.AI_ADVISORY_ENABLED && env.AI_PROVIDER === 'openai-compatible') {
+    if (!env.AI_PROVIDER_API_KEY) {
+      issues.push(
+        'AI_PROVIDER_API_KEY is required when AI_PROVIDER is openai-compatible and AI advisories are enabled.',
+      );
+    }
+
+    if (env.AI_ADVISORY_MODEL.startsWith('deterministic-')) {
+      issues.push(
+        'Set AI_ADVISORY_MODEL to a real provider model when AI_PROVIDER is openai-compatible.',
       );
     }
   }

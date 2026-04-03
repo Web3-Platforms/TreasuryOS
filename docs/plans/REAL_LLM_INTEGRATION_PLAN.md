@@ -19,6 +19,22 @@ TreasuryOS already has a safe foundation in place:
 The next phase is **not** to replace that foundation. It is to add a real model
 provider behind the same contract and rollout controls.
 
+## Current execution status
+
+- first provider chosen: **OpenAI-compatible API**
+- repo implementation now includes:
+  - provider routing
+  - OpenAI-compatible model calls
+  - deterministic fallback
+  - provider metadata persistence
+  - operator feedback capture
+  - dashboard feedback UX
+- remaining manual rollout work is now mostly operational:
+  - provider account setup
+  - Railway secret configuration
+  - canary enablement
+  - feedback review
+
 ## Management workflow
 
 ### 1. Plan

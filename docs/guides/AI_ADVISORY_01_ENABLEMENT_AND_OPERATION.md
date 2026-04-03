@@ -12,6 +12,7 @@ The first AI slice is:
 - **feature-flagged**
 - **stored and auditable**
 - **not allowed to approve, reject, escalate, or sign anything**
+- **capable of deterministic or OpenAI-compatible provider modes**
 
 When enabled, the dashboard transaction-case detail page shows an **AI Advisory**
 card sourced from the API gateway route:
@@ -34,10 +35,24 @@ Set these in the API gateway environment:
 
 ```env
 AI_ADVISORY_ENABLED=true
+AI_PROVIDER=deterministic
 AI_ADVISORY_MODEL=deterministic-case-advisor-v1
 ```
 
-For a safe first rollout, leave everything else unchanged.
+For a safe first rollout, start with deterministic mode.
+
+If you want the real-provider path:
+
+```env
+AI_ADVISORY_ENABLED=true
+AI_PROVIDER=openai-compatible
+AI_ADVISORY_MODEL=gpt-4.1-mini
+AI_PROVIDER_API_KEY=<Railway secret only>
+AI_PROVIDER_BASE_URL=https://api.openai.com/v1
+AI_PROVIDER_TIMEOUT_MS=10000
+AI_PROMPT_VERSION=tx-case-v2
+AI_ADVISORY_FALLBACK=deterministic
+```
 
 ## Step-by-step
 
@@ -54,11 +69,17 @@ Before enabling the flag, confirm the team understands:
 In Railway or your local API environment:
 
 1. set `AI_ADVISORY_ENABLED=true`
-2. optionally set `AI_ADVISORY_MODEL` to the label you want operators to see
-3. redeploy the API gateway
+2. choose `AI_PROVIDER=deterministic` or `AI_PROVIDER=openai-compatible`
+3. if using the real-provider path, set the API key, base URL, prompt version,
+   and fallback vars too
+4. redeploy the API gateway
 
 If the flag is `false`, the API returns a disabled response and the dashboard
 shows that AI advisories are unavailable.
+
+When `AI_PROVIDER=openai-compatible` and `AI_ADVISORY_FALLBACK=deterministic`,
+TreasuryOS will temporarily reuse a fresh fallback advisory for a short retry
+window instead of stalling every page load on a failing provider.
 
 ### 3. Deploy the dashboard if needed
 
@@ -77,13 +98,17 @@ Then:
 1. open the transaction case detail page
 2. confirm the **AI Advisory** card renders
 3. confirm it shows:
-   - summary
-   - recommendation
-   - risk factors
-   - operator checklist
-   - model label
-   - generated timestamp
-   - redaction profile
+    - summary
+    - recommendation
+    - risk factors
+    - operator checklist
+    - provider
+    - model label
+    - prompt version
+    - fallback status
+    - generated timestamp
+    - redaction profile
+    - feedback controls
 
 ### 5. Train operators on the operating rule
 
@@ -97,8 +122,9 @@ Tell reviewers:
 
 If the advisory output is distracting or you want to pause rollout:
 
-1. set `AI_ADVISORY_ENABLED=false`
-2. redeploy the API gateway
+1. either set `AI_PROVIDER=deterministic` to leave AI on with no external model
+2. or set `AI_ADVISORY_ENABLED=false` to disable the feature entirely
+3. redeploy the API gateway
 
 The rest of the transaction-review workflow continues unchanged.
 
@@ -106,15 +132,16 @@ The rest of the transaction-review workflow continues unchanged.
 
 After the first rollout is stable, the next manual/product decisions are:
 
-1. decide whether TreasuryOS wants an external model provider at all
-2. define retention and residency policy for future provider-backed prompts
-3. decide whether operator feedback capture should be the next AI increment
-4. if you move to a real provider, use `AI_ADVISORY_02_REAL_LLM_PROVIDER_SETUP.md`
-   together with `docs/plans/REAL_LLM_INTEGRATION_PLAN.md`
+1. complete provider secret setup in Railway if you want the real-provider path
+2. define retention and residency policy for provider-backed prompts
+3. review early operator feedback before broader rollout
+4. use `AI_ADVISORY_02_REAL_LLM_PROVIDER_SETUP.md` together with
+   `docs/plans/REAL_LLM_INTEGRATION_PLAN.md` for the manual rollout lane
 
 ## Related references
 
 - `docs/reports/AI_ADVISORY_FOUNDATION_REPORT.md`
+- `docs/reports/AI_REAL_LLM_IMPLEMENTATION_REPORT.md`
 - `docs/guides/AI_ADVISORY_02_REAL_LLM_PROVIDER_SETUP.md`
 - `docs/plans/AI_ADVISORY_LAYER_IMPLEMENTATION_PLAN.md`
 - `docs/plans/REAL_LLM_INTEGRATION_PLAN.md`

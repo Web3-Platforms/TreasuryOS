@@ -48,11 +48,15 @@
      - What shipped in the first AI slice
      - Safety boundaries and rollout posture
      - Validation commands and follow-up recommendations
-12. **[plans/REAL_LLM_INTEGRATION_PLAN.md](plans/REAL_LLM_INTEGRATION_PLAN.md)** ⭐ NEXT AI PHASE
+12. **[reports/AI_REAL_LLM_IMPLEMENTATION_REPORT.md](reports/AI_REAL_LLM_IMPLEMENTATION_REPORT.md)** ⭐ REAL LLM REPORT
+    - What shipped in the OpenAI-compatible provider phase
+    - Fallback, feedback, and runtime configuration
+    - Validation evidence and live rollout checklist
+13. **[plans/REAL_LLM_INTEGRATION_PLAN.md](plans/REAL_LLM_INTEGRATION_PLAN.md)** ⭐ NEXT AI PHASE
     - Detailed plan for integrating a real external provider
     - Management workflow from planning through maintenance
     - Provider, security, rollout, and feedback requirements
-13. **[thoughts/brainstorm.md](thoughts/brainstorm.md)** ⭐ STRATEGIC THOUGHTS
+14. **[thoughts/brainstorm.md](thoughts/brainstorm.md)** ⭐ STRATEGIC THOUGHTS
      - What happens if TreasuryOS builds the AI layer first
      - Whether audit/manual work can be deferred
      - Whether the AI layer can act like an internal audit function

@@ -62,6 +62,8 @@ This means:
 - Report download handling supports the launch formats and routing behavior required by the current dashboard
 - Entity draft creation is available for the allowed operator roles
 - Wallet governance and signer loading now support the launch-time serverless environment model
+- AI advisories now support deterministic and OpenAI-compatible provider modes,
+  deterministic fallback, and operator feedback capture on transaction cases
 
 ---
 
@@ -96,7 +98,8 @@ These items are intentionally not part of the first launch:
 - Live on-chain synchronization
 - Solana mainnet finalization and fee-management path
 - Full banking production integrations
-- external AI provider selection, advisory feedback capture, and AI expansion beyond transaction-case summaries
+- live provider secret rollout, canary evaluation, and AI expansion beyond the
+  current transaction-case advisory surface
 
 ---
 

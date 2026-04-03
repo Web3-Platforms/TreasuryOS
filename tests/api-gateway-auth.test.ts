@@ -692,15 +692,67 @@ test('wallet approval moves into proposal_pending when Squads proposal creation 
 test('rbac, onboarding, wallet governance, transaction review, AI advisories, and reporting work end to end when Sumsub is enabled', async () => {
   const fixture = withApiEnv({
     AI_ADVISORY_ENABLED: 'true',
-    AI_ADVISORY_MODEL: 'deterministic-test-advisor-v1',
+    AI_PROVIDER: 'openai-compatible',
+    AI_PROVIDER_API_KEY: 'test-openai-key',
+    AI_PROVIDER_BASE_URL: 'https://llm.example.com/v1',
+    AI_PROVIDER_TIMEOUT_MS: '3000',
+    AI_ADVISORY_MODEL: 'gpt-4.1-mini',
+    AI_PROMPT_VERSION: 'tx-case-v2',
+    AI_ADVISORY_FALLBACK: 'deterministic',
     KYC_SUMSUB_ENABLED: 'true',
   });
   const originalFetch = globalThis.fetch;
   const sumsubWebhookSecret = process.env.SUMSUB_WEBHOOK_SECRET!;
+  let llmMode: 'success' | 'failure' = 'success';
+  let llmRequestCount = 0;
   let app: Awaited<ReturnType<typeof bootstrapApiApp>>['app'] | undefined;
 
   globalThis.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
     const url = typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url;
+
+    if (url.startsWith('https://llm.example.com/v1/chat/completions')) {
+      llmRequestCount += 1;
+
+      if (llmMode === 'failure') {
+        return new Response(JSON.stringify({ error: { message: 'provider unavailable' } }), {
+          status: 503,
+          headers: {
+            'content-type': 'application/json',
+          },
+        });
+      }
+
+      return new Response(JSON.stringify({
+        id: 'chatcmpl-test-1',
+        model: 'gpt-4.1-mini',
+        choices: [
+          {
+            message: {
+              content: JSON.stringify({
+                summary:
+                  'Case tx-review-1 is a human-reviewed EU treasury transfer flagged by deterministic screening thresholds and should remain in manual review context.',
+                recommendation:
+                  'Keep the case in human review until beneficiary evidence and wallet ownership are explicitly reconciled in the review record.',
+                riskFactors: [
+                  'The travel-rule threshold screening rule fired for this transfer.',
+                  'The entity is operating in a regulated treasury workflow that still requires human evidence review.',
+                ],
+                checklist: [
+                  'Verify the beneficiary evidence attached to the case record.',
+                  'Confirm source and destination wallet ownership against entity records.',
+                ],
+                confidence: 0.68,
+              }),
+            },
+          },
+        ],
+      }), {
+        status: 200,
+        headers: {
+          'content-type': 'application/json',
+        },
+      });
+    }
 
     if (url.startsWith('https://api.sumsub.com')) {
       return new Response(JSON.stringify({ id: 'sumsub-applicant-1' }), {
@@ -1127,7 +1179,11 @@ test('rbac, onboarding, wallet governance, transaction review, AI advisories, an
     const advisoryPayload = await advisoryResponse.json();
     assert.equal(advisoryPayload.enabled, true);
     assert.equal(advisoryPayload.advisory.resourceId, openedCasePayload.case.id);
-    assert.equal(advisoryPayload.advisory.model, 'deterministic-test-advisor-v1');
+    assert.equal(advisoryPayload.advisory.model, 'gpt-4.1-mini');
+    assert.equal(advisoryPayload.advisory.provider, 'openai-compatible');
+    assert.equal(advisoryPayload.advisory.promptVersion, 'tx-case-v2');
+    assert.equal(advisoryPayload.advisory.fallbackUsed, false);
+    assert.equal(llmRequestCount, 1);
     assert.match(advisoryPayload.advisory.summary, /tx-review-1/);
     assert.ok(
       advisoryPayload.advisory.riskFactors.some((factor: string) =>
@@ -1151,8 +1207,31 @@ test('rbac, onboarding, wallet governance, transaction review, AI advisories, an
     assert.equal(cachedAdvisoryResponse.status, 200);
     const cachedAdvisory = await cachedAdvisoryResponse.json();
     assert.equal(cachedAdvisory.advisory.id, advisoryPayload.advisory.id);
+    assert.equal(llmRequestCount, 1);
+
+    const feedbackResponse = await fetch(
+      `${started.baseUrl}/ai/advisories/${advisoryPayload.advisory.id}/feedback`,
+      {
+        method: 'POST',
+        headers: {
+          authorization: `Bearer ${auditorLogin.accessToken}`,
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({
+          helpfulness: 'helpful',
+          disposition: 'edited',
+          note: 'Useful summary, but the recommendation needed our standard escalation wording.',
+        }),
+      },
+    );
+    assert.equal(feedbackResponse.status, 201);
+    const feedbackPayload = await feedbackResponse.json();
+    assert.equal(feedbackPayload.advisoryId, advisoryPayload.advisory.id);
+    assert.equal(feedbackPayload.helpfulness, 'helpful');
+    assert.equal(feedbackPayload.disposition, 'edited');
 
     await new Promise((resolve) => setTimeout(resolve, 20));
+    llmMode = 'failure';
     await app.get(DatabaseService).pool.query(
       `
         update transaction_cases
@@ -1179,6 +1258,52 @@ test('rbac, onboarding, wallet governance, transaction review, AI advisories, an
     assert.equal(regeneratedAdvisory.advisory.id, advisoryPayload.advisory.id);
     assert.equal(regeneratedAdvisory.advisory.generatedAt, advisoryPayload.advisory.generatedAt);
     assert.notEqual(regeneratedAdvisory.advisory.updatedAt, advisoryPayload.advisory.updatedAt);
+    assert.equal(regeneratedAdvisory.advisory.provider, 'deterministic');
+    assert.equal(regeneratedAdvisory.advisory.fallbackUsed, true);
+    assert.match(String(regeneratedAdvisory.notice), /deterministic fallback/i);
+    assert.equal(llmRequestCount, 2);
+
+    const reusedFallbackResponse = await fetch(
+      `${started.baseUrl}/ai/transaction-cases/${openedCasePayload.case.id}/advisory`,
+      {
+        headers: {
+          authorization: `Bearer ${auditorLogin.accessToken}`,
+        },
+      },
+    );
+    assert.equal(reusedFallbackResponse.status, 200);
+    const reusedFallback = await reusedFallbackResponse.json();
+    assert.equal(reusedFallback.advisory.id, advisoryPayload.advisory.id);
+    assert.equal(reusedFallback.advisory.provider, 'deterministic');
+    assert.equal(reusedFallback.advisory.fallbackUsed, true);
+    assert.equal(reusedFallback.advisory.updatedAt, regeneratedAdvisory.advisory.updatedAt);
+    assert.match(String(reusedFallback.notice), /temporarily reusing/i);
+    assert.equal(llmRequestCount, 2);
+
+    llmMode = 'success';
+    await app.get(DatabaseService).pool.query(
+      `
+        update ai_advisories
+        set updated_at = now() - interval '2 minutes'
+        where id = $1
+      `,
+      [advisoryPayload.advisory.id],
+    );
+    const recoveredAdvisoryResponse = await fetch(
+      `${started.baseUrl}/ai/transaction-cases/${openedCasePayload.case.id}/advisory`,
+      {
+        headers: {
+          authorization: `Bearer ${auditorLogin.accessToken}`,
+        },
+      },
+    );
+    assert.equal(recoveredAdvisoryResponse.status, 200);
+    const recoveredAdvisory = await recoveredAdvisoryResponse.json();
+    assert.equal(recoveredAdvisory.advisory.id, advisoryPayload.advisory.id);
+    assert.equal(recoveredAdvisory.advisory.provider, 'openai-compatible');
+    assert.equal(recoveredAdvisory.advisory.fallbackUsed, false);
+    assert.equal(recoveredAdvisory.notice, undefined);
+    assert.equal(llmRequestCount, 3);
 
     const reportMonth = new Date().toISOString().slice(0, 7);
     const generateReportResponse = await fetch(`${started.baseUrl}/reports`, {
@@ -1230,6 +1355,7 @@ test('rbac, onboarding, wallet governance, transaction review, AI advisories, an
     assert.equal(auditResponse.status, 200);
     const auditPayload = await auditResponse.json();
     assert.ok(auditPayload.events.some((event: { action: string }) => event.action === 'entity.approved'));
+    assert.ok(auditPayload.events.some((event: { action: string }) => event.action === 'ai_feedback.recorded'));
     assert.ok(auditPayload.events.some((event: { action: string }) => event.action === 'wallet.approved'));
     assert.ok(auditPayload.events.some((event: { action: string }) => event.action === 'transaction_case.approved'));
     assert.ok(auditPayload.events.some((event: { action: string }) => event.action === 'report.generated'));

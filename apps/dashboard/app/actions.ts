@@ -5,7 +5,15 @@ import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { fetchApi } from '@/lib/api-client';
 import { isDemoAccessAvailable, isSumsubKycEnabled } from '@/lib/feature-flags';
-import { Jurisdiction, RiskLevel, type EntityRecord, type ReportRecord } from '@treasuryos/types';
+import {
+  Jurisdiction,
+  RiskLevel,
+  type AiAdvisoryFeedbackDisposition,
+  type AiAdvisoryFeedbackHelpfulness,
+  type AiAdvisoryFeedbackRecord,
+  type EntityRecord,
+  type ReportRecord,
+} from '@treasuryos/types';
 
 type ActionResult = { success: true } | { error: string };
 type CreateEntityActionResult = { success: true; entityId: string } | { error: string };
@@ -391,6 +399,27 @@ export async function escalateTransactionAction(caseId: string, notes: string) {
     return { success: true };
   } catch (error) {
     return { error: error instanceof Error ? error.message : 'Escalate action failed' };
+  }
+}
+
+export async function submitAiAdvisoryFeedbackAction(
+  advisoryId: string,
+  caseId: string,
+  input: {
+    helpfulness: AiAdvisoryFeedbackHelpfulness;
+    disposition: AiAdvisoryFeedbackDisposition;
+    note?: string;
+  },
+): Promise<ActionResult> {
+  try {
+    await fetchApi<AiAdvisoryFeedbackRecord>(`ai/advisories/${advisoryId}/feedback`, {
+      method: 'POST',
+      body: JSON.stringify(input),
+    });
+    revalidatePath(`/transactions/${caseId}`);
+    return { success: true };
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : 'AI feedback action failed' };
   }
 }
 

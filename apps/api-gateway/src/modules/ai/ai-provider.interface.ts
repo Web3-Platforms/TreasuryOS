@@ -1,9 +1,12 @@
 import type {
   AiAdvisoryRecord,
+  AiProviderKind,
   EntityRecord,
   ReviewedTransaction,
   WalletRecord,
 } from '@treasuryos/types';
+
+export type AiProviderPolicy = Pick<AiAdvisoryRecord, 'model' | 'promptVersion' | 'provider'>;
 
 export type TransactionCaseAdvisoryContext = {
   amount: string;
@@ -36,10 +39,37 @@ export type TransactionCaseAdvisoryContext = {
 
 export type GeneratedAiAdvisory = Pick<
   AiAdvisoryRecord,
-  'checklist' | 'confidence' | 'model' | 'recommendation' | 'riskFactors' | 'summary'
->;
+  | 'checklist'
+  | 'confidence'
+  | 'fallbackUsed'
+  | 'model'
+  | 'promptVersion'
+  | 'provider'
+  | 'providerLatencyMs'
+  | 'recommendation'
+  | 'riskFactors'
+  | 'summary'
+> & {
+  notice?: string;
+};
+
+export class AiProviderError extends Error {
+  constructor(
+    message: string,
+    readonly details: {
+      code: 'invalid_response' | 'request_failed' | 'timeout';
+      operatorMessage: string;
+      provider: AiProviderKind;
+      statusCode?: number;
+    },
+  ) {
+    super(message);
+    this.name = 'AiProviderError';
+  }
+}
 
 export interface AiProvider {
+  getPolicy(): AiProviderPolicy;
   generateTransactionCaseAdvisory(
     context: TransactionCaseAdvisoryContext,
   ): Promise<GeneratedAiAdvisory>;

@@ -6,11 +6,11 @@ cannot be completed automatically from inside the repository.
 ## Start here
 
 1. **[AI_ADVISORY_01_ENABLEMENT_AND_OPERATION.md](AI_ADVISORY_01_ENABLEMENT_AND_OPERATION.md)**
-   Enable the first AI advisory slice safely, verify it in the product, and
-   know when to roll it back.
+   Enable the AI advisory slice safely in deterministic or real-provider mode,
+   verify it in the product, and know when to roll it back.
 2. **[AI_ADVISORY_02_REAL_LLM_PROVIDER_SETUP.md](AI_ADVISORY_02_REAL_LLM_PROVIDER_SETUP.md)**
-   Prepare the manual provider, security, and secret-management work needed
-   before TreasuryOS connects to a real external LLM.
+   Complete the manual provider, security, and secret-management work needed
+   to activate the shipped OpenAI-compatible provider path.
 3. **[PROTOCOL_AUDIT_00_AUDIT_FIRM_PRIMER.md](PROTOCOL_AUDIT_00_AUDIT_FIRM_PRIMER.md)**
    Understand what audit firms are, why TreasuryOS needs one, what requirements
    matter, and how to work with them well.

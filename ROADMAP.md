@@ -371,13 +371,20 @@ layer**.
 4. Add `AI_ADVISORY_ENABLED` and `AI_ADVISORY_MODEL` env vars
 5. Render the advisory on the dashboard transaction-case detail page
 
-### Next AI steps
+### Real-provider rollout now shipped in code
 
-1. Execute `docs/plans/REAL_LLM_INTEGRATION_PLAN.md` to add one real-provider
-   transaction-case advisory path behind the existing AI module
+1. Add one OpenAI-compatible transaction-case advisory path behind the existing
+   AI module
 2. Add operator feedback capture for advisory quality review
 3. Keep deterministic fallback available during rollout and rollback
-4. Expand read-only advisories to wallet reviews or report narratives only after
+4. Surface provider, prompt version, fallback state, and latency in the
+   dashboard advisory card
+
+### Next AI steps
+
+1. Complete Railway secret setup and the first live canary rollout
+2. Review operator feedback, fallback rate, and latency before broader enablement
+3. Expand read-only advisories to wallet reviews or report narratives only after
    the transaction-case slice is stable
 
 ---

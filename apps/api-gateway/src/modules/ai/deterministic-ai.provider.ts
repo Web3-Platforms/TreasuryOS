@@ -2,7 +2,15 @@ import { Injectable } from '@nestjs/common';
 import { RiskLevel, TransactionCaseStatus } from '@treasuryos/types';
 
 import { loadApiGatewayEnv } from '../../config/env.js';
-import type { AiProvider, GeneratedAiAdvisory, TransactionCaseAdvisoryContext } from './ai-provider.interface.js';
+import type {
+  AiProvider,
+  AiProviderPolicy,
+  GeneratedAiAdvisory,
+  TransactionCaseAdvisoryContext,
+} from './ai-provider.interface.js';
+
+const DETERMINISTIC_PROMPT_VERSION = 'deterministic-tx-case-v1';
+const DETERMINISTIC_FALLBACK_MODEL = 'deterministic-case-advisor-v1';
 
 function joinWithAnd(values: string[]) {
   if (values.length === 0) {
@@ -57,6 +65,17 @@ function dedupe(values: string[]) {
 @Injectable()
 export class DeterministicAiProvider implements AiProvider {
   private readonly env = loadApiGatewayEnv();
+
+  getPolicy(): AiProviderPolicy {
+    return {
+      model:
+        this.env.AI_PROVIDER === 'deterministic'
+          ? this.env.AI_ADVISORY_MODEL
+          : DETERMINISTIC_FALLBACK_MODEL,
+      promptVersion: DETERMINISTIC_PROMPT_VERSION,
+      provider: 'deterministic',
+    };
+  }
 
   async generateTransactionCaseAdvisory(
     context: TransactionCaseAdvisoryContext,
@@ -129,7 +148,11 @@ export class DeterministicAiProvider implements AiProvider {
     return {
       checklist,
       confidence: Number(Math.min(confidence, 0.9).toFixed(2)),
-      model: this.env.AI_ADVISORY_MODEL,
+      fallbackUsed: false,
+      model: this.getPolicy().model,
+      promptVersion: DETERMINISTIC_PROMPT_VERSION,
+      provider: 'deterministic',
+      providerLatencyMs: undefined,
       recommendation,
       riskFactors,
       summary: summaryParts.join(' '),

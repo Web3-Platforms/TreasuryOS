@@ -49,7 +49,13 @@ FRONTEND_URL=https://app.example.com           # Required in production for CORS
 
 # ── AI Advisories ───────────────────────────────────────
 AI_ADVISORY_ENABLED=false                      # Enables read-only transaction-case AI advisories
-AI_ADVISORY_MODEL=deterministic-case-advisor-v1
+AI_PROVIDER=deterministic                      # Options: deterministic, openai-compatible
+AI_ADVISORY_MODEL=deterministic-case-advisor-v1 # Set a real model (e.g. gpt-4.1-mini) when AI_PROVIDER=openai-compatible
+AI_PROVIDER_API_KEY=your-provider-api-key      # Required when AI_PROVIDER=openai-compatible and AI_ADVISORY_ENABLED=true
+AI_PROVIDER_BASE_URL=https://api.openai.com/v1 # OpenAI-compatible base URL
+AI_PROVIDER_TIMEOUT_MS=10000
+AI_PROMPT_VERSION=tx-case-v2
+AI_ADVISORY_FALLBACK=deterministic             # Options: deterministic, disabled
 
 # ── Solana RPC ───────────────────────────────────────────
 SOLANA_RPC_URL=https://api.devnet.solana.com   # Local default; use testnet for beta launch
@@ -160,6 +166,9 @@ NEXT_PUBLIC_SENTRY_DSN=https://key@sentry.io/project-id
 
 - The dashboard uses `API_BASE_URL`, not `NEXT_PUBLIC_API_BASE_URL`.
 - AI advisories are served by the API gateway and rendered on the dashboard transaction-case detail page when enabled.
+- The OpenAI-compatible real-provider path is activated only on the API service via `AI_PROVIDER=openai-compatible`.
+- When `AI_PROVIDER=openai-compatible`, `AI_PROVIDER_API_KEY` is required and `AI_ADVISORY_MODEL` must be a real provider model instead of a deterministic label.
+- The dashboard now lets reviewers submit advisory feedback from the transaction detail page, but the provider credentials still belong only in Railway.
 - `KYC_SUMSUB_ENABLED` and `PILOT_ALLOW_MANUAL_KYC_BYPASS` are read by both the dashboard and the API so the launch posture stays consistent.
 - Leave demo access disabled unless you explicitly want a public demo login path.
 - For stricter environments, set `SEED_DEFAULT_USERS=false` after a deliberate `npm run seed:users` bootstrap so logins no longer mutate default-user password hashes implicitly.

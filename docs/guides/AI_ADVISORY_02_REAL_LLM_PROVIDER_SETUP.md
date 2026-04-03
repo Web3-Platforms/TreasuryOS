@@ -1,18 +1,19 @@
 # AI Advisory Guide 02 - Real LLM Provider Setup
 
-This guide covers the **manual work you own** before TreasuryOS can move from
-the built-in deterministic advisory provider to a real external LLM.
+This guide covers the **manual work you own** to activate the shipped
+OpenAI-compatible real-provider path in TreasuryOS.
 
 ## What is already true today
 
-The current shipped AI slice:
+The repo now supports:
 
-- is advisory-only
-- does not call OpenAI, Anthropic, or another external model yet
-- uses the built-in deterministic provider
-- stays behind `AI_ADVISORY_ENABLED`
+- deterministic AI advisories
+- OpenAI-compatible provider-backed advisories
+- deterministic fallback
+- advisory feedback capture
 
-So this guide is for the **next phase**, not for the current rollout.
+The remaining manual work is provider account setup, secret storage, and canary
+rollout.
 
 ## What you need to decide
 
@@ -24,7 +25,7 @@ Pick one of these paths:
 2. managed provider through your cloud account
 3. self-hosted model
 
-For the first real integration, the recommended path is **one managed provider**
+The current implemented path is **one managed OpenAI-compatible provider**
 behind the existing API gateway abstraction.
 
 ### 2. Approve the security and privacy posture
@@ -73,21 +74,20 @@ Do **not** share the raw API key in chat.
 
 ## Where to store the secret
 
-When the implementation phase is ready, put the key in the API gateway service
-environment in Railway.
+Put the key in the API gateway service environment in Railway.
 
-Expected future shape:
+Current configuration shape:
 
 ```env
-AI_PROVIDER=managed-llm
+AI_ADVISORY_ENABLED=true
+AI_PROVIDER=openai-compatible
 AI_PROVIDER_API_KEY=<set in Railway only>
+AI_PROVIDER_BASE_URL=https://api.openai.com/v1
 AI_ADVISORY_MODEL=<approved provider model>
 AI_PROVIDER_TIMEOUT_MS=10000
+AI_PROMPT_VERSION=tx-case-v2
 AI_ADVISORY_FALLBACK=deterministic
 ```
-
-These names are planned, not live yet. Follow the implementation PR or rollout
-report for the final variable names.
 
 ## First-canary checklist
 
@@ -105,11 +105,12 @@ When you are ready to move beyond the current deterministic provider, the repo
 work should follow:
 
 1. `docs/plans/REAL_LLM_INTEGRATION_PLAN.md`
-2. a provider integration implementation PR
-3. a rollout report with validation evidence
+2. `docs/reports/AI_REAL_LLM_IMPLEMENTATION_REPORT.md`
+3. a live rollout with your Railway provider secrets
 
 ## Related references
 
 - `docs/plans/REAL_LLM_INTEGRATION_PLAN.md`
 - `docs/plans/AI_ADVISORY_LAYER_IMPLEMENTATION_PLAN.md`
 - `docs/reports/AI_ADVISORY_FOUNDATION_REPORT.md`
+- `docs/reports/AI_REAL_LLM_IMPLEMENTATION_REPORT.md`

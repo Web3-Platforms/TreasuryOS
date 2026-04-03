@@ -106,6 +106,37 @@ test('api gateway allows production queues when a real Redis transport is config
   assert.equal(env.REDIS_URL, 'rediss://default:token@cache.example.com:6380');
 });
 
+test('api gateway rejects openai-compatible AI config without an API key', () => {
+  assert.throws(
+    () =>
+      loadApiGatewayEnv(
+        createProductionEnv({
+          AI_ADVISORY_ENABLED: 'true',
+          AI_PROVIDER: 'openai-compatible',
+          AI_ADVISORY_MODEL: 'gpt-4.1-mini',
+        }),
+      ),
+    /AI_PROVIDER_API_KEY is required/,
+  );
+});
+
+test('api gateway accepts openai-compatible AI config with provider credentials', () => {
+  const env = loadApiGatewayEnv(
+    createProductionEnv({
+      AI_ADVISORY_ENABLED: 'true',
+      AI_PROVIDER: 'openai-compatible',
+      AI_PROVIDER_API_KEY: 'test-openai-key',
+      AI_PROVIDER_BASE_URL: 'https://llm.example.com/v1',
+      AI_ADVISORY_MODEL: 'gpt-4.1-mini',
+      AI_PROMPT_VERSION: 'tx-case-v2',
+    }),
+  );
+
+  assert.equal(env.AI_PROVIDER, 'openai-compatible');
+  assert.equal(env.AI_ADVISORY_MODEL, 'gpt-4.1-mini');
+  assert.equal(env.AI_PROVIDER_API_KEY, 'test-openai-key');
+});
+
 test('api gateway development CORS keeps localhost origins plus optional frontend', () => {
   const env = loadApiGatewayEnv(
     createProductionEnv({

@@ -18,6 +18,13 @@ function mapAiAdvisoryRow(row: Record<string, unknown>): AiAdvisoryRecord {
     confidence:
       row.confidence === null || row.confidence === undefined ? undefined : Number(row.confidence),
     model: String(row.model),
+    provider: String(row.provider) as AiAdvisoryRecord['provider'],
+    promptVersion: String(row.prompt_version),
+    fallbackUsed: Boolean(row.fallback_used),
+    providerLatencyMs:
+      row.provider_latency_ms === null || row.provider_latency_ms === undefined
+        ? undefined
+        : Number(row.provider_latency_ms),
     redactionProfile: String(row.redaction_profile),
     sourceHash: String(row.source_hash),
     generatedAt: toIso(row.created_at) ?? new Date().toISOString(),
@@ -51,6 +58,10 @@ export class AiAdvisoriesRepository {
           checklist,
           confidence,
           model,
+          provider,
+          prompt_version,
+          fallback_used,
+          provider_latency_ms,
           redaction_profile,
           source_hash,
           created_at,
@@ -61,6 +72,41 @@ export class AiAdvisoriesRepository {
         limit 1
       `,
       [input.advisoryType, input.resourceType, input.resourceId],
+    );
+
+    return result.rows[0]
+      ? mapAiAdvisoryRow(result.rows[0] as Record<string, unknown>)
+      : undefined;
+  }
+
+  async findById(id: string, client?: PoolClient): Promise<AiAdvisoryRecord | undefined> {
+    const executor = client ?? this.database.pool;
+    const result = await executor.query(
+      `
+        select
+          id,
+          advisory_type,
+          resource_type,
+          resource_id,
+          summary,
+          recommendation,
+          risk_factors,
+          checklist,
+          confidence,
+          model,
+          provider,
+          prompt_version,
+          fallback_used,
+          provider_latency_ms,
+          redaction_profile,
+          source_hash,
+          created_at,
+          updated_at
+        from ai_advisories
+        where id = $1
+        limit 1
+      `,
+      [id],
     );
 
     return result.rows[0]
@@ -83,13 +129,17 @@ export class AiAdvisoriesRepository {
           checklist,
           confidence,
           model,
+          provider,
+          prompt_version,
+          fallback_used,
+          provider_latency_ms,
           redaction_profile,
           source_hash,
           created_at,
           updated_at
         )
         values (
-          $1, $2, $3, $4, $5, $6, $7::text[], $8::text[], $9, $10, $11, $12, $13, $14
+          $1, $2, $3, $4, $5, $6, $7::text[], $8::text[], $9, $10, $11, $12, $13, $14, $15, $16, $17, $18
         )
         on conflict (advisory_type, resource_type, resource_id) do update
         set
@@ -99,6 +149,10 @@ export class AiAdvisoriesRepository {
           checklist = excluded.checklist,
           confidence = excluded.confidence,
           model = excluded.model,
+          provider = excluded.provider,
+          prompt_version = excluded.prompt_version,
+          fallback_used = excluded.fallback_used,
+          provider_latency_ms = excluded.provider_latency_ms,
           redaction_profile = excluded.redaction_profile,
           source_hash = excluded.source_hash,
           updated_at = excluded.updated_at
@@ -113,6 +167,10 @@ export class AiAdvisoriesRepository {
           checklist,
           confidence,
           model,
+          provider,
+          prompt_version,
+          fallback_used,
+          provider_latency_ms,
           redaction_profile,
           source_hash,
           created_at,
@@ -129,6 +187,10 @@ export class AiAdvisoriesRepository {
         advisory.checklist,
         advisory.confidence ?? null,
         advisory.model,
+        advisory.provider,
+        advisory.promptVersion,
+        advisory.fallbackUsed,
+        advisory.providerLatencyMs ?? null,
         advisory.redactionProfile,
         advisory.sourceHash,
         advisory.generatedAt,

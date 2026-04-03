@@ -3,6 +3,7 @@ import { AppShell } from '@/components/app-shell';
 import type { AiAdvisoryEnvelope, ReviewedTransaction } from '@treasuryos/types';
 import Link from 'next/link';
 import { TransactionReviewActions } from '@/components/transaction-review-actions';
+import { AiAdvisoryFeedbackForm } from '@/components/ai-advisory-feedback-form';
 
 export default async function TransactionDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -118,6 +119,12 @@ export default async function TransactionDetailPage({ params }: { params: Promis
             </div>
           ) : aiAdvisory?.enabled && aiAdvisory.advisory ? (
             <div style={{ display: 'grid', gap: '1rem' }}>
+              {aiAdvisory.notice ? (
+                <div style={{ background: '#2a2100', border: '1px solid #8a6d08', color: '#f0d26d', padding: '1rem', borderRadius: '8px' }}>
+                  {aiAdvisory.notice}
+                </div>
+              ) : null}
+
               <div>
                 <div style={{ color: '#888', fontSize: '0.875rem', marginBottom: '0.35rem' }}>Summary</div>
                 <div style={{ color: '#ddd', lineHeight: 1.6 }}>{aiAdvisory.advisory.summary}</div>
@@ -135,7 +142,7 @@ export default async function TransactionDetailPage({ params }: { params: Promis
                   <div style={{ color: '#888', fontSize: '0.875rem', marginBottom: '0.5rem' }}>Risk Factors</div>
                   {aiAdvisory.advisory.riskFactors.length > 0 ? (
                     <ul style={{ margin: 0, paddingLeft: '1.2rem', color: '#ddd', lineHeight: 1.7 }}>
-                      {aiAdvisory.advisory.riskFactors.map((factor) => (
+                      {aiAdvisory.advisory.riskFactors.map((factor: string) => (
                         <li key={factor}>{factor}</li>
                       ))}
                     </ul>
@@ -148,7 +155,7 @@ export default async function TransactionDetailPage({ params }: { params: Promis
                   <div style={{ color: '#888', fontSize: '0.875rem', marginBottom: '0.5rem' }}>Operator Checklist</div>
                   {aiAdvisory.advisory.checklist.length > 0 ? (
                     <ol style={{ margin: 0, paddingLeft: '1.2rem', color: '#ddd', lineHeight: 1.7 }}>
-                      {aiAdvisory.advisory.checklist.map((item) => (
+                      {aiAdvisory.advisory.checklist.map((item: string) => (
                         <li key={item}>{item}</li>
                       ))}
                     </ol>
@@ -159,13 +166,21 @@ export default async function TransactionDetailPage({ params }: { params: Promis
               </div>
 
               <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', color: '#888', fontSize: '0.875rem' }}>
+                <span>Provider: {aiAdvisory.advisory.provider}</span>
                 <span>Model: {aiAdvisory.advisory.model}</span>
+                <span>Prompt: {aiAdvisory.advisory.promptVersion}</span>
+                <span>Fallback: {aiAdvisory.advisory.fallbackUsed ? 'deterministic used' : 'no'}</span>
                 {typeof aiAdvisory.advisory.confidence === 'number' ? (
                   <span>Confidence: {Math.round(aiAdvisory.advisory.confidence * 100)}%</span>
+                ) : null}
+                {typeof aiAdvisory.advisory.providerLatencyMs === 'number' ? (
+                  <span>Latency: {aiAdvisory.advisory.providerLatencyMs} ms</span>
                 ) : null}
                 <span>Generated: {new Date(aiAdvisory.advisory.generatedAt).toLocaleString()}</span>
                 <span>Redaction: {aiAdvisory.advisory.redactionProfile}</span>
               </div>
+
+              <AiAdvisoryFeedbackForm advisoryId={aiAdvisory.advisory.id} caseId={txCase.id} />
             </div>
           ) : (
             <div style={{ background: '#0f1a2b', border: '1px solid #1f4f82', color: '#a9c7ea', padding: '1rem', borderRadius: '8px' }}>
