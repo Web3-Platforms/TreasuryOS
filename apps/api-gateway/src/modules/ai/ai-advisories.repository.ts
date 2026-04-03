@@ -155,6 +155,7 @@ export class AiAdvisoriesRepository {
           provider_latency_ms = excluded.provider_latency_ms,
           redaction_profile = excluded.redaction_profile,
           source_hash = excluded.source_hash,
+          created_at = excluded.created_at,
           updated_at = excluded.updated_at
         returning
           id,

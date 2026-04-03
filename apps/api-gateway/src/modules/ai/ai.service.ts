@@ -53,45 +53,37 @@ export class AiService {
 
   async getTransactionCaseAdvisory(caseId: string): Promise<AiAdvisoryEnvelope> {
     if (!this.env.AI_ADVISORY_ENABLED) {
-      return {
-        enabled: false,
-        advisory: null,
-        reason: 'AI advisories are disabled for this environment.',
-      };
+      return this.buildDisabledEnvelope();
     }
 
     const transactionCase = await this.requireCase(caseId);
-    const entity = await this.requireEntity(transactionCase.entityId);
-    const wallet = transactionCase.walletId
-      ? await this.walletsRepository.findById(transactionCase.walletId)
-      : undefined;
+    const advisory = await this.findTransactionCaseAdvisory(transactionCase.id);
 
-    const redacted = this.aiRedactionService.redactTransactionCase({
-      entity,
-      transactionCase,
-      wallet,
-    });
-    const providerPolicy = this.aiProvider.getPolicy();
-    const deterministicPolicy = this.deterministicAiProvider.getPolicy();
-    const existing = await this.aiAdvisoriesRepository.findByResource({
-      advisoryType: 'transaction_case_summary',
-      resourceId: transactionCase.id,
-      resourceType: 'transaction_case',
-    });
-
-    if (
-      existing &&
-      existing.sourceHash === redacted.sourceHash &&
-      existing.provider === providerPolicy.provider &&
-      existing.model === providerPolicy.model &&
-      existing.promptVersion === providerPolicy.promptVersion &&
-      !existing.fallbackUsed
-    ) {
+    if (!advisory) {
       return {
         enabled: true,
-        advisory: existing,
+        advisory: null,
+        reason: 'No AI advisory has been generated for this transaction case yet.',
       };
     }
+
+    return {
+      enabled: true,
+      advisory,
+    };
+  }
+
+  async generateTransactionCaseAdvisory(
+    caseId: string,
+    actor: AuthenticatedUser,
+  ): Promise<AiAdvisoryEnvelope> {
+    if (!this.env.AI_ADVISORY_ENABLED) {
+      return this.buildDisabledEnvelope();
+    }
+
+    const { redacted, transactionCase } = await this.prepareTransactionCaseAdvisory(caseId);
+    const deterministicPolicy = this.deterministicAiProvider.getPolicy();
+    const existing = await this.findTransactionCaseAdvisory(transactionCase.id);
 
     const recentFallbackAgeMs = existing ? Date.now() - Date.parse(existing.updatedAt) : Number.POSITIVE_INFINITY;
     if (
@@ -124,8 +116,7 @@ export class AiService {
 
       await this.auditService.record({
         action: 'ai_advisory.generation_failed',
-        actorEmail: 'system@treasuryos.local',
-        actorId: 'system',
+        actor,
         metadata: {
           code: error.details.code,
           provider: error.details.provider,
@@ -169,8 +160,7 @@ export class AiService {
 
     await this.auditService.record({
       action: existing ? 'ai_advisory.regenerated' : 'ai_advisory.generated',
-      actorEmail: 'system@treasuryos.local',
-      actorId: 'system',
+      actor,
       metadata: {
         advisoryType: savedAdvisory.advisoryType,
         fallbackUsed: savedAdvisory.fallbackUsed,
@@ -259,6 +249,39 @@ export class AiService {
     }
 
     return advisory;
+  }
+
+  private buildDisabledEnvelope(): AiAdvisoryEnvelope {
+    return {
+      enabled: false,
+      advisory: null,
+      reason: 'AI advisories are disabled for this environment.',
+    };
+  }
+
+  private async findTransactionCaseAdvisory(caseId: string) {
+    return this.aiAdvisoriesRepository.findByResource({
+      advisoryType: 'transaction_case_summary',
+      resourceId: caseId,
+      resourceType: 'transaction_case',
+    });
+  }
+
+  private async prepareTransactionCaseAdvisory(caseId: string) {
+    const transactionCase = await this.requireCase(caseId);
+    const entity = await this.requireEntity(transactionCase.entityId);
+    const wallet = transactionCase.walletId
+      ? await this.walletsRepository.findById(transactionCase.walletId)
+      : undefined;
+
+    return {
+      transactionCase,
+      redacted: this.aiRedactionService.redactTransactionCase({
+        entity,
+        transactionCase,
+        wallet,
+      }),
+    };
   }
 
   private async requireCase(caseId: string) {

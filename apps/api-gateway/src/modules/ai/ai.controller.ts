@@ -16,6 +16,12 @@ export class AiController {
     return this.aiService.getTransactionCaseAdvisory(caseId);
   }
 
+  @Post('transaction-cases/:caseId/advisory')
+  @Roles(UserRole.Admin, UserRole.ComplianceOfficer, UserRole.Auditor)
+  generateTransactionCaseAdvisory(@Param('caseId') caseId: string, @Req() request: ApiRequest) {
+    return this.aiService.generateTransactionCaseAdvisory(caseId, extractActor(request));
+  }
+
   @Post('advisories/:advisoryId/feedback')
   @Roles(UserRole.Admin, UserRole.ComplianceOfficer, UserRole.Auditor)
   submitAdvisoryFeedback(

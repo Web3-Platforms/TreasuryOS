@@ -23,6 +23,7 @@ This directory contains implementation, launch, deployment, and validation repor
 
 ## Notes
 
-- Long-lived guidance and setup documents still live in the parent `docs/` directory.
+- Long-lived guidance and setup documents now live in `docs/guides/`,
+  `docs/deployment/`, and `docs/operations/`.
 - Architecture material stays in `docs/architecture/`.
 - Execution plans stay in `docs/plans/`.

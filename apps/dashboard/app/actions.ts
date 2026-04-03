@@ -6,6 +6,7 @@ import { revalidatePath } from 'next/cache';
 import { fetchApi } from '@/lib/api-client';
 import { isDemoAccessAvailable, isSumsubKycEnabled } from '@/lib/feature-flags';
 import {
+  type AiAdvisoryEnvelope,
   Jurisdiction,
   RiskLevel,
   type AiAdvisoryFeedbackDisposition,
@@ -420,6 +421,20 @@ export async function submitAiAdvisoryFeedbackAction(
     return { success: true };
   } catch (error) {
     return { error: error instanceof Error ? error.message : 'AI feedback action failed' };
+  }
+}
+
+export async function generateTransactionCaseAdvisoryAction(
+  caseId: string,
+): Promise<AiAdvisoryEnvelope | { error: string }> {
+  try {
+    const advisory = await fetchApi<AiAdvisoryEnvelope>(`ai/transaction-cases/${caseId}/advisory`, {
+      method: 'POST',
+    });
+    revalidatePath(`/transactions/${caseId}`);
+    return advisory;
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : 'AI advisory action failed' };
   }
 }
 

@@ -1,43 +1,47 @@
 # TreasuryOS
 
-**TreasuryOS** is a Solana-native institutional treasury and compliance platform designed for strict regulatory requirements (such as EU MiCA compliance). It provides robust identity verification, multi-signature governance, and fully authenticated, role-based workflows for institutional onboarding.
+**TreasuryOS** is a Solana-native institutional treasury and compliance
+platform built for strict regulatory requirements such as EU MiCA. It combines
+identity verification, role-based controls, governance workflows, and Solana
+permissioning for institutional operators.
 
----
-
-## 🚀 Quick Start
+## Quick start
 
 Ensure you have copied `.env.example` to `.env` and populated your variables.
 
 ```bash
-# Install dependencies
-npm install
-
-# Run database migrations
+npm ci
 npm run db:migrate
-
-# Start the API Gateway and Dashboard locally
 npm run dev:api
 npm run dev:dashboard
 ```
 
-## 📖 Documentation Directory
+## Documentation
 
-The documentation has been fully structured to help you navigate the system's architecture, deployments, and components. Here is an overview:
+- **Start here:** [docs/README.md](docs/README.md)
+- **Current status:** [docs/reports/PROJECT_STATUS_REPORT.md](docs/reports/PROJECT_STATUS_REPORT.md)
+- **Operations source of truth:** [docs/operations/README.md](docs/operations/README.md)
+- **Operator guides:** [docs/guides/README.md](docs/guides/README.md)
+- **Environment configuration:** [docs/ENVIRONMENT_VARIABLES.md](docs/ENVIRONMENT_VARIABLES.md)
 
-*   **[Comprehensive Report (`docs/reports/COMPREHENSIVE_REPORT.md`)](docs/reports/COMPREHENSIVE_REPORT.md)** - *START HERE!* An extensive overview of the entire stack, workflows, environments, and functional capabilities delivered during the MVP run.
-*   **[Reports Archive (`docs/reports/`)](docs/reports/)** - Implementation reports, launch reports, validation records, and rollout notes.
-*   **[Architecture (`docs/architecture/`)](docs/architecture/)** - Diagrams, application structures, risk assessments, and technical workflows. 
-*   **[Deployment Guidelines (`docs/deployment/`)](docs/deployment/)** - Operational guides, setup notes, and security hardening tips for Cloudflare, Neon Postgres, Railway, and Upstash.
-*   **[History & Archival Plans (`docs/history/`)](docs/history/)** - Former MVP execution plans, walkthroughs, task checklists, and historical implementation logs.
+## Current highlights
 
-## 🛠 Tech Stack Overview
-- **Next.js**: Frontend Client (`apps/dashboard`)
-- **NestJS**: API Gateway Gateway (`apps/api-gateway`)
-- **Supabase**: Authentication & Storage
-- **Neon Serverless**: Primary PostgreSQL Database
-- **Upstash Serverless**: Redis Cache & BullMQ Queue Backing
-- **SumSub**: KYC automation and secure compliance webhooks
-- **Solana Web3.js**: Direct on-chain whitelisting and squad integrations
+- Production AI advisories now support deterministic, OpenAI-compatible, and
+  OpenRouter providers.
+- OpenRouter is the current live provider path for transaction-case advisories.
+- The latest repo dashboard AI panel now generates and regenerates analysis on
+  explicit user action instead of auto-running on page load.
 
-## 🔐 Licensing
-Proprietary & Confidential. All rights reserved.
+## Tech stack
+
+- **Frontend:** Next.js 16 App Router (`apps/dashboard`)
+- **Backend:** NestJS 11 (`apps/api-gateway`)
+- **Shared packages:** `packages/types`, `packages/compliance-rules`,
+  `packages/sdk`
+- **Data and infra:** Neon Postgres, Upstash Redis, Supabase Storage, Railway,
+  Vercel
+- **Blockchain:** Solana, Anchor, Squads V4
+
+## License
+
+Proprietary and confidential. All rights reserved.

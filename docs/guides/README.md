@@ -37,10 +37,10 @@ cannot be completed automatically from inside the repository.
 ## Supporting repo references
 
 - `Anchor.toml`
-- `ROADMAP.md`
-- `NEXT_ACTIONS.md`
-- `SECURITY.md`
+- `docs/operations/ROADMAP.md`
+- `docs/operations/NEXT_ACTIONS.md`
+- `docs/operations/SECURITY.md`
 - `docs/ENVIRONMENT_VARIABLES.md`
 - `docs/reports/AI_ADVISORY_FOUNDATION_REPORT.md`
-- `DEPLOYMENT.md`
+- `docs/deployment/DEPLOYMENT.md`
 - `target/idl/*.json`

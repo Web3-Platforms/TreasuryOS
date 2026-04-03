@@ -1266,7 +1266,7 @@ test('rbac, onboarding, wallet governance, transaction review, AI advisories, an
     const caseDetail = await caseDetailResponse.json();
     assert.ok(caseDetail.reviewNotes.includes('Transfer approved after treasury verification'));
 
-    const advisoryResponse = await fetch(
+    const advisoryLookupBeforeGenerate = await fetch(
       `${started.baseUrl}/ai/transaction-cases/${openedCasePayload.case.id}/advisory`,
       {
         headers: {
@@ -1274,7 +1274,23 @@ test('rbac, onboarding, wallet governance, transaction review, AI advisories, an
         },
       },
     );
-    assert.equal(advisoryResponse.status, 200);
+    assert.equal(advisoryLookupBeforeGenerate.status, 200);
+    const advisoryBeforeGenerate = await advisoryLookupBeforeGenerate.json();
+    assert.equal(advisoryBeforeGenerate.enabled, true);
+    assert.equal(advisoryBeforeGenerate.advisory, null);
+    assert.match(String(advisoryBeforeGenerate.reason), /No AI advisory has been generated/i);
+    assert.equal(llmRequestCount, 0);
+
+    const advisoryResponse = await fetch(
+      `${started.baseUrl}/ai/transaction-cases/${openedCasePayload.case.id}/advisory`,
+      {
+        method: 'POST',
+        headers: {
+          authorization: `Bearer ${auditorLogin.accessToken}`,
+        },
+      },
+    );
+    assert.equal(advisoryResponse.status, 201);
     const advisoryPayload = await advisoryResponse.json();
     assert.equal(advisoryPayload.enabled, true);
     assert.equal(advisoryPayload.advisory.resourceId, openedCasePayload.case.id);
@@ -1347,15 +1363,16 @@ test('rbac, onboarding, wallet governance, transaction review, AI advisories, an
     const regeneratedAdvisoryResponse = await fetch(
       `${started.baseUrl}/ai/transaction-cases/${openedCasePayload.case.id}/advisory`,
       {
+        method: 'POST',
         headers: {
           authorization: `Bearer ${auditorLogin.accessToken}`,
         },
       },
     );
-    assert.equal(regeneratedAdvisoryResponse.status, 200);
+    assert.equal(regeneratedAdvisoryResponse.status, 201);
     const regeneratedAdvisory = await regeneratedAdvisoryResponse.json();
     assert.equal(regeneratedAdvisory.advisory.id, advisoryPayload.advisory.id);
-    assert.equal(regeneratedAdvisory.advisory.generatedAt, advisoryPayload.advisory.generatedAt);
+    assert.notEqual(regeneratedAdvisory.advisory.generatedAt, advisoryPayload.advisory.generatedAt);
     assert.notEqual(regeneratedAdvisory.advisory.updatedAt, advisoryPayload.advisory.updatedAt);
     assert.equal(regeneratedAdvisory.advisory.provider, 'deterministic');
     assert.equal(regeneratedAdvisory.advisory.fallbackUsed, true);
@@ -1365,16 +1382,18 @@ test('rbac, onboarding, wallet governance, transaction review, AI advisories, an
     const reusedFallbackResponse = await fetch(
       `${started.baseUrl}/ai/transaction-cases/${openedCasePayload.case.id}/advisory`,
       {
+        method: 'POST',
         headers: {
           authorization: `Bearer ${auditorLogin.accessToken}`,
         },
       },
     );
-    assert.equal(reusedFallbackResponse.status, 200);
+    assert.equal(reusedFallbackResponse.status, 201);
     const reusedFallback = await reusedFallbackResponse.json();
     assert.equal(reusedFallback.advisory.id, advisoryPayload.advisory.id);
     assert.equal(reusedFallback.advisory.provider, 'deterministic');
     assert.equal(reusedFallback.advisory.fallbackUsed, true);
+    assert.equal(reusedFallback.advisory.generatedAt, regeneratedAdvisory.advisory.generatedAt);
     assert.equal(reusedFallback.advisory.updatedAt, regeneratedAdvisory.advisory.updatedAt);
     assert.match(String(reusedFallback.notice), /temporarily reusing/i);
     assert.equal(llmRequestCount, 2);
@@ -1391,17 +1410,33 @@ test('rbac, onboarding, wallet governance, transaction review, AI advisories, an
     const recoveredAdvisoryResponse = await fetch(
       `${started.baseUrl}/ai/transaction-cases/${openedCasePayload.case.id}/advisory`,
       {
+        method: 'POST',
         headers: {
           authorization: `Bearer ${auditorLogin.accessToken}`,
         },
       },
     );
-    assert.equal(recoveredAdvisoryResponse.status, 200);
+    assert.equal(recoveredAdvisoryResponse.status, 201);
     const recoveredAdvisory = await recoveredAdvisoryResponse.json();
     assert.equal(recoveredAdvisory.advisory.id, advisoryPayload.advisory.id);
     assert.equal(recoveredAdvisory.advisory.provider, 'openai-compatible');
     assert.equal(recoveredAdvisory.advisory.fallbackUsed, false);
     assert.equal(recoveredAdvisory.notice, undefined);
+    assert.equal(llmRequestCount, 3);
+
+    const latestAdvisoryResponse = await fetch(
+      `${started.baseUrl}/ai/transaction-cases/${openedCasePayload.case.id}/advisory`,
+      {
+        headers: {
+          authorization: `Bearer ${auditorLogin.accessToken}`,
+        },
+      },
+    );
+    assert.equal(latestAdvisoryResponse.status, 200);
+    const latestAdvisory = await latestAdvisoryResponse.json();
+    assert.equal(latestAdvisory.advisory.id, advisoryPayload.advisory.id);
+    assert.equal(latestAdvisory.advisory.provider, 'openai-compatible');
+    assert.equal(latestAdvisory.advisory.model, 'gpt-4.1-mini');
     assert.equal(llmRequestCount, 3);
 
     const reportMonth = new Date().toISOString().slice(0, 7);

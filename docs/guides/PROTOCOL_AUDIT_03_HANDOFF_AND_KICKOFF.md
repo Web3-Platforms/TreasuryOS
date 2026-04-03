@@ -25,8 +25,8 @@ Send the auditor one clean package with these items:
 | Program source | `programs/*/src/lib.rs` |
 | Cargo manifests | `programs/*/Cargo.toml` |
 | IDLs | `target/idl/*.json` |
-| Current roadmap/security context | `NEXT_ACTIONS.md`, `ROADMAP.md`, `SECURITY.md` |
-| Environment references | `docs/ENVIRONMENT_VARIABLES.md`, `DEPLOYMENT.md` |
+| Current roadmap/security context | `docs/operations/NEXT_ACTIONS.md`, `docs/operations/ROADMAP.md`, `docs/operations/SECURITY.md` |
+| Environment references | `docs/ENVIRONMENT_VARIABLES.md`, `docs/deployment/DEPLOYMENT.md` |
 | Testnet deployment facts | your operator record from Guide 02 |
 | Known integration context | wallet sync active, compliance registry partial, tx-monitor not actively wired |
 

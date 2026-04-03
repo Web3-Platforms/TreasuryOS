@@ -79,7 +79,22 @@ Do **not** share the raw API key in chat.
 
 ## Where to store the secret
 
-Put the key in the API gateway service environment in Railway.
+Use Railway **production shared variables** for the AI rollout, but enable them
+only on `@treasuryos/api-gateway`.
+
+Recommended order in Railway:
+
+1. create or update the shared variables
+2. enable the safe defaults on `@treasuryos/api-gateway`:
+   `AI_PROVIDER_BASE_URL`, `AI_PROVIDER_TIMEOUT_MS`, `AI_PROMPT_VERSION`, and
+   `AI_ADVISORY_FALLBACK`
+3. add `AI_PROVIDER_API_KEY` as a shared secret
+4. only then enable `AI_PROVIDER` and the real-provider `AI_ADVISORY_MODEL` on
+   `@treasuryos/api-gateway`
+
+Do **not** enable `AI_PROVIDER=openrouter` or a real-provider
+`AI_ADVISORY_MODEL` on the API service before `AI_PROVIDER_API_KEY` exists, or
+the next deploy will fail environment validation.
 
 OpenAI-compatible configuration shape:
 

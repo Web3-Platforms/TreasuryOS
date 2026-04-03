@@ -3,8 +3,14 @@
 ## Outcome
 
 TreasuryOS now supports **real OpenAI-compatible and OpenRouter provider paths**
-for transaction-case advisories while preserving deterministic fallback, audit
-traces, redaction boundaries, and human-in-the-loop control.
+for transaction-case advisories while preserving deterministic fallback,
+auditability, redaction boundaries, and human-in-the-loop control.
+
+The current live production rollout uses:
+
+- provider: `openrouter`
+- model: `qwen/qwen3.6-plus:free`
+- fallback: deterministic
 
 ## What shipped
 
@@ -12,40 +18,33 @@ traces, redaction boundaries, and human-in-the-loop control.
 
 - OpenAI-compatible and OpenRouter provider integrations behind the existing
   `AiProvider` abstraction
-- provider router that selects:
-  - deterministic
-  - OpenAI-compatible
-  - OpenRouter
-  - deterministic fallback when configured
+- provider router that selects deterministic, OpenAI-compatible, or OpenRouter
+- deterministic fallback when configured
 - short fallback reuse window so a recent deterministic fallback is reused
-  briefly instead of retrying a failing provider on every page load
+  briefly instead of retrying a failing provider on every request
 - strict JSON response parsing and schema validation
-- provider timeout handling and explicit operator-visible failure messages
-- advisory metadata persistence for:
-  - provider
-  - prompt version
-  - fallback usage
-  - provider latency
-- new feedback endpoint:
+- advisory metadata persistence for provider, prompt version, fallback usage,
+  and provider latency
+- feedback endpoint:
   - `POST /api/ai/advisories/:advisoryId/feedback`
-
-### Database
-
-- `008_ai_feedback_and_provider_metadata.sql`
-- `ai_advisories` now stores provider metadata for cache safety and reporting
-- new `ai_feedback` table stores reviewer feedback per advisory snapshot
 
 ### Dashboard
 
-- AI Advisory card now shows:
-  - provider
-  - prompt version
-  - fallback status
-  - provider latency when available
-- reviewers can now record:
-  - helpful / not helpful
-  - accepted / edited / dismissed
-  - optional note
+- AI Advisory card shows provider, prompt version, fallback status, and latency
+- reviewers can record helpful/not-helpful and accepted/edited/dismissed
+  feedback with an optional note
+- the latest repo dashboard cut changes transaction detail pages so they no
+  longer auto-generate advisories on load
+- the operator flow in that dashboard cut uses:
+  - **Generate AI Analysis**
+  - **Regenerate AI Analysis**
+
+### Storage and auditability
+
+- `ai_advisories` stores provider metadata and the active advisory snapshot
+- `ai_feedback` stores reviewer feedback per advisory
+- generation and regeneration are attributed to the signed-in actor rather than
+  a generic system identity
 
 ## Safety model
 
@@ -56,33 +55,11 @@ The real-provider rollout keeps the original guardrails:
 - no automatic approval or rejection
 - deterministic screening remains primary
 - deterministic fallback remains available when the provider fails
-- dashboard never calls the model directly
+- the dashboard never calls the model directly
 
 ## Runtime configuration
 
-```env
-AI_ADVISORY_ENABLED=true
-AI_PROVIDER=openai-compatible
-AI_ADVISORY_MODEL=gpt-4.1-mini
-AI_PROVIDER_API_KEY=<Railway secret only>
-AI_PROVIDER_BASE_URL=https://api.openai.com/v1
-AI_PROVIDER_TIMEOUT_MS=10000
-AI_PROMPT_VERSION=tx-case-v2
-AI_ADVISORY_FALLBACK=deterministic
-```
-
-```env
-AI_ADVISORY_ENABLED=true
-AI_PROVIDER=openrouter
-AI_ADVISORY_MODEL=openai/gpt-4.1-mini
-AI_PROVIDER_API_KEY=<Railway secret only>
-AI_PROVIDER_BASE_URL=https://openrouter.ai/api/v1
-AI_PROVIDER_TIMEOUT_MS=10000
-AI_PROMPT_VERSION=tx-case-v2
-AI_ADVISORY_FALLBACK=deterministic
-```
-
-Default-safe posture remains:
+### Default-safe posture
 
 ```env
 AI_ADVISORY_ENABLED=false
@@ -90,11 +67,26 @@ AI_PROVIDER=deterministic
 AI_ADVISORY_MODEL=deterministic-case-advisor-v1
 ```
 
+### Live OpenRouter posture
+
+```env
+AI_ADVISORY_ENABLED=true
+AI_PROVIDER=openrouter
+AI_ADVISORY_MODEL=qwen/qwen3.6-plus:free
+AI_PROVIDER_API_KEY=<Railway secret only>
+AI_PROVIDER_BASE_URL=https://openrouter.ai/api/v1
+AI_PROVIDER_TIMEOUT_MS=10000
+AI_PROMPT_VERSION=tx-case-v2
+AI_ADVISORY_FALLBACK=deterministic
+```
+
 ## Validation
 
 The following validation completed successfully:
 
 ```bash
+npm run db:migrate
+npm run db:migrate:check
 npm run build -w @treasuryos/types
 npm run typecheck
 node ./node_modules/tsx/dist/cli.mjs --tsconfig tsconfig.test.json --test tests/api-gateway-auth.test.ts tests/api-gateway-production-env.test.ts
@@ -102,22 +94,17 @@ npm run build -w @treasuryos/api-gateway
 API_BASE_URL=http://localhost:3001/api npm run build -w @treasuryos/dashboard
 ```
 
-## Manual rollout still required
+## Live rollout status
 
-The repo implementation is complete, but a live provider-backed rollout still
-requires manual operator work:
+The provider-backed rollout is no longer only planned; it is live in Railway
+with OpenRouter configured as the default production provider path.
 
-1. create the provider account and API key
-2. store `AI_PROVIDER_API_KEY` in Railway
-3. set the chosen model and provider env vars
-4. redeploy the API gateway
-5. verify a canary advisory on `/transactions/[id]`
-6. review early operator feedback before broader rollout
+The follow-up manual advisory dashboard UX is implemented and validated in the
+repo and should be the next live canary release check.
 
-## Next recommended steps
+The remaining work is operational follow-through:
 
-1. complete the Railway secret setup for the chosen provider
-2. run a limited canary with real operator feedback
-3. track fallback rate, latency, and feedback quality
-4. expand to additional AI surfaces only after the transaction-case path is
-   stable
+1. run the live transaction-case canary
+2. review early operator feedback
+3. tune or upgrade the model if quality, latency, or fallback rate requires it
+4. expand AI to more read-only surfaces only after the current path is stable

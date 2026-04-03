@@ -15,9 +15,10 @@ The first AI slice is:
 - **capable of deterministic, OpenAI-compatible, or OpenRouter provider modes**
 
 When enabled, the dashboard transaction-case detail page shows an **AI Advisory**
-card sourced from the API gateway route:
+card with manual controls sourced from the API gateway routes:
 
 - `GET /api/ai/transaction-cases/:caseId/advisory`
+- `POST /api/ai/transaction-cases/:caseId/advisory`
 
 ## What this feature does not do
 
@@ -108,8 +109,10 @@ Use an existing transaction case or create one through the normal workflow.
 Then:
 
 1. open the transaction case detail page
-2. confirm the **AI Advisory** card renders
-3. confirm it shows:
+2. confirm the **AI Advisory** card renders with a **Generate AI Analysis**
+   button
+3. click the button to create the first advisory
+4. confirm it shows:
     - summary
     - recommendation
     - risk factors
@@ -121,6 +124,7 @@ Then:
     - generated timestamp
     - redaction profile
     - feedback controls
+5. click **Regenerate AI Analysis** and confirm the advisory refreshes on demand
 
 ### 5. Train operators on the operating rule
 
