@@ -29,8 +29,8 @@ npm run dev:dashboard
 - Production AI advisories now support deterministic, OpenAI-compatible, and
   OpenRouter providers.
 - OpenRouter is the current live provider path for transaction-case advisories.
-- The latest repo dashboard AI panel now generates and regenerates analysis on
-  explicit user action instead of auto-running on page load.
+- The dashboard AI panel now generates and regenerates analysis on explicit
+  user action instead of auto-running on page load.
 
 ## Tech stack
 

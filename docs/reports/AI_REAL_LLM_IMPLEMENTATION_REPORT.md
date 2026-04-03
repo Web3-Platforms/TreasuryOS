@@ -33,9 +33,8 @@ The current live production rollout uses:
 - AI Advisory card shows provider, prompt version, fallback status, and latency
 - reviewers can record helpful/not-helpful and accepted/edited/dismissed
   feedback with an optional note
-- the latest repo dashboard cut changes transaction detail pages so they no
-  longer auto-generate advisories on load
-- the operator flow in that dashboard cut uses:
+- transaction detail pages no longer auto-generate advisories on load
+- the operator flow now uses:
   - **Generate AI Analysis**
   - **Regenerate AI Analysis**
 
@@ -99,8 +98,8 @@ API_BASE_URL=http://localhost:3001/api npm run build -w @treasuryos/dashboard
 The provider-backed rollout is no longer only planned; it is live in Railway
 with OpenRouter configured as the default production provider path.
 
-The follow-up manual advisory dashboard UX is implemented and validated in the
-repo and should be the next live canary release check.
+The follow-up manual advisory dashboard UX is now deployed. The next live
+follow-through is the operator canary review.
 
 The remaining work is operational follow-through:
 

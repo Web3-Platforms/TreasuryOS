@@ -21,7 +21,7 @@ operations, and audit work have a clear source of truth.
 ## Current highlights
 
 - OpenRouter is the live production AI provider for transaction-case advisories.
-- The latest repo dashboard AI advisory panel uses explicit
+- The dashboard AI advisory panel uses explicit
   **Generate AI Analysis** / **Regenerate AI Analysis** actions instead of
   auto-running on page load.
 - External protocol audit preparation guides are ready in `docs/guides/`.

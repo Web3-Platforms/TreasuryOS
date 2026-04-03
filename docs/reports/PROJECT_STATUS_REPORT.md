@@ -15,14 +15,15 @@ rollout**, plus a repo-ready manual advisory UX follow-up:
 
 - OpenRouter is the live production AI provider.
 - The configured live model is `qwen/qwen3.6-plus:free`.
-- The latest repo cut changes the dashboard advisory panel so it generates
-  analysis only when the operator clicks **Generate AI Analysis** and supports
-  **Regenerate AI Analysis** for follow-up runs.
+- The dashboard advisory panel now generates analysis only when the operator
+  clicks **Generate AI Analysis** and supports **Regenerate AI Analysis** for
+  follow-up runs.
 
 ## Current platform posture
 
 - pilot launch posture remains in effect
-- `SOLANA_SYNC_ENABLED=false` remains the safe default
+- the live pilot currently reports direct wallet sync enabled on Solana testnet
+- mainnet remains gated behind audit and governance approval
 - AI advisories remain advisory-only and never control approvals or signers
 - external protocol audit preparation is documented, but the firm engagement is
   still pending
@@ -36,7 +37,7 @@ rollout**, plus a repo-ready manual advisory UX follow-up:
 | AI provider | Live | `AI_PROVIDER=openrouter` |
 | AI model | Live | `AI_ADVISORY_MODEL=qwen/qwen3.6-plus:free` |
 | AI fallback | Live | deterministic fallback remains enabled |
-| AI interaction model | Ready to release | manual generate/regenerate flow is implemented in the repo and needs live canary verification |
+| AI interaction model | Live | manual generate/regenerate flow is deployed and still needs live canary verification |
 | Audit preparation | Ready | operator guides and handoff materials exist |
 
 ## What is already complete
@@ -50,8 +51,7 @@ rollout**, plus a repo-ready manual advisory UX follow-up:
 
 ## Remaining high-value work
 
-1. Release the manual AI dashboard UX, then run the live canary and review the
-   first operator feedback.
+1. Run the live canary and review the first operator feedback.
 2. Engage the external protocol audit firm and complete the handoff cycle.
 3. Advance the deferred production tracks:
    - Sumsub production rollout

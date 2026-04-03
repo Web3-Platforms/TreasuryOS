@@ -30,8 +30,8 @@ cannot be completed automatically from inside the repository.
   - `programs/wallet-whitelist`
   - `programs/compliance-registry`
   - `programs/tx-monitor`
-- The current app posture is still preview-first:
-  - `SOLANA_SYNC_ENABLED=false`
+- The current live app posture is testnet-only:
+  - direct wallet sync is currently enabled on Solana testnet
   - mainnet is out of scope before audit sign-off
 
 ## Supporting repo references

@@ -56,7 +56,7 @@ In scope:
 
 Environment posture:
 - testnet environment prepared
-- preview-first operational posture
+- testnet-active operational posture
 - no mainnet enablement before audit sign-off
 
 Important integration context:

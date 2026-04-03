@@ -26,8 +26,7 @@
 - [x] OpenRouter provider support
 - [x] provider metadata, fallback tracking, and operator feedback capture
 - [x] manual generate/regenerate dashboard UX
-- [ ] release and verify the manual generate/regenerate dashboard UX in
-      production
+- [x] release the manual generate/regenerate dashboard UX in production
 - [ ] live canary review and first feedback assessment
 - [ ] expand AI to additional read-only surfaces only after the transaction-case
       path is stable
@@ -54,6 +53,7 @@
 ## Roadmap notes
 
 - AI remains advisory-only and non-authoritative.
-- Solana sync stays preview-first until audit and governance gates are closed.
+- The live pilot currently reports direct wallet sync enabled on Solana testnet;
+  mainnet remains gated behind audit and governance approval.
 - External audit is no longer blocked by missing repo documentation; it is now
   primarily an operator and vendor-management task.

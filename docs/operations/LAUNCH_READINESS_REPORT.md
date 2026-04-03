@@ -26,7 +26,7 @@ posture because the following gates remain open:
 | Health/readiness endpoints | Ready | API exposes live and ready health surfaces |
 | Core treasury/compliance workflows | Ready for pilot | Entity, wallet, case, report, and audit flows exist |
 | AI advisory | Ready for controlled use | OpenRouter is live with deterministic fallback |
-| Manual AI UX | Ready to deploy | Explicit operator-triggered generation is implemented in the repo and awaits live canary verification |
+| Manual AI UX | Ready | Explicit operator-triggered generation is deployed and awaits live canary verification |
 | External audit | Not complete | Preparation is documented; firm engagement is still pending |
 | Sumsub production | Not complete | Preview-first posture still applies |
 | Solana mainnet | Not complete | Remains intentionally gated |

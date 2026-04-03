@@ -53,7 +53,8 @@ That makes external review important for five reasons:
    permanent, expensive, or reputation-damaging.
 
 2. **The current programs control sensitive business rules.**
-   Even though the launch posture is still preview-first, the code is clearly
+   Even though mainnet is still gated, the code is already operating in a
+   live testnet posture and is clearly
    intended to support:
    - wallet permissioning,
    - compliance state,
@@ -120,7 +121,7 @@ For TreasuryOS, that means:
 
 1. Clear in-scope programs.
 2. A clear launch posture:
-   - preview-first today,
+   - testnet-active today,
    - no mainnet enablement before audit sign-off.
 3. Buildable code and generated IDLs.
 4. Testnet deployment plan or actual testnet deployment.

@@ -41,7 +41,7 @@ Have these ready before you contact firms:
 | ----------------------- | ----------------------------------------------------------------------- |
 | Code scope              | Three Anchor programs in `programs/`                                    |
 | Framework               | Anchor `0.32.1`                                                         |
-| Launch posture          | Preview-first, no mainnet enablement before audit sign-off              |
+| Launch posture          | Testnet-active pilot, no mainnet enablement before audit sign-off       |
 | Expected deliverable    | Written audit report with severity ratings and remediation verification |
 | Environment expectation | Testnet deployment access for verification                              |
 | Timeline target         | Your desired kickoff week and report window                             |
@@ -94,7 +94,7 @@ Preferred scope:
 - optional integration-context review for the wallet / KYC bridge around the programs
 
 Current posture:
-- preview-first launch posture
+- testnet-active pilot posture
 - no mainnet enablement before audit sign-off
 - testnet deployment will be prepared for the audit
 

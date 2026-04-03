@@ -22,9 +22,9 @@ The current production AI posture is:
 - live model: `qwen/qwen3.6-plus:free`
 - fallback mode: deterministic
 
-The latest repo UX change is the manual
-**Generate AI Analysis** / **Regenerate AI Analysis** flow, which is ready for
-live canary verification.
+The latest shipped UX change is the manual
+**Generate AI Analysis** / **Regenerate AI Analysis** flow, which is now live
+and ready for canary verification.
 
 ## What is live
 
@@ -57,9 +57,9 @@ live canary verification.
 | Area | Status | Notes |
 | --- | --- | --- |
 | Pilot dashboard + API | Active | Core pilot deployment paths are stable |
-| AI advisory | Live, controlled | OpenRouter is live; the latest repo UX change is manual generate/regenerate and still needs live canary confirmation |
+| AI advisory | Live, controlled | OpenRouter is live; manual generate/regenerate is now deployed and still needs canary review |
 | External protocol audit | Prepared, not engaged | Guides and handoff workflow are documented |
-| Solana sync | Preview-first | `SOLANA_SYNC_ENABLED=false` remains the safe default |
+| Solana sync | Testnet-active | The live pilot currently reports direct wallet sync enabled on Solana testnet; mainnet remains gated |
 | Sumsub production rollout | Deferred | Current posture still keeps KYC launch gated |
 | Banking production integrations | Deferred | Adapters exist, live credentials and mTLS still pending |
 
@@ -84,8 +84,7 @@ live canary verification.
 
 ## Main open work
 
-1. Ship and verify the latest manual AI advisory dashboard UX, then run and
-   review the live canary on `/transactions/[id]`.
+1. Run and review the live AI canary on `/transactions/[id]`.
 2. Stand up the external protocol audit engagement and complete the user-owned
    handoff cycle.
 3. Progress the deferred production surfaces:

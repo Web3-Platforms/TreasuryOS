@@ -7,8 +7,6 @@ manual AI advisory UX change.
 
 ## Priority 1 — Close the live AI rollout loop
 
-- [ ] Ship the manual AI advisory dashboard change to `main` so production picks
-  up the explicit generate/regenerate flow.
 - [ ] Run a live `/transactions/[id]` canary and confirm:
   - no advisory is generated on page load
   - the page shows **Generate AI Analysis** before first run
@@ -41,7 +39,7 @@ manual AI advisory UX change.
 - [x] OpenAI-compatible provider path shipped
 - [x] OpenRouter provider path shipped
 - [x] OpenRouter configured live in Railway
-- [x] dashboard AI panel changed in the repo from eager generation to explicit
+- [x] dashboard AI panel released from eager generation to explicit
   generate/regenerate
 - [x] roadmap, launch, security, deployment, and guide docs reorganized under
   canonical `docs/` folders
