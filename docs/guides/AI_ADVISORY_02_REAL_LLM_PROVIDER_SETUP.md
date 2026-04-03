@@ -124,6 +124,12 @@ AI_ADVISORY_FALLBACK=deterministic
 `AI_PROVIDER_BASE_URL` does not need to be set for OpenRouter unless you are
 intentionally overriding the default `https://openrouter.ai/api/v1`.
 
+For the current live Qwen OpenRouter path, TreasuryOS now disables reasoning in
+the request body so operator-triggered advisories stay inside the interactive
+latency budget instead of timing out into deterministic fallback. If you later
+switch to another reasoning-heavy OpenRouter model, recheck latency before
+promoting it.
+
 ## First-canary checklist
 
 Before enabling a real provider:

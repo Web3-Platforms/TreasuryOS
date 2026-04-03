@@ -203,6 +203,7 @@ test('openrouter provider sends provider identity headers and returns openrouter
   const originalFetch = globalThis.fetch;
   let capturedUrl: string | undefined;
   let capturedHeaders: Headers | undefined;
+  let capturedBody: Record<string, unknown> | undefined;
 
   const context: TransactionCaseAdvisoryContext = {
     amount: '1250',
@@ -230,6 +231,7 @@ test('openrouter provider sends provider identity headers and returns openrouter
   globalThis.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
     capturedUrl = typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url;
     capturedHeaders = new Headers(init?.headers);
+    capturedBody = init?.body ? JSON.parse(String(init.body)) as Record<string, unknown> : undefined;
 
     return new Response(JSON.stringify({
       id: 'chatcmpl-openrouter-1',
@@ -269,6 +271,10 @@ test('openrouter provider sends provider identity headers and returns openrouter
     assert.equal(capturedHeaders?.get('authorization'), 'Bearer test-openrouter-key');
     assert.equal(capturedHeaders?.get('http-referer'), 'https://app.treasuryos.xyz');
     assert.equal(capturedHeaders?.get('x-title'), 'TreasuryOS');
+    assert.deepEqual(capturedBody?.reasoning, {
+      effort: 'none',
+      exclude: true,
+    });
     assert.equal(advisory.provider, 'openrouter');
     assert.equal(advisory.model, 'openai/gpt-4.1-mini');
     assert.equal(advisory.promptVersion, 'tx-case-v2');

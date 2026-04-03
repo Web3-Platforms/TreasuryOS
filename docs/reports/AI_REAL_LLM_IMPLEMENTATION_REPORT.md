@@ -20,6 +20,8 @@ The current live production rollout uses:
   `AiProvider` abstraction
 - provider router that selects deterministic, OpenAI-compatible, or OpenRouter
 - deterministic fallback when configured
+- OpenRouter requests can now disable model reasoning when needed to keep
+  operator-triggered advisories inside the live latency budget
 - short fallback reuse window so a recent deterministic fallback is reused
   briefly instead of retrying a failing provider on every request
 - strict JSON response parsing and schema validation

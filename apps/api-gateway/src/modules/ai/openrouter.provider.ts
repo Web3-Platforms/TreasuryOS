@@ -27,6 +27,15 @@ export class OpenRouterAiProvider implements AiProvider {
     return generateChatCompletionsAdvisory(context, {
       env: this.env,
       provider: 'openrouter',
+      // The current live Qwen model is a reasoning-capable path on OpenRouter.
+      // Disable reasoning so operator-triggered advisory requests stay within
+      // the interactive latency budget instead of timing out into fallback.
+      extraBody: {
+        reasoning: {
+          effort: 'none',
+          exclude: true,
+        },
+      },
       extraHeaders: {
         'HTTP-Referer': this.env.FRONTEND_URL,
         'X-Title': 'TreasuryOS',

@@ -143,6 +143,7 @@ export async function generateChatCompletionsAdvisory(
   options: {
     env: ChatCompletionsEnv;
     provider: ExternalAiProviderKind;
+    extraBody?: Record<string, unknown>;
     extraHeaders?: Record<string, string | undefined>;
   },
 ): Promise<GeneratedAiAdvisory> {
@@ -177,6 +178,7 @@ export async function generateChatCompletionsAdvisory(
         ],
         model: options.env.AI_ADVISORY_MODEL,
         temperature: 0.2,
+        ...options.extraBody,
       }),
       signal: AbortSignal.timeout(options.env.AI_PROVIDER_TIMEOUT_MS),
     });
