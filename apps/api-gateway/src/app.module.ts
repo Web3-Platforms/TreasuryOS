@@ -15,6 +15,7 @@ import { TransactionCasesModule } from './modules/transaction-cases/transaction-
 import { WalletsModule } from './modules/wallets/wallets.module.js';
 import { SecurityModule } from './modules/security/security.module.js';
 import { GovernanceModule } from './modules/governance/governance.module.js';
+import { LeadsModule } from './modules/leads/leads.module.js';
 import { StorageModule } from './modules/storage/storage.module.js';
 import { StructuredLoggingMiddleware } from './modules/platform/structured-logging.middleware.js';
 
@@ -33,6 +34,7 @@ import { StructuredLoggingMiddleware } from './modules/platform/structured-loggi
     HealthModule,
     SecurityModule,
     GovernanceModule,
+    LeadsModule,
     StorageModule,
     // Named throttlers allow per-endpoint overrides via @Throttle({ <name>: {...} })
     ThrottlerModule.forRoot([

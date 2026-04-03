@@ -28,6 +28,8 @@ let DatabaseService = DatabaseService_1 = class DatabaseService {
         statement_timeout: 30_000,
     });
     seedUsersInitialized = false;
+    seedUsersInitialization = null;
+    seedUsersDisabledLogged = false;
     shouldUseSsl() {
         if (this.env.DATABASE_SSL) {
             return true;
@@ -67,13 +69,40 @@ let DatabaseService = DatabaseService_1 = class DatabaseService {
         if (this.seedUsersInitialized) {
             return;
         }
+        if (!this.env.SEED_DEFAULT_USERS) {
+            if (!this.seedUsersDisabledLogged) {
+                this.logger.warn('Default user auto-seeding is disabled; run `npm run seed:users` when an intentional bootstrap is required.');
+                this.seedUsersDisabledLogged = true;
+            }
+            return;
+        }
+        await this.initializeSeedUsers('auto');
+    }
+    async seedDefaultUsers() {
+        await this.initializeSeedUsers('manual');
+    }
+    async initializeSeedUsers(mode) {
+        if (this.seedUsersInitialized) {
+            return;
+        }
+        if (!this.seedUsersInitialization) {
+            this.seedUsersInitialization = this.runSeedUserInitialization(mode).finally(() => {
+                this.seedUsersInitialization = null;
+            });
+        }
+        await this.seedUsersInitialization;
+    }
+    async runSeedUserInitialization(mode) {
         try {
             await this.upsertSeedUsers();
             this.seedUsersInitialized = true;
-            this.logger.log('Seed users initialized successfully');
+            this.logger.log(mode === 'manual'
+                ? 'Seed users bootstrapped successfully'
+                : 'Seed users initialized successfully');
         }
         catch (error) {
-            this.logger.error(`Failed to initialize seed users: ${error instanceof Error ? error.message : String(error)}`, error instanceof Error ? error.stack : '');
+            const action = mode === 'manual' ? 'bootstrap seed users' : 'initialize seed users';
+            this.logger.error(`Failed to ${action}: ${error instanceof Error ? error.message : String(error)}`, error instanceof Error ? error.stack : '');
             throw error;
         }
     }

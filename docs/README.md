@@ -34,6 +34,7 @@ operations, and audit work have a clear source of truth.
 | `deployment/` | Deployment posture, runtime setup, cutover, and environment docs | [`deployment/README.md`](deployment/README.md), [`ENVIRONMENT_VARIABLES.md`](ENVIRONMENT_VARIABLES.md) |
 | `operations/` | Living project-management and operational source-of-truth docs | [`operations/README.md`](operations/README.md) |
 | `guides/` | Manual operator workflows that cannot be completed purely in code | [`guides/README.md`](guides/README.md) |
+| `investors/` | Investor narrative, fundraising materials, and video scripts | [`investors/README.md`](investors/README.md) |
 | `reports/` | Implementation, validation, and release reports | [`reports/README.md`](reports/README.md) |
 | `plans/` | Delivery plans, Jira import material, and forward-looking implementation plans | [`plans/REAL_LLM_INTEGRATION_PLAN.md`](plans/REAL_LLM_INTEGRATION_PLAN.md) |
 | `thoughts/` | Strategic brainstorming and growth recommendations | [`thoughts/brainstorm.md`](thoughts/brainstorm.md) |

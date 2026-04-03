@@ -1,6 +1,6 @@
 'use server';
 
-import { supabase } from '../../lib/supabase';
+const API_GATEWAY_URL = process.env.API_GATEWAY_URL ?? 'https://api.treasuryos.aicustombot.net';
 
 export async function submitContactForm(formData: FormData) {
   const name = formData.get('name')?.toString().trim() ?? '';
@@ -17,24 +17,23 @@ export async function submitContactForm(formData: FormData) {
   }
 
   try {
-    const { error } = await supabase.from('lead_contacts').insert([
-      {
-        full_name: name,
-        email,
-        organization,
-        message,
-        created_at: new Date().toISOString(),
-      },
-    ]);
+    const res = await fetch(`${API_GATEWAY_URL}/api/leads`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ full_name: name, email, organization, message }),
+    });
 
-    if (error) {
-      console.error('Supabase Error:', error);
-      return { error: 'Failed to submit the form. Please try again.' };
+    const data = (await res.json()) as { success?: boolean; error?: string };
+
+    if (!res.ok || data.error) {
+      console.error('Lead submission error:', data);
+      return { error: data.error ?? 'Failed to submit. Please try again.' };
     }
 
     return { success: true };
   } catch (err) {
     console.error('Submission Error:', err);
-    return { error: 'An unexpected error occurred.' };
+    return { error: 'An unexpected error occurred. Please try again.' };
   }
 }
+

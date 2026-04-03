@@ -29,65 +29,38 @@ export default async function EntitiesPage() {
 
   return (
     <AppShell>
-      <div style={{ padding: '2rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-          <h1 style={{ margin: 0 }}>Entity Review Queue</h1>
+      <div>
+        <div className="page-header">
+          <h1 className="page-title">Entity Review Queue</h1>
           {canCreateDraft ? (
-            <Link
-              href="/entities/new"
-              style={{
-                padding: '0.5rem 1rem',
-                background: '#fff',
-                color: '#000',
-                border: 'none',
-                borderRadius: '4px',
-                fontWeight: 'bold',
-                textDecoration: 'none',
-              }}
-            >
-              New Draft
-            </Link>
+            <Link href="/entities/new" className="btn btn-primary">New Draft</Link>
           ) : null}
         </div>
 
         {!sumsubEnabled && (
-          <div
-            style={{
-              marginBottom: '1rem',
-              padding: '0.75rem 1rem',
-              border: '1px solid #5c3b00',
-              borderRadius: '8px',
-              background: '#2b2111',
-              color: '#f0c36d',
-            }}
-          >
+          <div className="alert alert-warning">
             Sumsub KYC is coming soon. Draft entities can still be created, but KYC submission is temporarily disabled.
           </div>
         )}
 
-        <div style={{ background: '#111', border: '1px solid #333', borderRadius: '8px', overflow: 'hidden' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+        <div className="page-card table-scroll">
+          <table className="data-table">
             <thead>
-              <tr style={{ background: '#222', borderBottom: '1px solid #333' }}>
-                <th style={{ padding: '1rem', fontWeight: 500, color: '#ccc' }}>Legal Name</th>
-                <th style={{ padding: '1rem', fontWeight: 500, color: '#ccc' }}>Jurisdiction</th>
-                <th style={{ padding: '1rem', fontWeight: 500, color: '#ccc' }}>Status</th>
-                <th style={{ padding: '1rem', fontWeight: 500, color: '#ccc' }}>KYC</th>
-                <th style={{ padding: '1rem', fontWeight: 500, color: '#ccc' }}>Risk</th>
-                <th style={{ padding: '1rem', fontWeight: 500, color: '#ccc', textAlign: 'right' }}>Actions</th>
+              <tr>
+                <th>Legal Name</th>
+                <th>Jurisdiction</th>
+                <th>Status</th>
+                <th>KYC</th>
+                <th>Risk</th>
+                <th style={{ textAlign: 'right' }}>Action</th>
               </tr>
             </thead>
             <tbody>
               {entities.length === 0 ? (
                 <tr>
-                  <td colSpan={6} style={{ padding: '2rem', textAlign: 'center', color: '#888' }}>
+                  <td colSpan={6} style={{ padding: '2rem', textAlign: 'center', color: 'var(--muted)' }}>
                     {canCreateDraft ? (
-                      <>
-                        No entities found in the system.{' '}
-                        <Link href="/entities/new" style={{ color: '#fff' }}>
-                          Create the first draft.
-                        </Link>
-                      </>
+                      <>No entities found.{' '}<Link href="/entities/new" style={{ color: 'var(--accent)' }}>Create the first draft.</Link></>
                     ) : (
                       'No entities found in the system.'
                     )}
@@ -96,40 +69,32 @@ export default async function EntitiesPage() {
               ) : (
                 entities.map((entity) => {
                   const showComingSoonKyc = !sumsubEnabled && !entity.kycApplicantId && entity.status === 'draft';
-                  const kycBackground = showComingSoonKyc
-                    ? '#5c3b00'
-                    : entity.kycStatus === 'Approved'
-                      ? '#0f5132'
-                      : entity.kycStatus === 'Rejected'
-                        ? '#842029'
-                        : '#333';
-
                   return (
-                    <tr key={entity.id} style={{ borderBottom: '1px solid #333' }}>
-                      <td style={{ padding: '1rem' }}>
-                        <Link href={`/entities/${entity.id}`} style={{ color: '#fff', textDecoration: 'none', fontWeight: 500 }}>
+                    <tr key={entity.id}>
+                      <td>
+                        <Link href={`/entities/${entity.id}`} style={{ color: 'var(--ink)', fontWeight: 500 }}>
                           {entity.legalName}
                         </Link>
                       </td>
-                      <td style={{ padding: '1rem', color: '#aaa' }}>{entity.jurisdiction}</td>
-                      <td style={{ padding: '1rem' }}>
-                        <span style={{ padding: '0.25rem 0.5rem', background: '#333', borderRadius: '4px', fontSize: '0.875rem' }}>
+                      <td style={{ color: 'var(--muted)' }}>{entity.jurisdiction}</td>
+                      <td>
+                        <span className={`badge ${entity.status === 'approved' ? 'badge-green' : entity.status === 'rejected' ? 'badge-red' : 'badge-gray'}`}>
                           {entity.status}
                         </span>
                       </td>
-                      <td style={{ padding: '1rem' }}>
-                        <span style={{ padding: '0.25rem 0.5rem', background: kycBackground, borderRadius: '4px', fontSize: '0.875rem' }}>
+                      <td>
+                        <span className={`badge ${showComingSoonKyc ? 'badge-amber' : entity.kycStatus === 'Approved' ? 'badge-green' : entity.kycStatus === 'Rejected' ? 'badge-red' : 'badge-gray'}`}>
                           {showComingSoonKyc ? 'Coming soon' : entity.kycStatus}
                         </span>
                       </td>
-                      <td style={{ padding: '1rem' }}>
-                        <span style={{ padding: '0.25rem 0.5rem', background: entity.riskLevel === 'high' ? '#842029' : '#333', borderRadius: '4px', fontSize: '0.875rem' }}>
+                      <td>
+                        <span className={`badge ${entity.riskLevel === 'high' ? 'badge-red' : entity.riskLevel === 'medium' ? 'badge-amber' : 'badge-gray'}`}>
                           {entity.riskLevel}
                         </span>
                       </td>
-                      <td style={{ padding: '1rem', textAlign: 'right' }}>
-                        <Link href={`/entities/${entity.id}`} style={{ color: '#aaa', textDecoration: 'none', fontSize: '0.875rem' }}>
-                          Review &rarr;
+                      <td style={{ textAlign: 'right' }}>
+                        <Link href={`/entities/${entity.id}`} style={{ color: 'var(--accent)', fontWeight: 600, fontSize: '0.8rem' }}>
+                          Review →
                         </Link>
                       </td>
                     </tr>

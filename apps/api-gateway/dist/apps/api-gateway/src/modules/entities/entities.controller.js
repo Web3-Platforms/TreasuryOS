@@ -34,8 +34,8 @@ let EntitiesController = class EntitiesController {
     createEntity(body, request) {
         return this.entitiesService.createEntity(body, extractActor(request));
     }
-    updateDraft(entityId, body, request) {
-        return this.entitiesService.updateDraft(entityId, body, extractActor(request));
+    updateEntity(entityId, body, request) {
+        return this.entitiesService.updateEntity(entityId, body, extractActor(request));
     }
     submitEntity(entityId, request) {
         return this.entitiesService.submitEntity(entityId, extractActor(request));
@@ -80,7 +80,7 @@ __decorate([
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, UpdateDraftDto, Object]),
     __metadata("design:returntype", void 0)
-], EntitiesController.prototype, "updateDraft", null);
+], EntitiesController.prototype, "updateEntity", null);
 __decorate([
     Post(':entityId/submit'),
     Roles(UserRole.Admin, UserRole.ComplianceOfficer),

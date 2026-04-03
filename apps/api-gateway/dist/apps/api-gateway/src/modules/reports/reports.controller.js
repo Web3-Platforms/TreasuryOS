@@ -57,7 +57,7 @@ __decorate([
 ], ReportsController.prototype, "getReport", null);
 __decorate([
     Post(),
-    Roles(UserRole.Admin, UserRole.ComplianceOfficer),
+    Roles(UserRole.Admin, UserRole.ComplianceOfficer, UserRole.Auditor),
     __param(0, Body()),
     __param(1, Req()),
     __metadata("design:type", Function),

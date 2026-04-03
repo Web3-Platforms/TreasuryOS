@@ -11,7 +11,7 @@ export declare class EntitiesController {
     }>;
     getEntity(entityId: string): Promise<import("@treasuryos/types").EntityRecord>;
     createEntity(body: CreateEntityDto, request: ApiRequest): Promise<import("@treasuryos/types").EntityRecord>;
-    updateDraft(entityId: string, body: UpdateDraftDto, request: ApiRequest): Promise<import("@treasuryos/types").EntityRecord>;
+    updateEntity(entityId: string, body: UpdateDraftDto, request: ApiRequest): Promise<import("@treasuryos/types").EntityRecord>;
     submitEntity(entityId: string, request: ApiRequest): Promise<import("@treasuryos/types").EntityRecord>;
     approveEntity(entityId: string, body: EntityDecisionDto, request: ApiRequest): Promise<import("@treasuryos/types").EntityRecord>;
     rejectEntity(entityId: string, body: EntityDecisionDto, request: ApiRequest): Promise<import("@treasuryos/types").EntityRecord>;

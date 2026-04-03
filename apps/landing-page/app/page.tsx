@@ -58,12 +58,12 @@ export default function LandingPage() {
             
             <FadeIn delay={0.5}>
               <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:flex-wrap">
-                <Link href="/products" className="button-primary pr-6">
-                  Explore Products
+                <a href="#request-access" className="button-primary pr-6">
+                  Request Early Access
                   <ArrowUpRight className="h-4 w-4" />
-                </Link>
-                <Link href="/company/contact" className="button-secondary">
-                  Launch Workshop
+                </a>
+                <Link href="/products" className="button-secondary">
+                  Explore Products
                 </Link>
               </div>
             </FadeIn>
@@ -111,6 +111,27 @@ export default function LandingPage() {
             </div>
           </FadeIn>
         </div>
+      </section>
+
+      {/* Early Access Banner */}
+      <section className="shell-container pb-10">
+        <FadeIn>
+          <div className="surface-panel flex flex-col gap-5 p-8 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <span className="eyebrow">Pilot Program</span>
+              <p className="mt-3 text-base font-medium text-white">Limited early access open for institutional teams.</p>
+              <p className="mt-1 text-sm text-slate-400">Join the pilot and get direct product tours, onboarding support, and early compliance tooling.</p>
+            </div>
+            <a
+              href="#request-access"
+              className="button-primary shrink-0 justify-center"
+              style={{ whiteSpace: 'nowrap' }}
+            >
+              Apply for Access
+              <ArrowUpRight className="h-4 w-4" />
+            </a>
+          </div>
+        </FadeIn>
       </section>
 
       {/* Platform Features */}
@@ -238,7 +259,7 @@ export default function LandingPage() {
       </section>
 
       {/* Trust & Engagement Footer */}
-      <section id="contact" className="shell-container pb-24 sm:pb-32 lg:pb-40">
+      <section id="request-access" className="shell-container pb-24 sm:pb-32 lg:pb-40">
         <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
           <FadeIn>
             <div className="surface-panel p-10 h-full flex flex-col justify-between">

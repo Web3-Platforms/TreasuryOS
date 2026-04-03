@@ -21,10 +21,11 @@ export declare class EntitiesService {
     listEntities(): Promise<EntityRecord[]>;
     getEntity(entityId: string): Promise<EntityRecord>;
     createEntity(input: CreateEntityDto, actor: AuthenticatedUser): Promise<EntityRecord>;
-    updateDraft(entityId: string, input: UpdateDraftDto, actor: AuthenticatedUser): Promise<EntityRecord>;
+    updateEntity(entityId: string, input: UpdateDraftDto, actor: AuthenticatedUser): Promise<EntityRecord>;
     submitEntity(entityId: string, actor: AuthenticatedUser): Promise<EntityRecord>;
     approveEntity(entityId: string, input: EntityDecisionDto, actor: AuthenticatedUser): Promise<EntityRecord>;
     private isPilotManualKycBypassEnabled;
+    private resetEntityVerificationState;
     rejectEntity(entityId: string, input: EntityDecisionDto, actor: AuthenticatedUser): Promise<EntityRecord>;
     applyVerifiedKycWebhook(payload: SumsubWebhookPayload, digestMetadata: {
         digest: string;

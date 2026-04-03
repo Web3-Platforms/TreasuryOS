@@ -97,16 +97,12 @@ let EntitiesService = class EntitiesService {
         });
         return entity;
     }
-    async updateDraft(entityId, input, actor) {
+    async updateEntity(entityId, input, actor) {
         const patch = updateDraftSchema.parse(input);
-        const updatedEntity = await this.database.withTransaction(async (client) => {
-            const entity = await this.entitiesRepository.findById(entityId, client);
-            if (!entity) {
-                throw new NotFoundException(`Entity ${entityId} not found`);
-            }
-            if (entity.status !== EntityStatus.Draft) {
-                throw new ConflictException('Only draft entities can be edited');
-            }
+        const { entity: updatedEntity, previousKycStatus, previousStatus, workflowReset } = await this.database.withTransaction(async (client) => {
+            const entity = await this.requireEntityFromStore(entityId, client);
+            const previousStatus = entity.status;
+            const previousKycStatus = entity.kycStatus;
             if (patch.jurisdiction && patch.jurisdiction !== Jurisdiction.EU) {
                 throw new BadRequestException('Phase 0 only supports EU entities');
             }
@@ -115,15 +111,38 @@ let EntitiesService = class EntitiesService {
             entity.riskLevel = patch.riskLevel ?? entity.riskLevel;
             entity.notes = patch.notes ?? entity.notes;
             entity.lastUpdatedAt = new Date().toISOString();
+            const workflowReset = entity.status !== EntityStatus.Draft;
+            if (workflowReset) {
+                this.resetEntityVerificationState(entity);
+            }
             await this.entitiesRepository.save(entity, client);
-            return entity;
+            return {
+                entity,
+                previousKycStatus,
+                previousStatus,
+                workflowReset,
+            };
         });
         await this.auditService.record({
             action: 'entity.updated',
             actor,
             resourceType: 'entity',
             resourceId: updatedEntity.id,
-            summary: `Entity draft ${updatedEntity.legalName} was updated`,
+            summary: workflowReset
+                ? `Entity ${updatedEntity.legalName} was updated and moved back to draft for renewed approval`
+                : `Entity draft ${updatedEntity.legalName} was updated`,
+            metadata: workflowReset
+                ? {
+                    previousKycStatus,
+                    previousStatus,
+                    workflowReset: true,
+                }
+                : undefined,
+        });
+        await this.queueService.enqueue(this.env.REDIS_QUEUE_NAME, {
+            entityId: updatedEntity.id,
+            type: 'entity.updated',
+            workflowReset,
         });
         return updatedEntity;
     }
@@ -232,6 +251,18 @@ let EntitiesService = class EntitiesService {
             throw new ConflictException('Rejected entities cannot use the pilot manual KYC bypass');
         }
         return true;
+    }
+    resetEntityVerificationState(entity) {
+        entity.status = EntityStatus.Draft;
+        entity.kycStatus = KycStatus.Pending;
+        entity.submittedAt = undefined;
+        entity.reviewedAt = undefined;
+        entity.kycApplicantId = undefined;
+        entity.kycLevelName = undefined;
+        entity.kycCorrelationId = undefined;
+        entity.latestKycWebhookType = undefined;
+        entity.latestKycReviewAnswer = undefined;
+        entity.lastKycEventAt = undefined;
     }
     async rejectEntity(entityId, input, actor) {
         const decision = decisionSchema.parse(input);

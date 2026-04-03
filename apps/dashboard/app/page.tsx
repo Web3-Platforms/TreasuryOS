@@ -17,30 +17,32 @@ export default async function DashboardHome() {
 
   return (
     <AppShell>
-      <div style={{ padding: '2rem' }}>
-        <h1 style={{ marginBottom: '1rem' }}>Welcome, {user.email}</h1>
-        <p style={{ color: '#aaa', marginBottom: '2rem' }}>
+      <div>
+        <div className="page-header">
+          <h1 className="page-title">Welcome, {user.email}</h1>
+        </div>
+        <p style={{ color: 'var(--muted)', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
           You are logged in as an administrator. Select an action below.
         </p>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1rem' }}>
-          <Link href="/entities" style={{ display: 'block', padding: '1.5rem', border: '1px solid #333', borderRadius: '8px', background: '#111', textDecoration: 'none' }}>
-            <h2 style={{ fontSize: '1.25rem', marginBottom: '0.5rem', color: '#fff' }}>Entity Review Queue</h2>
-            <p style={{ color: '#888', margin: 0 }}>
+        <div className="grid-section">
+          <Link href="/entities" className="page-card" style={{ padding: '1.5rem', display: 'block' }}>
+            <h2 style={{ fontSize: '1.1rem', marginBottom: '0.5rem', marginTop: 0, color: 'var(--ink)' }}>Entity Review Queue</h2>
+            <p style={{ color: 'var(--muted)', margin: 0, fontSize: '0.875rem' }}>
               {sumsubEnabled
                 ? 'Review new entities and progress them through KYC'
                 : 'Review new entities while Sumsub KYC is prepared for launch'}
             </p>
           </Link>
 
-          <Link href="/wallets" style={{ display: 'block', padding: '1.5rem', border: '1px solid #333', borderRadius: '8px', background: '#111', textDecoration: 'none' }}>
-            <h2 style={{ fontSize: '1.25rem', marginBottom: '0.5rem', color: '#fff' }}>Wallet Governance</h2>
-            <p style={{ color: '#888', margin: 0 }}>Approve institutional wallets for Solana sync preview</p>
+          <Link href="/wallets" className="page-card" style={{ padding: '1.5rem', display: 'block' }}>
+            <h2 style={{ fontSize: '1.1rem', marginBottom: '0.5rem', marginTop: 0, color: 'var(--ink)' }}>Wallet Governance</h2>
+            <p style={{ color: 'var(--muted)', margin: 0, fontSize: '0.875rem' }}>Approve institutional wallets for Solana sync preview</p>
           </Link>
 
-          <Link href="/transactions" style={{ display: 'block', padding: '1.5rem', border: '1px solid #333', borderRadius: '8px', background: '#111', textDecoration: 'none' }}>
-            <h2 style={{ fontSize: '1.25rem', marginBottom: '0.5rem', color: '#fff' }}>Transaction Escalate</h2>
-            <p style={{ color: '#888', margin: 0 }}>Review flagged transactions cases</p>
+          <Link href="/transactions" className="page-card" style={{ padding: '1.5rem', display: 'block' }}>
+            <h2 style={{ fontSize: '1.1rem', marginBottom: '0.5rem', marginTop: 0, color: 'var(--ink)' }}>Transaction Escalations</h2>
+            <p style={{ color: 'var(--muted)', margin: 0, fontSize: '0.875rem' }}>Review flagged transaction cases</p>
           </Link>
         </div>
       </div>

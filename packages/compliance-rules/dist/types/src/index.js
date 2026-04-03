@@ -41,6 +41,7 @@ export var WalletStatus;
     WalletStatus["Submitted"] = "submitted";
     WalletStatus["UnderReview"] = "under_review";
     WalletStatus["Approved"] = "approved";
+    WalletStatus["ProposalPending"] = "proposal_pending";
     WalletStatus["Rejected"] = "rejected";
     WalletStatus["Synced"] = "synced";
     WalletStatus["SyncFailed"] = "sync_failed";
@@ -48,6 +49,7 @@ export var WalletStatus;
 export var ChainSyncStatus;
 (function (ChainSyncStatus) {
     ChainSyncStatus["Pending"] = "pending";
+    ChainSyncStatus["ProposalPending"] = "proposal_pending";
     ChainSyncStatus["Sent"] = "sent";
     ChainSyncStatus["Skipped"] = "skipped";
     ChainSyncStatus["Failed"] = "failed";
@@ -83,6 +85,7 @@ export const walletWorkflowStates = [
     WalletStatus.Submitted,
     WalletStatus.UnderReview,
     WalletStatus.Approved,
+    WalletStatus.ProposalPending,
     WalletStatus.Rejected,
     WalletStatus.Synced,
     WalletStatus.SyncFailed,

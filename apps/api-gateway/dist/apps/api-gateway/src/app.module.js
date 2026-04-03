@@ -7,6 +7,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 import { Module, RequestMethod } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { AiModule } from './modules/ai/ai.module.js';
 import { AuditModule } from './modules/audit/audit.module.js';
 import { AuthModule } from './modules/auth/auth.module.js';
 import { EntitiesModule } from './modules/entities/entities.module.js';
@@ -19,6 +20,7 @@ import { TransactionCasesModule } from './modules/transaction-cases/transaction-
 import { WalletsModule } from './modules/wallets/wallets.module.js';
 import { SecurityModule } from './modules/security/security.module.js';
 import { GovernanceModule } from './modules/governance/governance.module.js';
+import { LeadsModule } from './modules/leads/leads.module.js';
 import { StorageModule } from './modules/storage/storage.module.js';
 import { StructuredLoggingMiddleware } from './modules/platform/structured-logging.middleware.js';
 let AppModule = class AppModule {
@@ -34,6 +36,7 @@ AppModule = __decorate([
         imports: [
             PlatformModule,
             DatabaseModule,
+            AiModule,
             AuditModule,
             AuthModule,
             EntitiesModule,
@@ -44,6 +47,7 @@ AppModule = __decorate([
             HealthModule,
             SecurityModule,
             GovernanceModule,
+            LeadsModule,
             StorageModule,
             // Named throttlers allow per-endpoint overrides via @Throttle({ <name>: {...} })
             ThrottlerModule.forRoot([

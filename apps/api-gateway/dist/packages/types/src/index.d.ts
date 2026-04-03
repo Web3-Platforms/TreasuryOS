@@ -115,6 +115,55 @@ export interface ReviewedTransaction {
     updatedAt: string;
     reviewedAt?: string;
 }
+export type AiProviderKind = 'deterministic' | 'openai-compatible' | 'openrouter';
+export type AiAdvisoryType = 'transaction_case_summary';
+export type AiAdvisoryResourceType = 'transaction_case';
+export interface AiAdvisoryRecord {
+    id: string;
+    advisoryType: AiAdvisoryType;
+    resourceType: AiAdvisoryResourceType;
+    resourceId: string;
+    summary: string;
+    recommendation?: string;
+    riskFactors: string[];
+    checklist: string[];
+    confidence?: number;
+    model: string;
+    provider: AiProviderKind;
+    promptVersion: string;
+    fallbackUsed: boolean;
+    providerLatencyMs?: number;
+    redactionProfile: string;
+    sourceHash: string;
+    generatedAt: string;
+    updatedAt: string;
+}
+export type AiAdvisoryFeedbackHelpfulness = 'helpful' | 'not_helpful';
+export type AiAdvisoryFeedbackDisposition = 'accepted' | 'edited' | 'dismissed';
+export interface AiAdvisoryFeedbackRecord {
+    id: string;
+    advisoryId: string;
+    advisoryType: AiAdvisoryType;
+    resourceType: AiAdvisoryResourceType;
+    resourceId: string;
+    actorId: string;
+    actorEmail: string;
+    helpfulness: AiAdvisoryFeedbackHelpfulness;
+    disposition: AiAdvisoryFeedbackDisposition;
+    note?: string;
+    advisorySourceHash: string;
+    advisoryProvider: AiProviderKind;
+    advisoryModel: string;
+    advisoryPromptVersion: string;
+    createdAt: string;
+    updatedAt: string;
+}
+export interface AiAdvisoryEnvelope {
+    enabled: boolean;
+    advisory: AiAdvisoryRecord | null;
+    notice?: string;
+    reason?: string;
+}
 export type KycProvider = 'sumsub' | 'jumio' | 'sumsub-with-jumio-fallback';
 export interface AuthenticatedUser {
     id: string;
@@ -215,6 +264,8 @@ export interface PilotStore {
     entities: EntityRecord[];
     wallets: WalletRecord[];
     transactionCases: ReviewedTransaction[];
+    aiAdvisories?: AiAdvisoryRecord[];
+    aiFeedback?: AiAdvisoryFeedbackRecord[];
     auditEvents: AuditEventRecord[];
     reports: ReportRecord[];
     kycWebhooks: KycWebhookRecord[];

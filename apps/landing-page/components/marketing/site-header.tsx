@@ -35,12 +35,10 @@ export function SiteHeader() {
         }`}
       >
         <Link href="/" className="flex flex-row items-center gap-3 shrink-0 ml-2">
-          <div className="relative h-10 w-10 shrink-0 flex items-center justify-center overflow-hidden rounded-2xl border border-white/5 bg-white/5 shadow-inner">
-            <Image src="/logo.png" alt="TreasuryOS" width={40} height={40} className="object-cover p-1.5" priority />
+          <div className="relative h-9 w-9 shrink-0 flex items-center justify-center overflow-hidden rounded-xl border border-white/10 bg-white/5 shadow-inner">
+            <Image src="/logo.png" alt="TreasuryOS" width={36} height={36} className="object-contain p-1" priority />
           </div>
-          <div className="hidden sm:block">
-            <p className="text-sm font-bold tracking-tight text-white m-0">TreasuryOS</p>
-          </div>
+          <p className="text-sm font-bold tracking-tight text-white m-0">TreasuryOS</p>
         </Link>
 
         {/* Explicitly using flex-row and space-x for fallback reliability */}

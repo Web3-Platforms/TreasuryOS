@@ -15,75 +15,51 @@ export default async function WalletsPage() {
 
   return (
     <AppShell>
-      <div style={{ padding: '2rem' }}>
-        <h1 style={{ marginBottom: '1.5rem', marginTop: 0 }}>Wallet Review Queue</h1>
-        
+      <div>
+        <div className="page-header">
+          <h1 className="page-title">Wallet Review Queue</h1>
+        </div>
+
         {wallets.length === 0 ? (
-          <div style={{ background: '#111', padding: '2rem', borderRadius: '8px', textAlign: 'center', color: '#888' }}>
+          <div className="page-card" style={{ padding: '2rem', textAlign: 'center', color: 'var(--muted)', fontSize: '0.875rem' }}>
             No wallets found in the system.
           </div>
         ) : (
-          <div style={{ background: '#111', borderRadius: '8px', overflow: 'hidden', border: '1px solid #333' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+          <div className="page-card table-scroll">
+            <table className="data-table">
               <thead>
-                <tr style={{ background: '#222', borderBottom: '1px solid #333' }}>
-                  <th style={{ padding: '1rem', fontWeight: 500, color: '#ccc' }}>Address</th>
-                  <th style={{ padding: '1rem', fontWeight: 500, color: '#ccc' }}>Entity ID</th>
-                  <th style={{ padding: '1rem', fontWeight: 500, color: '#ccc' }}>Overall Status</th>
-                  <th style={{ padding: '1rem', fontWeight: 500, color: '#ccc' }}>Chain Sync</th>
-                  <th style={{ padding: '1rem', fontWeight: 500, color: '#ccc' }}>Actions</th>
+                <tr>
+                  <th>Address</th>
+                  <th>Entity</th>
+                  <th>Status</th>
+                  <th>Chain Sync</th>
+                  <th style={{ textAlign: 'right' }}>Action</th>
                 </tr>
               </thead>
               <tbody>
                 {wallets.map((wallet) => (
-                  <tr key={wallet.id} style={{ borderBottom: '1px solid #333' }}>
-                    <td style={{ padding: '1rem', fontFamily: 'monospace' }}>
-                      {wallet.walletAddress.substring(0, 8)}...{wallet.walletAddress.substring(wallet.walletAddress.length - 8)}
+                  <tr key={wallet.id}>
+                    <td className="mono">
+                      {wallet.walletAddress.substring(0, 8)}…{wallet.walletAddress.substring(wallet.walletAddress.length - 8)}
                     </td>
-                    <td style={{ padding: '1rem', fontFamily: 'monospace', fontSize: '0.875rem', color: '#aaa' }}>
-                      <Link href={`/entities/${wallet.entityId}`} style={{ color: '#0d6efd', textDecoration: 'none' }}>
-                        {wallet.entityId}
+                    <td className="mono">
+                      <Link href={`/entities/${wallet.entityId}`} style={{ color: 'var(--accent)' }}>
+                        {wallet.entityId.substring(0, 8)}…
                       </Link>
                     </td>
-                    <td style={{ padding: '1rem' }}>
-                      <span style={{ 
-                        padding: '0.25rem 0.5rem', 
-                        background:
-                          wallet.status === WalletStatus.Approved || wallet.status === WalletStatus.Synced
-                            ? '#0f5132'
-                            : wallet.status === WalletStatus.ProposalPending
-                              ? '#5c3b00'
-                              : wallet.status === WalletStatus.Rejected
-                                ? '#842029'
-                                : '#333', 
-                        borderRadius: '4px', 
-                        fontSize: '0.875rem' 
-                      }}>
+                    <td>
+                      <span className={`badge ${wallet.status === WalletStatus.Approved || wallet.status === WalletStatus.Synced ? 'badge-green' : wallet.status === WalletStatus.ProposalPending ? 'badge-amber' : wallet.status === WalletStatus.Rejected ? 'badge-red' : 'badge-gray'}`}>
                         {wallet.status}
                       </span>
                     </td>
-                    <td style={{ padding: '1rem' }}>
-                      <span style={{ 
-                        padding: '0.25rem 0.5rem', 
-                        background:
-                          wallet.chainSyncStatus === ChainSyncStatus.Sent
-                            ? '#0f5132'
-                            : wallet.chainSyncStatus === ChainSyncStatus.ProposalPending
-                              ? '#5c3b00'
-                              : wallet.chainSyncStatus === ChainSyncStatus.Failed
-                                ? '#842029'
-                                : wallet.chainSyncStatus === ChainSyncStatus.Skipped
-                                  ? '#333'
-                                  : '#5c636a', 
-                        borderRadius: '4px', 
-                        fontSize: '0.875rem' 
-                      }}>
+                    <td>
+                      <span className={`badge ${wallet.chainSyncStatus === ChainSyncStatus.Sent ? 'badge-green' : wallet.chainSyncStatus === ChainSyncStatus.ProposalPending ? 'badge-amber' : wallet.chainSyncStatus === ChainSyncStatus.Failed ? 'badge-red' : 'badge-gray'}`}>
                         {wallet.chainSyncStatus}
                       </span>
                     </td>
-                    <td style={{ padding: '1rem' }}>
-                      <Link href={`/wallets/${wallet.id}`} style={{ color: '#0d6efd', textDecoration: 'none', fontWeight: 500 }}>
-                        {wallet.status === WalletStatus.ProposalPending ? 'Track Proposal →' : 'Review →'}
+                    <td style={{ textAlign: 'right' }}>
+                      <Link href={`/wallets/${wallet.id}`} style={{ color: 'var(--accent)', fontWeight: 600, fontSize: '0.8rem' }}>
+                        {wallet.status === WalletStatus.ProposalPending ? 'Track →' : 'Review →'}
                       </Link>
                     </td>
                   </tr>

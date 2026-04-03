@@ -3,7 +3,35 @@ import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { z } from 'zod';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const repoRoot = path.resolve(__dirname, '../../../../');
+const defaultRedisUrl = 'redis://localhost:6379';
+const defaultOpenAiCompatibleBaseUrl = 'https://api.openai.com/v1';
+const defaultOpenRouterBaseUrl = 'https://openrouter.ai/api/v1';
+function isRepoRootCandidate(candidatePath) {
+    return (fs.existsSync(path.join(candidatePath, 'apps')) &&
+        fs.existsSync(path.join(candidatePath, 'package-lock.json')) &&
+        fs.existsSync(path.join(candidatePath, 'railway.json')));
+}
+function searchUpwardForRepoRoot(startPath) {
+    let currentPath = path.resolve(startPath);
+    while (true) {
+        if (isRepoRootCandidate(currentPath)) {
+            return currentPath;
+        }
+        const parentPath = path.dirname(currentPath);
+        if (parentPath === currentPath) {
+            return null;
+        }
+        currentPath = parentPath;
+    }
+}
+export function resolveApiGatewayRepoRoot(options) {
+    const currentFileDir = options?.currentFileDir ?? __dirname;
+    const currentWorkingDirectory = options?.currentWorkingDirectory ?? process.cwd();
+    return (searchUpwardForRepoRoot(currentWorkingDirectory) ??
+        searchUpwardForRepoRoot(currentFileDir) ??
+        path.resolve(currentFileDir, '../../../../'));
+}
+const repoRoot = resolveApiGatewayRepoRoot();
 const stringBooleanSchema = z.preprocess((value) => {
     if (typeof value === 'boolean') {
         return value;
@@ -31,6 +59,7 @@ const envSchema = z.object({
     PILOT_INSTITUTION_NAME: z.string().min(3).default('TreasuryOS Pilot Institution'),
     PILOT_CUSTOMER_PROFILE: z.string().min(3).default('eu-regulated-casp'),
     PILOT_ALLOW_MANUAL_KYC_BYPASS: stringBooleanSchema.default(false),
+    SEED_DEFAULT_USERS: stringBooleanSchema.default(true),
     DEFAULT_ADMIN_EMAIL: z.string().email(),
     DEFAULT_ADMIN_PASSWORD: z.string().min(8),
     DEFAULT_COMPLIANCE_EMAIL: z.string().email(),
@@ -42,14 +71,29 @@ const envSchema = z.object({
     DATABASE_SSL: stringBooleanSchema.default(false),
     // ── Redis / Upstash ──────────────────────────────────────────
     // Accepts redis:// (local) and rediss:// (Upstash TLS)
-    REDIS_URL: z.string().min(1).default('redis://localhost:6379'),
+    REDIS_URL: z.string().min(1).default(defaultRedisUrl),
     REDIS_QUEUE_ENABLED: stringBooleanSchema.default(true),
     REDIS_QUEUE_NAME: z.string().min(3).default('treasuryos:events'),
     // Upstash REST API (preferred for cloud deployments)
     UPSTASH_REDIS_REST_URL: z.string().url().optional(),
     UPSTASH_REDIS_REST_TOKEN: z.string().min(1).optional(),
     // ── CORS ─────────────────────────────────────────────────────
-    FRONTEND_URL: z.string().optional(),
+    FRONTEND_URL: z
+        .string()
+        .url()
+        .refine((value) => !value.endsWith('/'), {
+        message: 'FRONTEND_URL must not include a trailing slash',
+    })
+        .optional(),
+    // ── AI advisories ────────────────────────────────────────────
+    AI_ADVISORY_ENABLED: stringBooleanSchema.default(false),
+    AI_PROVIDER: z.enum(['deterministic', 'openai-compatible', 'openrouter']).default('deterministic'),
+    AI_ADVISORY_MODEL: z.string().min(3).default('deterministic-case-advisor-v1'),
+    AI_PROVIDER_API_KEY: z.string().min(1).optional(),
+    AI_PROVIDER_BASE_URL: z.string().url().optional(),
+    AI_PROVIDER_TIMEOUT_MS: z.coerce.number().int().min(1000).max(60000).default(10000),
+    AI_PROMPT_VERSION: z.string().min(3).max(120).default('tx-case-v2'),
+    AI_ADVISORY_FALLBACK: z.enum(['deterministic', 'disabled']).default('deterministic'),
     // ── KYC ──────────────────────────────────────────────────────
     KYC_SUMSUB_ENABLED: stringBooleanSchema.default(false),
     SUMSUB_LEVEL_NAME: z.string().min(1).default('basic-kyc-level'),
@@ -110,6 +154,58 @@ function loadDotEnvFile(filePath) {
     }
     return values;
 }
+function usesLoopbackRedisUrl(redisUrl) {
+    try {
+        const parsedRedisUrl = new URL(redisUrl);
+        return ['localhost', '127.0.0.1', '::1'].includes(parsedRedisUrl.hostname);
+    }
+    catch {
+        return false;
+    }
+}
+function validateApiGatewayEnv(env) {
+    const issues = [];
+    const hasUpstashRestUrl = Boolean(env.UPSTASH_REDIS_REST_URL);
+    const hasUpstashRestToken = Boolean(env.UPSTASH_REDIS_REST_TOKEN);
+    const usesExternalAiProvider = env.AI_ADVISORY_ENABLED && env.AI_PROVIDER !== 'deterministic';
+    if (hasUpstashRestUrl !== hasUpstashRestToken) {
+        issues.push('UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN must be set together.');
+    }
+    if (env.NODE_ENV === 'production') {
+        if (!env.FRONTEND_URL) {
+            issues.push('FRONTEND_URL is required in production.');
+        }
+        if (!env.DATABASE_SSL) {
+            issues.push('DATABASE_SSL must be true in production.');
+        }
+        if (env.REDIS_QUEUE_ENABLED &&
+            !((env.UPSTASH_REDIS_REST_URL && env.UPSTASH_REDIS_REST_TOKEN) ||
+                !usesLoopbackRedisUrl(env.REDIS_URL))) {
+            issues.push('Configure Upstash REST credentials or a non-loopback REDIS_URL when REDIS_QUEUE_ENABLED is true in production.');
+        }
+    }
+    if (usesExternalAiProvider) {
+        if (!env.AI_PROVIDER_API_KEY) {
+            issues.push('AI_PROVIDER_API_KEY is required when AI_PROVIDER is openai-compatible or openrouter and AI advisories are enabled.');
+        }
+        if (env.AI_ADVISORY_MODEL.startsWith('deterministic-')) {
+            issues.push('Set AI_ADVISORY_MODEL to a real provider model when AI_PROVIDER is openai-compatible or openrouter.');
+        }
+    }
+    if (issues.length > 0) {
+        throw new Error(`Invalid API gateway environment: ${issues.join(' ')}`);
+    }
+}
+function resolveDefaultAiProviderBaseUrl(provider) {
+    switch (provider) {
+        case 'openrouter':
+            return defaultOpenRouterBaseUrl;
+        case 'openai-compatible':
+        case 'deterministic':
+        default:
+            return defaultOpenAiCompatibleBaseUrl;
+    }
+}
 export function loadApiGatewayEnv(env = process.env) {
     // In production, env vars are injected by Railway/Vercel — skip .env file loading
     const fileEnv = env.NODE_ENV === 'production' ? {} : loadDotEnvFile(path.join(repoRoot, '.env'));
@@ -117,12 +213,20 @@ export function loadApiGatewayEnv(env = process.env) {
         ...fileEnv,
         ...env,
     });
+    validateApiGatewayEnv(parsed);
     return {
         ...parsed,
+        AI_PROVIDER_BASE_URL: parsed.AI_PROVIDER_BASE_URL ?? resolveDefaultAiProviderBaseUrl(parsed.AI_PROVIDER),
         PILOT_REPORTS_DIR: resolveRepoPath(parsed.PILOT_REPORTS_DIR),
         REPO_ROOT: repoRoot,
         // Railway injects PORT; prefer it over API_GATEWAY_PORT
         LISTEN_PORT: parsed.PORT ?? parsed.API_GATEWAY_PORT,
     };
+}
+export function resolveApiGatewayCorsOrigins(env) {
+    if (env.NODE_ENV === 'production') {
+        return env.FRONTEND_URL ? [env.FRONTEND_URL] : [];
+    }
+    return Array.from(new Set(['http://localhost:3000', 'http://localhost:3001', env.FRONTEND_URL].filter((origin) => Boolean(origin))));
 }
 //# sourceMappingURL=env.js.map
