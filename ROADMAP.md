@@ -373,8 +373,8 @@ layer**.
 
 ### Real-provider rollout now shipped in code
 
-1. Add one OpenAI-compatible transaction-case advisory path behind the existing
-   AI module
+1. Add OpenAI-compatible and OpenRouter transaction-case advisory paths behind
+   the existing AI module
 2. Add operator feedback capture for advisory quality review
 3. Keep deterministic fallback available during rollout and rollback
 4. Surface provider, prompt version, fallback state, and latency in the

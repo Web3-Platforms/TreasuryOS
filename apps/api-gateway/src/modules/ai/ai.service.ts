@@ -12,6 +12,7 @@ import { AI_PROVIDER, type AiProvider, AiProviderError } from './ai-provider.int
 import { AiAdvisoriesRepository } from './ai-advisories.repository.js';
 import { AiFeedbackRepository } from './ai-feedback.repository.js';
 import { AiRedactionService } from './ai-redaction.service.js';
+import { describeExternalAiProvider } from './chat-completions.provider.js';
 import { DeterministicAiProvider } from './deterministic-ai.provider.js';
 
 const aiFeedbackSchema = z.object({
@@ -20,8 +21,10 @@ const aiFeedbackSchema = z.object({
   note: z.string().trim().max(2000).optional(),
 });
 const FALLBACK_RETRY_WINDOW_MS = 60_000;
-const RECENT_FALLBACK_NOTICE =
-  'The OpenAI-compatible provider was recently unavailable, so TreasuryOS is temporarily reusing the most recent deterministic fallback advisory.';
+
+function buildRecentFallbackNotice(provider: 'openai-compatible' | 'openrouter') {
+  return `The ${describeExternalAiProvider(provider)} was recently unavailable, so TreasuryOS is temporarily reusing the most recent deterministic fallback advisory.`;
+}
 
 @Injectable()
 export class AiService {
@@ -95,7 +98,7 @@ export class AiService {
       existing &&
       existing.sourceHash === redacted.sourceHash &&
       existing.fallbackUsed &&
-      this.env.AI_PROVIDER === 'openai-compatible' &&
+      this.env.AI_PROVIDER !== 'deterministic' &&
       this.env.AI_ADVISORY_FALLBACK === 'deterministic' &&
       existing.provider === deterministicPolicy.provider &&
       existing.model === deterministicPolicy.model &&
@@ -106,7 +109,7 @@ export class AiService {
       return {
         enabled: true,
         advisory: existing,
-        notice: RECENT_FALLBACK_NOTICE,
+        notice: buildRecentFallbackNotice(this.env.AI_PROVIDER),
       };
     }
 

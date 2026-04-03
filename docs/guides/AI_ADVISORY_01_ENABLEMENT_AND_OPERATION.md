@@ -12,7 +12,7 @@ The first AI slice is:
 - **feature-flagged**
 - **stored and auditable**
 - **not allowed to approve, reject, escalate, or sign anything**
-- **capable of deterministic or OpenAI-compatible provider modes**
+- **capable of deterministic, OpenAI-compatible, or OpenRouter provider modes**
 
 When enabled, the dashboard transaction-case detail page shows an **AI Advisory**
 card sourced from the API gateway route:
@@ -41,7 +41,7 @@ AI_ADVISORY_MODEL=deterministic-case-advisor-v1
 
 For a safe first rollout, start with deterministic mode.
 
-If you want the real-provider path:
+If you want the OpenAI-compatible real-provider path:
 
 ```env
 AI_ADVISORY_ENABLED=true
@@ -49,6 +49,18 @@ AI_PROVIDER=openai-compatible
 AI_ADVISORY_MODEL=gpt-4.1-mini
 AI_PROVIDER_API_KEY=<Railway secret only>
 AI_PROVIDER_BASE_URL=https://api.openai.com/v1
+AI_PROVIDER_TIMEOUT_MS=10000
+AI_PROMPT_VERSION=tx-case-v2
+AI_ADVISORY_FALLBACK=deterministic
+```
+
+If you want the OpenRouter path:
+
+```env
+AI_ADVISORY_ENABLED=true
+AI_PROVIDER=openrouter
+AI_ADVISORY_MODEL=openai/gpt-4.1-mini
+AI_PROVIDER_API_KEY=<Railway secret only>
 AI_PROVIDER_TIMEOUT_MS=10000
 AI_PROMPT_VERSION=tx-case-v2
 AI_ADVISORY_FALLBACK=deterministic
@@ -69,7 +81,7 @@ Before enabling the flag, confirm the team understands:
 In Railway or your local API environment:
 
 1. set `AI_ADVISORY_ENABLED=true`
-2. choose `AI_PROVIDER=deterministic` or `AI_PROVIDER=openai-compatible`
+2. choose `AI_PROVIDER=deterministic`, `AI_PROVIDER=openai-compatible`, or `AI_PROVIDER=openrouter`
 3. if using the real-provider path, set the API key, base URL, prompt version,
    and fallback vars too
 4. redeploy the API gateway
@@ -77,7 +89,7 @@ In Railway or your local API environment:
 If the flag is `false`, the API returns a disabled response and the dashboard
 shows that AI advisories are unavailable.
 
-When `AI_PROVIDER=openai-compatible` and `AI_ADVISORY_FALLBACK=deterministic`,
+When `AI_PROVIDER` uses a real provider and `AI_ADVISORY_FALLBACK=deterministic`,
 TreasuryOS will temporarily reuse a fresh fallback advisory for a short retry
 window instead of stalling every page load on a failing provider.
 

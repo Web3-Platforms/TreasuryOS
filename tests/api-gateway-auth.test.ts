@@ -13,12 +13,23 @@ import { fileURLToPath } from 'node:url';
 import { NestFactory } from '@nestjs/core';
 import jwt from 'jsonwebtoken';
 import { Keypair } from '@solana/web3.js';
-import { ChainSyncStatus, UserRole, WalletStatus } from '@treasuryos/types';
+import {
+  ChainSyncStatus,
+  EntityStatus,
+  Jurisdiction,
+  KycStatus,
+  RiskLevel,
+  TransactionCaseStatus,
+  UserRole,
+  WalletStatus,
+} from '@treasuryos/types';
 import { Pool } from 'pg';
 
 import { AppModule } from '../apps/api-gateway/src/app.module.js';
+import type { TransactionCaseAdvisoryContext } from '../apps/api-gateway/src/modules/ai/ai-provider.interface.js';
 import { AuthService } from '../apps/api-gateway/src/modules/auth/auth.service.js';
 import { DatabaseService } from '../apps/api-gateway/src/modules/database/database.service.js';
+import { OpenRouterAiProvider } from '../apps/api-gateway/src/modules/ai/openrouter.provider.js';
 import { WalletSyncService } from '../apps/api-gateway/src/modules/wallets/wallet-sync.service.js';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -179,6 +190,94 @@ async function resetDatabase() {
     await pool.end();
   }
 }
+
+test('openrouter provider sends provider identity headers and returns openrouter metadata', async () => {
+  const fixture = withApiEnv({
+    AI_ADVISORY_ENABLED: 'true',
+    AI_PROVIDER: 'openrouter',
+    AI_PROVIDER_API_KEY: 'test-openrouter-key',
+    AI_ADVISORY_MODEL: 'openai/gpt-4.1-mini',
+    AI_PROMPT_VERSION: 'tx-case-v2',
+    FRONTEND_URL: 'https://app.treasuryos.xyz',
+  });
+  const originalFetch = globalThis.fetch;
+  let capturedUrl: string | undefined;
+  let capturedHeaders: Headers | undefined;
+
+  const context: TransactionCaseAdvisoryContext = {
+    amount: '1250',
+    asset: 'USDC',
+    caseId: 'case-openrouter-1',
+    caseStatus: TransactionCaseStatus.UnderReview,
+    createdAt: new Date().toISOString(),
+    destinationWallet: 'destination-wallet-1',
+    entity: {
+      id: 'entity-openrouter-1',
+      jurisdiction: Jurisdiction.EU,
+      kycStatus: KycStatus.Approved,
+      legalName: 'ACME Treasury GmbH',
+      riskLevel: RiskLevel.Medium,
+      status: EntityStatus.Approved,
+    },
+    jurisdiction: Jurisdiction.EU,
+    manualReviewRequested: false,
+    riskLevel: RiskLevel.Medium,
+    sourceWallet: 'source-wallet-1',
+    transactionReference: 'tx-openrouter-1',
+    triggeredRules: ['amount_threshold'],
+  };
+
+  globalThis.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
+    capturedUrl = typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url;
+    capturedHeaders = new Headers(init?.headers);
+
+    return new Response(JSON.stringify({
+      id: 'chatcmpl-openrouter-1',
+      model: 'openai/gpt-4.1-mini',
+      choices: [
+        {
+          message: {
+            content: JSON.stringify({
+              summary:
+                'Case tx-openrouter-1 remains under human review after screening because the amount threshold rule triggered.',
+              recommendation:
+                'Keep the case in human review until the beneficiary evidence and wallet context are confirmed by the analyst.',
+              riskFactors: [
+                'The transaction crossed the amount threshold screening rule.',
+              ],
+              checklist: [
+                'Verify beneficiary evidence before final disposition.',
+              ],
+              confidence: 0.66,
+            }),
+          },
+        },
+      ],
+    }), {
+      status: 200,
+      headers: {
+        'content-type': 'application/json',
+      },
+    });
+  };
+
+  try {
+    const provider = new OpenRouterAiProvider();
+    const advisory = await provider.generateTransactionCaseAdvisory(context);
+
+    assert.equal(capturedUrl, 'https://openrouter.ai/api/v1/chat/completions');
+    assert.equal(capturedHeaders?.get('authorization'), 'Bearer test-openrouter-key');
+    assert.equal(capturedHeaders?.get('http-referer'), 'https://app.treasuryos.xyz');
+    assert.equal(capturedHeaders?.get('x-title'), 'TreasuryOS');
+    assert.equal(advisory.provider, 'openrouter');
+    assert.equal(advisory.model, 'openai/gpt-4.1-mini');
+    assert.equal(advisory.promptVersion, 'tx-case-v2');
+    assert.equal(advisory.fallbackUsed, false);
+  } finally {
+    globalThis.fetch = originalFetch;
+    fixture.restore();
+  }
+});
 
 test('auth service validates credentials and returns user info', async () => {
   const fixture = withApiEnv();

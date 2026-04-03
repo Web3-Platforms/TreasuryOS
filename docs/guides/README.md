@@ -10,7 +10,7 @@ cannot be completed automatically from inside the repository.
    verify it in the product, and know when to roll it back.
 2. **[AI_ADVISORY_02_REAL_LLM_PROVIDER_SETUP.md](AI_ADVISORY_02_REAL_LLM_PROVIDER_SETUP.md)**
    Complete the manual provider, security, and secret-management work needed
-   to activate the shipped OpenAI-compatible provider path.
+   to activate the shipped OpenAI-compatible or OpenRouter provider path.
 3. **[PROTOCOL_AUDIT_00_AUDIT_FIRM_PRIMER.md](PROTOCOL_AUDIT_00_AUDIT_FIRM_PRIMER.md)**
    Understand what audit firms are, why TreasuryOS needs one, what requirements
    matter, and how to work with them well.

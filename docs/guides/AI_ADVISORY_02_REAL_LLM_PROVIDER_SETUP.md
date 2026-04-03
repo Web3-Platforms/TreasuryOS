@@ -1,7 +1,8 @@
 # AI Advisory Guide 02 - Real LLM Provider Setup
 
 This guide covers the **manual work you own** to activate the shipped
-OpenAI-compatible real-provider path in TreasuryOS.
+real-provider path in TreasuryOS, including OpenAI-compatible and OpenRouter
+choices.
 
 ## What is already true today
 
@@ -9,6 +10,7 @@ The repo now supports:
 
 - deterministic AI advisories
 - OpenAI-compatible provider-backed advisories
+- OpenRouter-backed advisories
 - deterministic fallback
 - advisory feedback capture
 
@@ -25,8 +27,11 @@ Pick one of these paths:
 2. managed provider through your cloud account
 3. self-hosted model
 
-The current implemented path is **one managed OpenAI-compatible provider**
-behind the existing API gateway abstraction.
+The current implemented path is **managed provider choices behind the existing
+API gateway abstraction**:
+
+1. OpenAI-compatible
+2. OpenRouter
 
 ### 2. Approve the security and privacy posture
 
@@ -76,7 +81,7 @@ Do **not** share the raw API key in chat.
 
 Put the key in the API gateway service environment in Railway.
 
-Current configuration shape:
+OpenAI-compatible configuration shape:
 
 ```env
 AI_ADVISORY_ENABLED=true
@@ -88,6 +93,21 @@ AI_PROVIDER_TIMEOUT_MS=10000
 AI_PROMPT_VERSION=tx-case-v2
 AI_ADVISORY_FALLBACK=deterministic
 ```
+
+OpenRouter configuration shape:
+
+```env
+AI_ADVISORY_ENABLED=true
+AI_PROVIDER=openrouter
+AI_PROVIDER_API_KEY=<set in Railway only>
+AI_ADVISORY_MODEL=<approved OpenRouter model, e.g. openai/gpt-4.1-mini>
+AI_PROVIDER_TIMEOUT_MS=10000
+AI_PROMPT_VERSION=tx-case-v2
+AI_ADVISORY_FALLBACK=deterministic
+```
+
+`AI_PROVIDER_BASE_URL` does not need to be set for OpenRouter unless you are
+intentionally overriding the default `https://openrouter.ai/api/v1`.
 
 ## First-canary checklist
 

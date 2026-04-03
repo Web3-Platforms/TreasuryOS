@@ -14,6 +14,7 @@ import { AiRedactionService } from './ai-redaction.service.js';
 import { AiService } from './ai.service.js';
 import { DeterministicAiProvider } from './deterministic-ai.provider.js';
 import { OpenAiCompatibleAiProvider } from './openai-compatible.provider.js';
+import { OpenRouterAiProvider } from './openrouter.provider.js';
 
 @Module({
   imports: [DatabaseModule, AuditModule, TransactionCasesModule, EntitiesModule, WalletsModule],
@@ -25,6 +26,7 @@ import { OpenAiCompatibleAiProvider } from './openai-compatible.provider.js';
     AiService,
     DeterministicAiProvider,
     OpenAiCompatibleAiProvider,
+    OpenRouterAiProvider,
     AiProviderRouterService,
     {
       provide: AI_PROVIDER,

@@ -29,7 +29,7 @@ This document outlines the strategic roadmap for evolving the TreasuryOS MVP int
 ## Phase 3: Governance & AI (AI Advisory Foundation Live)
 - [x] **Multi-Signature Handover**: Integrated **Squads V4** for institutional multisig governance.
 - [x] **Read-only AI Advisory Foundation**: Shipped feature-flagged transaction-case advisories with persistent storage, dashboard rendering, and strict no-signer boundaries.
-- [x] **External AI Provider & Feedback Layer**: Shipped the OpenAI-compatible transaction-case advisory path, deterministic fallback, provider metadata, and operator feedback capture.
+- [x] **External AI Provider & Feedback Layer**: Shipped OpenAI-compatible and OpenRouter transaction-case advisory paths, deterministic fallback, provider metadata, and operator feedback capture.
 - [ ] **Provider Secret Rollout & Canary Review**: Set the live provider vars in Railway, verify a canary on `/transactions/[id]`, and review early operator feedback before broader rollout.
 
 ## Current Project Status

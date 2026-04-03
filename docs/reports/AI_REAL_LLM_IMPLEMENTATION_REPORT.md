@@ -2,19 +2,20 @@
 
 ## Outcome
 
-TreasuryOS now supports a **real OpenAI-compatible provider path** for
-transaction-case advisories while preserving deterministic fallback, audit
+TreasuryOS now supports **real OpenAI-compatible and OpenRouter provider paths**
+for transaction-case advisories while preserving deterministic fallback, audit
 traces, redaction boundaries, and human-in-the-loop control.
 
 ## What shipped
 
 ### API gateway
 
-- OpenAI-compatible provider integration behind the existing `AiProvider`
-  abstraction
+- OpenAI-compatible and OpenRouter provider integrations behind the existing
+  `AiProvider` abstraction
 - provider router that selects:
   - deterministic
   - OpenAI-compatible
+  - OpenRouter
   - deterministic fallback when configured
 - short fallback reuse window so a recent deterministic fallback is reused
   briefly instead of retrying a failing provider on every page load
@@ -65,6 +66,17 @@ AI_PROVIDER=openai-compatible
 AI_ADVISORY_MODEL=gpt-4.1-mini
 AI_PROVIDER_API_KEY=<Railway secret only>
 AI_PROVIDER_BASE_URL=https://api.openai.com/v1
+AI_PROVIDER_TIMEOUT_MS=10000
+AI_PROMPT_VERSION=tx-case-v2
+AI_ADVISORY_FALLBACK=deterministic
+```
+
+```env
+AI_ADVISORY_ENABLED=true
+AI_PROVIDER=openrouter
+AI_ADVISORY_MODEL=openai/gpt-4.1-mini
+AI_PROVIDER_API_KEY=<Railway secret only>
+AI_PROVIDER_BASE_URL=https://openrouter.ai/api/v1
 AI_PROVIDER_TIMEOUT_MS=10000
 AI_PROMPT_VERSION=tx-case-v2
 AI_ADVISORY_FALLBACK=deterministic

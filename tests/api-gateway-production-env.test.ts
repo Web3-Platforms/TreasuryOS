@@ -137,6 +137,37 @@ test('api gateway accepts openai-compatible AI config with provider credentials'
   assert.equal(env.AI_PROVIDER_API_KEY, 'test-openai-key');
 });
 
+test('api gateway rejects openrouter AI config without an API key', () => {
+  assert.throws(
+    () =>
+      loadApiGatewayEnv(
+        createProductionEnv({
+          AI_ADVISORY_ENABLED: 'true',
+          AI_PROVIDER: 'openrouter',
+          AI_ADVISORY_MODEL: 'openai/gpt-4.1-mini',
+        }),
+      ),
+    /AI_PROVIDER_API_KEY is required/,
+  );
+});
+
+test('api gateway accepts openrouter AI config and resolves the default base URL', () => {
+  const env = loadApiGatewayEnv(
+    createProductionEnv({
+      AI_ADVISORY_ENABLED: 'true',
+      AI_PROVIDER: 'openrouter',
+      AI_PROVIDER_API_KEY: 'test-openrouter-key',
+      AI_ADVISORY_MODEL: 'openai/gpt-4.1-mini',
+      AI_PROMPT_VERSION: 'tx-case-v2',
+    }),
+  );
+
+  assert.equal(env.AI_PROVIDER, 'openrouter');
+  assert.equal(env.AI_ADVISORY_MODEL, 'openai/gpt-4.1-mini');
+  assert.equal(env.AI_PROVIDER_API_KEY, 'test-openrouter-key');
+  assert.equal(env.AI_PROVIDER_BASE_URL, 'https://openrouter.ai/api/v1');
+});
+
 test('api gateway development CORS keeps localhost origins plus optional frontend', () => {
   const env = loadApiGatewayEnv(
     createProductionEnv({

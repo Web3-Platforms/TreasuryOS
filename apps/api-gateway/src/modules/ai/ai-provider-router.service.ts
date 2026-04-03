@@ -8,8 +8,10 @@ import {
   type TransactionCaseAdvisoryContext,
   AiProviderError,
 } from './ai-provider.interface.js';
+import { describeExternalAiProvider } from './chat-completions.provider.js';
 import { DeterministicAiProvider } from './deterministic-ai.provider.js';
 import { OpenAiCompatibleAiProvider } from './openai-compatible.provider.js';
+import { OpenRouterAiProvider } from './openrouter.provider.js';
 
 @Injectable()
 export class AiProviderRouterService implements AiProvider {
@@ -20,23 +22,35 @@ export class AiProviderRouterService implements AiProvider {
     private readonly deterministicProvider: DeterministicAiProvider,
     @Inject(OpenAiCompatibleAiProvider)
     private readonly openAiCompatibleProvider: OpenAiCompatibleAiProvider,
+    @Inject(OpenRouterAiProvider)
+    private readonly openRouterProvider: OpenRouterAiProvider,
   ) {}
 
   getPolicy(): AiProviderPolicy {
-    return this.env.AI_PROVIDER === 'openai-compatible'
-      ? this.openAiCompatibleProvider.getPolicy()
-      : this.deterministicProvider.getPolicy();
+    switch (this.env.AI_PROVIDER) {
+      case 'openai-compatible':
+        return this.openAiCompatibleProvider.getPolicy();
+      case 'openrouter':
+        return this.openRouterProvider.getPolicy();
+      default:
+        return this.deterministicProvider.getPolicy();
+    }
   }
 
   async generateTransactionCaseAdvisory(
     context: TransactionCaseAdvisoryContext,
   ): Promise<GeneratedAiAdvisory> {
-    if (this.env.AI_PROVIDER !== 'openai-compatible') {
+    if (this.env.AI_PROVIDER === 'deterministic') {
       return this.deterministicProvider.generateTransactionCaseAdvisory(context);
     }
 
+    const externalProvider =
+      this.env.AI_PROVIDER === 'openrouter'
+        ? this.openRouterProvider
+        : this.openAiCompatibleProvider;
+
     try {
-      return await this.openAiCompatibleProvider.generateTransactionCaseAdvisory(context);
+      return await externalProvider.generateTransactionCaseAdvisory(context);
     } catch (error) {
       if (!(error instanceof AiProviderError) || this.env.AI_ADVISORY_FALLBACK !== 'deterministic') {
         throw error;
@@ -47,7 +61,7 @@ export class AiProviderRouterService implements AiProvider {
         ...fallback,
         fallbackUsed: true,
         notice:
-          'The OpenAI-compatible provider was unavailable, so TreasuryOS used the deterministic fallback for this advisory.',
+          `The ${describeExternalAiProvider(this.env.AI_PROVIDER)} was unavailable, so TreasuryOS used the deterministic fallback for this advisory.`,
       };
     }
   }

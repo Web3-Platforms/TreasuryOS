@@ -21,10 +21,12 @@ provider behind the same contract and rollout controls.
 
 ## Current execution status
 
-- first provider chosen: **OpenAI-compatible API**
+- first provider shipped: **OpenAI-compatible API**
+- additional explicit provider choice now shipped: **OpenRouter**
 - repo implementation now includes:
   - provider routing
   - OpenAI-compatible model calls
+  - OpenRouter model calls
   - deterministic fallback
   - provider metadata persistence
   - operator feedback capture
@@ -203,7 +205,7 @@ live repository requirements yet.
 
 ```env
 AI_ADVISORY_ENABLED=true
-AI_PROVIDER=deterministic|managed-llm
+AI_PROVIDER=deterministic|openai-compatible|openrouter
 AI_ADVISORY_MODEL=<provider model identifier>
 AI_PROVIDER_API_KEY=<secret in Railway only>
 AI_PROVIDER_BASE_URL=<optional vendor endpoint override>

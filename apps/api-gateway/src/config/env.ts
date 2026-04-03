@@ -6,6 +6,8 @@ import { z } from 'zod';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const defaultRedisUrl = 'redis://localhost:6379';
+const defaultOpenAiCompatibleBaseUrl = 'https://api.openai.com/v1';
+const defaultOpenRouterBaseUrl = 'https://openrouter.ai/api/v1';
 
 function isRepoRootCandidate(candidatePath: string) {
   return (
@@ -118,10 +120,10 @@ const envSchema = z.object({
 
   // ── AI advisories ────────────────────────────────────────────
   AI_ADVISORY_ENABLED: stringBooleanSchema.default(false),
-  AI_PROVIDER: z.enum(['deterministic', 'openai-compatible']).default('deterministic'),
+  AI_PROVIDER: z.enum(['deterministic', 'openai-compatible', 'openrouter']).default('deterministic'),
   AI_ADVISORY_MODEL: z.string().min(3).default('deterministic-case-advisor-v1'),
   AI_PROVIDER_API_KEY: z.string().min(1).optional(),
-  AI_PROVIDER_BASE_URL: z.string().url().default('https://api.openai.com/v1'),
+  AI_PROVIDER_BASE_URL: z.string().url().optional(),
   AI_PROVIDER_TIMEOUT_MS: z.coerce.number().int().min(1000).max(60000).default(10000),
   AI_PROMPT_VERSION: z.string().min(3).max(120).default('tx-case-v2'),
   AI_ADVISORY_FALLBACK: z.enum(['deterministic', 'disabled']).default('deterministic'),
@@ -171,8 +173,9 @@ type ParsedApiGatewayEnv = z.infer<typeof envSchema>;
 
 export type ApiGatewayEnv = Omit<
   z.infer<typeof envSchema>,
-  'PILOT_REPORTS_DIR' | 'PORT'
+  'PILOT_REPORTS_DIR' | 'PORT' | 'AI_PROVIDER_BASE_URL'
 > & {
+  AI_PROVIDER_BASE_URL: string;
   PILOT_REPORTS_DIR: string;
   REPO_ROOT: string;
   /** Resolved listen port: Railway PORT → API_GATEWAY_PORT → 3001 */
@@ -225,6 +228,7 @@ function validateApiGatewayEnv(env: ParsedApiGatewayEnv) {
   const issues: string[] = [];
   const hasUpstashRestUrl = Boolean(env.UPSTASH_REDIS_REST_URL);
   const hasUpstashRestToken = Boolean(env.UPSTASH_REDIS_REST_TOKEN);
+  const usesExternalAiProvider = env.AI_ADVISORY_ENABLED && env.AI_PROVIDER !== 'deterministic';
 
   if (hasUpstashRestUrl !== hasUpstashRestToken) {
     issues.push('UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN must be set together.');
@@ -252,22 +256,33 @@ function validateApiGatewayEnv(env: ParsedApiGatewayEnv) {
     }
   }
 
-  if (env.AI_ADVISORY_ENABLED && env.AI_PROVIDER === 'openai-compatible') {
+  if (usesExternalAiProvider) {
     if (!env.AI_PROVIDER_API_KEY) {
       issues.push(
-        'AI_PROVIDER_API_KEY is required when AI_PROVIDER is openai-compatible and AI advisories are enabled.',
+        'AI_PROVIDER_API_KEY is required when AI_PROVIDER is openai-compatible or openrouter and AI advisories are enabled.',
       );
     }
 
     if (env.AI_ADVISORY_MODEL.startsWith('deterministic-')) {
       issues.push(
-        'Set AI_ADVISORY_MODEL to a real provider model when AI_PROVIDER is openai-compatible.',
+        'Set AI_ADVISORY_MODEL to a real provider model when AI_PROVIDER is openai-compatible or openrouter.',
       );
     }
   }
 
   if (issues.length > 0) {
     throw new Error(`Invalid API gateway environment: ${issues.join(' ')}`);
+  }
+}
+
+function resolveDefaultAiProviderBaseUrl(provider: ParsedApiGatewayEnv['AI_PROVIDER']) {
+  switch (provider) {
+    case 'openrouter':
+      return defaultOpenRouterBaseUrl;
+    case 'openai-compatible':
+    case 'deterministic':
+    default:
+      return defaultOpenAiCompatibleBaseUrl;
   }
 }
 
@@ -283,6 +298,7 @@ export function loadApiGatewayEnv(env: NodeJS.ProcessEnv = process.env): ApiGate
 
   return {
     ...parsed,
+    AI_PROVIDER_BASE_URL: parsed.AI_PROVIDER_BASE_URL ?? resolveDefaultAiProviderBaseUrl(parsed.AI_PROVIDER),
     PILOT_REPORTS_DIR: resolveRepoPath(parsed.PILOT_REPORTS_DIR),
     REPO_ROOT: repoRoot,
     // Railway injects PORT; prefer it over API_GATEWAY_PORT

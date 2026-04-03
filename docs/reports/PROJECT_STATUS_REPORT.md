@@ -62,8 +62,9 @@ This means:
 - Report download handling supports the launch formats and routing behavior required by the current dashboard
 - Entity draft creation is available for the allowed operator roles
 - Wallet governance and signer loading now support the launch-time serverless environment model
-- AI advisories now support deterministic and OpenAI-compatible provider modes,
-  deterministic fallback, and operator feedback capture on transaction cases
+- AI advisories now support deterministic, OpenAI-compatible, and OpenRouter
+  provider modes, deterministic fallback, and operator feedback capture on
+  transaction cases
 
 ---
 

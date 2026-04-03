@@ -49,7 +49,7 @@
      - Safety boundaries and rollout posture
      - Validation commands and follow-up recommendations
 12. **[reports/AI_REAL_LLM_IMPLEMENTATION_REPORT.md](reports/AI_REAL_LLM_IMPLEMENTATION_REPORT.md)** ⭐ REAL LLM REPORT
-    - What shipped in the OpenAI-compatible provider phase
+    - What shipped in the OpenAI-compatible and OpenRouter provider phase
     - Fallback, feedback, and runtime configuration
     - Validation evidence and live rollout checklist
 13. **[plans/REAL_LLM_INTEGRATION_PLAN.md](plans/REAL_LLM_INTEGRATION_PLAN.md)** ⭐ NEXT AI PHASE

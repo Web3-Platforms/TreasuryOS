@@ -115,7 +115,7 @@ export interface ReviewedTransaction {
     updatedAt: string;
     reviewedAt?: string;
 }
-export type AiProviderKind = 'deterministic' | 'openai-compatible';
+export type AiProviderKind = 'deterministic' | 'openai-compatible' | 'openrouter';
 export type AiAdvisoryType = 'transaction_case_summary';
 export type AiAdvisoryResourceType = 'transaction_case';
 export interface AiAdvisoryRecord {
