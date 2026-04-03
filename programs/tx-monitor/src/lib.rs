@@ -6,6 +6,8 @@ declare_id!("4cfb2JR1aEHziz1rGfWAvDry2hj2kScqGLQSbU9VrfWx");
 pub mod tx_monitor {
     use super::*;
 
+    /// Creates the PDA that stores one transaction review case.
+    /// New reviews always begin in the Pending state.
     pub fn submit_transaction(
         ctx: Context<SubmitTransaction>,
         tx_hash: [u8; 32],
@@ -22,6 +24,7 @@ pub mod tx_monitor {
         Ok(())
     }
 
+    /// Updates the stored review outcome for a transaction case.
     pub fn resolve_transaction(ctx: Context<ResolveTransaction>, status: ReviewStatus) -> Result<()> {
         ctx.accounts.tx_review.status = status;
         Ok(())
@@ -31,6 +34,7 @@ pub mod tx_monitor {
 #[derive(Accounts)]
 #[instruction(tx_hash: [u8; 32])]
 pub struct SubmitTransaction<'info> {
+    /// PDA: ["tx-review", tx_hash].
     #[account(
         init,
         payer = authority,
@@ -46,6 +50,7 @@ pub struct SubmitTransaction<'info> {
 
 #[derive(Accounts)]
 pub struct ResolveTransaction<'info> {
+    /// The record can only be resolved by the authority stored on creation.
     #[account(mut, has_one = authority)]
     pub tx_review: Account<'info, TxReview>,
     pub authority: Signer<'info>,
@@ -53,6 +58,7 @@ pub struct ResolveTransaction<'info> {
 
 #[account]
 #[derive(InitSpace)]
+/// Canonical review case for one transaction hash.
 pub struct TxReview {
     pub tx_hash: [u8; 32],
     pub risk_score: u8,
@@ -62,6 +68,7 @@ pub struct TxReview {
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, PartialEq, Eq, InitSpace)]
+/// Final or intermediate disposition of a monitored transaction.
 pub enum ReviewStatus {
     Pending,
     Approved,

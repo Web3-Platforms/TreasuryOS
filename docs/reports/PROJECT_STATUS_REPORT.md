@@ -96,7 +96,7 @@ These items are intentionally not part of the first launch:
 - Live on-chain synchronization
 - Solana mainnet finalization and fee-management path
 - Full banking production integrations
-- AI-assisted screening
+- external AI provider selection, advisory feedback capture, and AI expansion beyond transaction-case summaries
 
 ---
 

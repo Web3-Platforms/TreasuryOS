@@ -33,6 +33,7 @@
     "format": "node ./node_modules/prettier/bin/prettier.cjs --write ."
   },
   "dependencies": {
+    "@tailwindcss/postcss": "^4.0.0-alpha.16",
     "path-to-regexp": "8.4.0"
   },
   "devDependencies": {

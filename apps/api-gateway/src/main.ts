@@ -6,7 +6,7 @@ import { NestFactory } from '@nestjs/core';
 import helmet from 'helmet';
 
 import { AppModule } from './app.module.js';
-import { loadApiGatewayEnv } from './config/env.js';
+import { loadApiGatewayEnv, resolveApiGatewayCorsOrigins } from './config/env.js';
 
 // Catch all uncaught exceptions
 process.on('uncaughtException', (error: Error) => {
@@ -58,18 +58,7 @@ async function bootstrap() {
   // ── CORS ─────────────────────────────────────────────────
   // In production, restrict to FRONTEND_URL (the Vercel deployment).
   // In development, allow localhost origins for convenience.
-  const allowedOrigins: string[] = [];
-
-  if (env.NODE_ENV === 'production') {
-    if (env.FRONTEND_URL) {
-      allowedOrigins.push(env.FRONTEND_URL);
-    }
-  } else {
-    allowedOrigins.push('http://localhost:3000', 'http://localhost:3001');
-    if (env.FRONTEND_URL) {
-      allowedOrigins.push(env.FRONTEND_URL);
-    }
-  }
+  const allowedOrigins = resolveApiGatewayCorsOrigins(env);
 
   console.log('[Bootstrap] Enabling CORS for origins:', allowedOrigins);
   app.enableCors({

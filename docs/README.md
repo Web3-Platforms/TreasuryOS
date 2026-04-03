@@ -24,17 +24,40 @@
    - Validation rules explained
 
 8. **[ENV_VAR_QUICK_REFERENCE.md](ENV_VAR_QUICK_REFERENCE.md)** ⭐ QUICK LOOKUP
-   - Quick reference tables
-   - Copy-paste .env templates
-   - Common connection strings
-   - Port resolution strategy
+    - Quick reference tables
+    - Copy-paste .env templates
+    - Common connection strings
+    - Port resolution strategy
 
 9. **[SERVICES_QUICK_REFERENCE.md](SERVICES_QUICK_REFERENCE.md)** ⭐ COMMANDS
-   - Start any service locally
-   - Build commands
-   - Health check tests
-   - Port reference table
-   - Railway deployment template
+    - Start any service locally
+    - Build commands
+    - Health check tests
+    - Port reference table
+    - Railway deployment template
+
+10. **[guides/README.md](guides/README.md)** ⭐ OPERATOR GUIDES
+      - Manual step-by-step guides for user-owned work
+      - AI advisory enablement & operation guide
+      - Real LLM provider setup guide
+      - Audit firm primer
+      - Protocol audit engagement guide
+      - Testnet environment setup guide
+      - Auditor handoff & kickoff guide
+11. **[reports/AI_ADVISORY_FOUNDATION_REPORT.md](reports/AI_ADVISORY_FOUNDATION_REPORT.md)** ⭐ AI DELIVERY REPORT
+     - What shipped in the first AI slice
+     - Safety boundaries and rollout posture
+     - Validation commands and follow-up recommendations
+12. **[plans/REAL_LLM_INTEGRATION_PLAN.md](plans/REAL_LLM_INTEGRATION_PLAN.md)** ⭐ NEXT AI PHASE
+    - Detailed plan for integrating a real external provider
+    - Management workflow from planning through maintenance
+    - Provider, security, rollout, and feedback requirements
+13. **[thoughts/brainstorm.md](thoughts/brainstorm.md)** ⭐ STRATEGIC THOUGHTS
+     - What happens if TreasuryOS builds the AI layer first
+     - Whether audit/manual work can be deferred
+     - Whether the AI layer can act like an internal audit function
+    - See also: `thoughts/ai-layer-as-audit-firm-study.md`
+    - See also: `thoughts/ai-growth-recommendations.md`
 
 ---
 

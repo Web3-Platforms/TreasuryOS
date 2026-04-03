@@ -163,6 +163,7 @@ async function resetDatabase() {
     await pool.query(
       `
         truncate table
+          ai_advisories,
           auth_sessions,
           audit_events,
           provider_webhooks,
@@ -688,8 +689,12 @@ test('wallet approval moves into proposal_pending when Squads proposal creation 
   }
 });
 
-test('rbac, onboarding, wallet governance, transaction review, and reporting work end to end when Sumsub is enabled', async () => {
-  const fixture = withApiEnv({ KYC_SUMSUB_ENABLED: 'true' });
+test('rbac, onboarding, wallet governance, transaction review, AI advisories, and reporting work end to end when Sumsub is enabled', async () => {
+  const fixture = withApiEnv({
+    AI_ADVISORY_ENABLED: 'true',
+    AI_ADVISORY_MODEL: 'deterministic-test-advisor-v1',
+    KYC_SUMSUB_ENABLED: 'true',
+  });
   const originalFetch = globalThis.fetch;
   const sumsubWebhookSecret = process.env.SUMSUB_WEBHOOK_SECRET!;
   let app: Awaited<ReturnType<typeof bootstrapApiApp>>['app'] | undefined;
@@ -1109,6 +1114,71 @@ test('rbac, onboarding, wallet governance, transaction review, and reporting wor
     assert.equal(caseDetailResponse.status, 200);
     const caseDetail = await caseDetailResponse.json();
     assert.ok(caseDetail.reviewNotes.includes('Transfer approved after treasury verification'));
+
+    const advisoryResponse = await fetch(
+      `${started.baseUrl}/ai/transaction-cases/${openedCasePayload.case.id}/advisory`,
+      {
+        headers: {
+          authorization: `Bearer ${auditorLogin.accessToken}`,
+        },
+      },
+    );
+    assert.equal(advisoryResponse.status, 200);
+    const advisoryPayload = await advisoryResponse.json();
+    assert.equal(advisoryPayload.enabled, true);
+    assert.equal(advisoryPayload.advisory.resourceId, openedCasePayload.case.id);
+    assert.equal(advisoryPayload.advisory.model, 'deterministic-test-advisor-v1');
+    assert.match(advisoryPayload.advisory.summary, /tx-review-1/);
+    assert.ok(
+      advisoryPayload.advisory.riskFactors.some((factor: string) =>
+        factor.includes('travel-rule threshold'),
+      ),
+    );
+    assert.ok(
+      advisoryPayload.advisory.checklist.some((item: string) =>
+        item.includes('evidence'),
+      ),
+    );
+
+    const cachedAdvisoryResponse = await fetch(
+      `${started.baseUrl}/ai/transaction-cases/${openedCasePayload.case.id}/advisory`,
+      {
+        headers: {
+          authorization: `Bearer ${auditorLogin.accessToken}`,
+        },
+      },
+    );
+    assert.equal(cachedAdvisoryResponse.status, 200);
+    const cachedAdvisory = await cachedAdvisoryResponse.json();
+    assert.equal(cachedAdvisory.advisory.id, advisoryPayload.advisory.id);
+
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    await app.get(DatabaseService).pool.query(
+      `
+        update transaction_cases
+        set review_notes = $1,
+            updated_at = now()
+        where id = $2
+      `,
+      [
+        'Transfer approved after treasury verification\nAnalyst addendum added to force advisory regeneration',
+        openedCasePayload.case.id,
+      ],
+    );
+
+    const regeneratedAdvisoryResponse = await fetch(
+      `${started.baseUrl}/ai/transaction-cases/${openedCasePayload.case.id}/advisory`,
+      {
+        headers: {
+          authorization: `Bearer ${auditorLogin.accessToken}`,
+        },
+      },
+    );
+    assert.equal(regeneratedAdvisoryResponse.status, 200);
+    const regeneratedAdvisory = await regeneratedAdvisoryResponse.json();
+    assert.equal(regeneratedAdvisory.advisory.id, advisoryPayload.advisory.id);
+    assert.equal(regeneratedAdvisory.advisory.generatedAt, advisoryPayload.advisory.generatedAt);
+    assert.notEqual(regeneratedAdvisory.advisory.updatedAt, advisoryPayload.advisory.updatedAt);
 
     const reportMonth = new Date().toISOString().slice(0, 7);
     const generateReportResponse = await fetch(`${started.baseUrl}/reports`, {

@@ -3,11 +3,13 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import helmet from 'helmet';
 import { AppModule } from './app.module.js';
+import { loadApiGatewayEnv, resolveApiGatewayCorsOrigins } from './config/env.js';
 
 let cachedApp: any;
 
 export default async function handler(req: any, res: any) {
   if (!cachedApp) {
+    const env = loadApiGatewayEnv();
     const app = await NestFactory.create(AppModule, {
       bufferLogs: true,
       rawBody: true,
@@ -21,9 +23,7 @@ export default async function handler(req: any, res: any) {
     }));
 
     app.enableCors({
-      origin: [
-        process.env.FRONTEND_URL,
-      ].filter(Boolean) as string[],
+      origin: resolveApiGatewayCorsOrigins(env),
       credentials: true,
     });
 

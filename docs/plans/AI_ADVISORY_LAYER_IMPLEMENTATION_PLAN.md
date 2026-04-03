@@ -40,9 +40,16 @@ The platform should use AI to make humans **better decision-makers**, not to rep
 
 ### What the repo explicitly says today
 
-- `docs/reports/PROJECT_STATUS_REPORT.md` lists `AI-assisted screening` as deferred post-launch work.
-
-That means the AI layer should be introduced as a planned new capability, not described as already live.
+- the first transaction-case AI advisory foundation now exists behind
+  `AI_ADVISORY_ENABLED`
+- the current shipped surface is:
+  - `GET /api/ai/transaction-cases/:caseId/advisory`
+  - advisory rendering on the dashboard transaction detail page
+  - persistent `ai_advisories` storage with a redaction profile and model label
+- the dedicated plan for integrating a real external provider now lives in:
+  - `docs/plans/REAL_LLM_INTEGRATION_PLAN.md`
+- external provider choice, operator feedback capture, and non-transaction AI
+  surfaces remain planned follow-up work
 
 ## Design principles
 

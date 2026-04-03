@@ -56,6 +56,24 @@ jobs:
       - run: npm ci
       - run: npm run build
 
+  hardening-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Run security and infrastructure hardening tests
+        run: >
+          node ./node_modules/tsx/dist/cli.mjs
+          --tsconfig tsconfig.test.json
+          --test
+          tests/dashboard-security-headers.test.ts
+          tests/api-gateway-production-env.test.ts
+          tests/infrastructure-hardening.test.ts
+
   # Unit tests that do NOT require Postgres/Redis (fast, reliable)
   unit-tests:
     runs-on: ubuntu-latest

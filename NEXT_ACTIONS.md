@@ -15,20 +15,21 @@ This document outlines the strategic roadmap for evolving the TreasuryOS MVP int
 - [x] **Final Live Smoke Pass**: The branded API plus live dashboard smoke pass completed with `19` checks passed, `0` failed, and `2` scope warnings for currently empty wallet/case data.
 - [x] **Go/No-Go Cutover**: Executed the monitored release window; see `docs/LAUNCH_CUTOVER_RUNBOOK.md` and `docs/reports/LAUNCH_CUTOVER_EXECUTION_REPORT.md`.
 
-## Phase 1: Security & Infrastructure (In Progress)
+## Phase 1: Security & Infrastructure (Repo Hardening Complete; External Audit Pending)
 - [x] **Signer Refactor**: Centralized Solana authority loading for filesystem and Railway-injected signer material.
 - [x] **Vercel/Serverless Readiness**: API Gateway optimized for serverless runtime.
+- [x] **Infrastructure Provisioning**: Hardened the Railway/Vercel/GitHub workflow stack with production env guardrails, dashboard header coverage, API health checks, and dedicated hardening tests in CI.
 - [ ] **Protocol Audit**: Hire a third-party security firm to audit the Anchor programs and Rust permissioning logic.
-- [ ] **Infrastructure Provisioning**: Harden the managed Railway/Vercel/Cloudflare stack for production traffic.
 
 ## Phase 2: Real-World Connectivity (6-12 Weeks)
 - [ ] **Banking Integration**: Secure production mTLS certificates for Amina/SWIFT and implement the live ISO20022 message relay.
 - [ ] **Sumsub Webhooks**: Connect the KycService to live Sumsub webhooks for automated entity status transitions.
 - [ ] **Solana Mainnet**: Set up a dedicated RPC node (Helius/Triton) and fee management.
 
-## Phase 3: Governance & AI (Logic Implemented)
+## Phase 3: Governance & AI (AI Advisory Foundation Live)
 - [x] **Multi-Signature Handover**: Integrated **Squads V4** for institutional multisig governance.
-- [ ] **AI-Assisted Screening**: Benchmarking transaction history using LLM-based risk scoring.
+- [x] **Read-only AI Advisory Foundation**: Shipped feature-flagged transaction-case advisories with persistent storage, dashboard rendering, and strict no-signer boundaries.
+- [ ] **External AI Provider & Feedback Layer**: Execute the detailed plan in `docs/plans/REAL_LLM_INTEGRATION_PLAN.md`, starting with one provider-backed transaction-case advisory path plus operator feedback capture.
 
 ## Current Project Status
 - **Core MVP**: [COMPLETED]

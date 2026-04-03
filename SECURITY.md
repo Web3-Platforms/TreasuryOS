@@ -236,6 +236,13 @@ npx vercel --prod --token ${{ secrets.VERCEL_TOKEN }}
 Complete every item before routing real user traffic to the production
 environment.
 
+The repo now enforces several of these controls automatically: production boot
+fails if `FRONTEND_URL` is missing or has a trailing slash, if `DATABASE_SSL`
+is not `true`, or if `REDIS_QUEUE_ENABLED=true` still points at loopback Redis.
+CI also locks the Railway/Vercel/GitHub workflow hardening with dedicated
+config tests. These guardrails reduce misconfiguration risk, but they do not
+replace the live checks below.
+
 ### Secrets & Credentials
 
 - [ ] All secrets in `.env.example` are placeholders — no real values
@@ -249,7 +256,7 @@ environment.
 
 ### Network & CORS
 
-- [ ] `FRONTEND_URL` in Railway is set to the exact production Vercel URL
+- [ ] `FRONTEND_URL` in Railway is set to the exact production Vercel URL (no trailing slash)
 - [ ] `NODE_ENV=production` is set in Railway
 - [ ] The API Gateway is not accessible on any port other than 443 (HTTPS)
 - [ ] TLS certificates are valid and auto-renewing (Railway + Vercel handle this)

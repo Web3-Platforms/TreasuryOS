@@ -55,6 +55,7 @@ These are the minimal changes needed for the code to build and deploy at all.
 > **Staging-ready** ✅ — all code changes for Phase 1 are committed.
 > The remaining items in this section are **ops/configuration tasks only** (setting env vars, connecting services).
 > No further code changes are required to reach staging.
+> The API now hard-fails production startup when `FRONTEND_URL` is missing or malformed, when `DATABASE_SSL` is not `true`, or when queue-enabled production deploys still point at loopback Redis. CI also runs dedicated hardening tests for the Railway/Vercel/GitHub workflow configuration.
 
 Everything below is an ops/configuration task. Code is ready; environment variables and platform setup are not.
 
@@ -357,14 +358,27 @@ At high transaction volumes, the `provider_webhooks` and `audit_events` tables w
 
 ---
 
-## Phase 8 — AI-Assisted Screening (Planned)
+## Phase 8 — AI Advisories (Foundation Shipped)
 
-`NEXT_ACTIONS.md` mentions LLM-based risk scoring. When ready:
+The first AI slice is now implemented as a **read-only transaction-case advisory
+layer**.
 
-1. Add `ai-screening` module to `apps/api-gateway/src/modules/`
-2. Integrate with OpenAI / Anthropic API for transaction narrative analysis
-3. Add `AI_RISK_SCORE` field to `transaction_cases` table (migration `008_ai_screening.sql`)
-4. Add `AI_SCREENING_ENABLED` env var (default: `false`)
+### Shipped foundation
+
+1. Add `ai` module to `apps/api-gateway/src/modules/`
+2. Add a provider abstraction plus a safe built-in deterministic provider
+3. Add persistent `ai_advisories` storage via `007_ai_advisories.sql`
+4. Add `AI_ADVISORY_ENABLED` and `AI_ADVISORY_MODEL` env vars
+5. Render the advisory on the dashboard transaction-case detail page
+
+### Next AI steps
+
+1. Execute `docs/plans/REAL_LLM_INTEGRATION_PLAN.md` to add one real-provider
+   transaction-case advisory path behind the existing AI module
+2. Add operator feedback capture for advisory quality review
+3. Keep deterministic fallback available during rollout and rollback
+4. Expand read-only advisories to wallet reviews or report narratives only after
+   the transaction-case slice is stable
 
 ---
 
@@ -428,10 +442,10 @@ node ./node_modules/tsx/dist/cli.mjs \
 | `AUTH_TOKEN_SECRET` | API | ✅ | ≥32 chars, `openssl rand -hex 32` |
 | `AUTH_TOKEN_TTL_MINUTES` | API | — | Default: 480 (8h) |
 | `DATABASE_URL` | API | ✅ | Neon pooled URL |
-| `DATABASE_SSL` | API | ✅ | `true` for Neon |
+| `DATABASE_SSL` | API | ✅ | `true` for Neon; production startup rejects `false` |
 | `UPSTASH_REDIS_REST_URL` | API | ✅ | Upstash REST endpoint |
-| `UPSTASH_REDIS_REST_TOKEN` | API | ✅ | Upstash REST token |
-| `FRONTEND_URL` | API | ✅ | Vercel domain (CORS) |
+| `UPSTASH_REDIS_REST_TOKEN` | API | ✅ | Upstash REST token; set it together with `UPSTASH_REDIS_REST_URL` |
+| `FRONTEND_URL` | API | ✅ | Exact Vercel domain for CORS, no trailing slash; required for production boot |
 | `API_BASE_URL` | Dashboard | ✅ | Railway domain + `/api` |
 | `NEXT_PUBLIC_SUPABASE_URL` | Dashboard | ✅ | Supabase project URL |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY` | Dashboard | ✅ | Supabase anon key |

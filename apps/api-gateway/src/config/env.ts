@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { z } from 'zod';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const defaultRedisUrl = 'redis://localhost:6379';
 
 function isRepoRootCandidate(candidatePath: string) {
   return (
@@ -98,7 +99,7 @@ const envSchema = z.object({
 
   // ── Redis / Upstash ──────────────────────────────────────────
   // Accepts redis:// (local) and rediss:// (Upstash TLS)
-  REDIS_URL: z.string().min(1).default('redis://localhost:6379'),
+  REDIS_URL: z.string().min(1).default(defaultRedisUrl),
   REDIS_QUEUE_ENABLED: stringBooleanSchema.default(true),
   REDIS_QUEUE_NAME: z.string().min(3).default('treasuryos:events'),
 
@@ -107,7 +108,17 @@ const envSchema = z.object({
   UPSTASH_REDIS_REST_TOKEN: z.string().min(1).optional(),
 
   // ── CORS ─────────────────────────────────────────────────────
-  FRONTEND_URL: z.string().optional(),
+  FRONTEND_URL: z
+    .string()
+    .url()
+    .refine((value) => !value.endsWith('/'), {
+      message: 'FRONTEND_URL must not include a trailing slash',
+    })
+    .optional(),
+
+  // ── AI advisories ────────────────────────────────────────────
+  AI_ADVISORY_ENABLED: stringBooleanSchema.default(false),
+  AI_ADVISORY_MODEL: z.string().min(3).default('deterministic-case-advisor-v1'),
 
   // ── KYC ──────────────────────────────────────────────────────
   KYC_SUMSUB_ENABLED: stringBooleanSchema.default(false),
@@ -150,6 +161,7 @@ const envSchema = z.object({
   // These are read-only and do not need to be set manually.
   RAILWAY_ENVIRONMENT: z.string().optional(),
 });
+type ParsedApiGatewayEnv = z.infer<typeof envSchema>;
 
 export type ApiGatewayEnv = Omit<
   z.infer<typeof envSchema>,
@@ -194,6 +206,51 @@ function loadDotEnvFile(filePath: string) {
   return values;
 }
 
+function usesLoopbackRedisUrl(redisUrl: string) {
+  try {
+    const parsedRedisUrl = new URL(redisUrl);
+    return ['localhost', '127.0.0.1', '::1'].includes(parsedRedisUrl.hostname);
+  } catch {
+    return false;
+  }
+}
+
+function validateApiGatewayEnv(env: ParsedApiGatewayEnv) {
+  const issues: string[] = [];
+  const hasUpstashRestUrl = Boolean(env.UPSTASH_REDIS_REST_URL);
+  const hasUpstashRestToken = Boolean(env.UPSTASH_REDIS_REST_TOKEN);
+
+  if (hasUpstashRestUrl !== hasUpstashRestToken) {
+    issues.push('UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN must be set together.');
+  }
+
+  if (env.NODE_ENV === 'production') {
+    if (!env.FRONTEND_URL) {
+      issues.push('FRONTEND_URL is required in production.');
+    }
+
+    if (!env.DATABASE_SSL) {
+      issues.push('DATABASE_SSL must be true in production.');
+    }
+
+    if (
+      env.REDIS_QUEUE_ENABLED &&
+      !(
+        (env.UPSTASH_REDIS_REST_URL && env.UPSTASH_REDIS_REST_TOKEN) ||
+        !usesLoopbackRedisUrl(env.REDIS_URL)
+      )
+    ) {
+      issues.push(
+        'Configure Upstash REST credentials or a non-loopback REDIS_URL when REDIS_QUEUE_ENABLED is true in production.',
+      );
+    }
+  }
+
+  if (issues.length > 0) {
+    throw new Error(`Invalid API gateway environment: ${issues.join(' ')}`);
+  }
+}
+
 export function loadApiGatewayEnv(env: NodeJS.ProcessEnv = process.env): ApiGatewayEnv {
   // In production, env vars are injected by Railway/Vercel — skip .env file loading
   const fileEnv = env.NODE_ENV === 'production' ? {} : loadDotEnvFile(path.join(repoRoot, '.env'));
@@ -202,6 +259,7 @@ export function loadApiGatewayEnv(env: NodeJS.ProcessEnv = process.env): ApiGate
     ...fileEnv,
     ...env,
   });
+  validateApiGatewayEnv(parsed);
 
   return {
     ...parsed,
@@ -210,4 +268,20 @@ export function loadApiGatewayEnv(env: NodeJS.ProcessEnv = process.env): ApiGate
     // Railway injects PORT; prefer it over API_GATEWAY_PORT
     LISTEN_PORT: parsed.PORT ?? parsed.API_GATEWAY_PORT,
   };
+}
+
+export function resolveApiGatewayCorsOrigins(
+  env: Pick<ApiGatewayEnv, 'NODE_ENV' | 'FRONTEND_URL'>,
+) {
+  if (env.NODE_ENV === 'production') {
+    return env.FRONTEND_URL ? [env.FRONTEND_URL] : [];
+  }
+
+  return Array.from(
+    new Set(
+      ['http://localhost:3000', 'http://localhost:3001', env.FRONTEND_URL].filter(
+        (origin): origin is string => Boolean(origin),
+      ),
+    ),
+  );
 }

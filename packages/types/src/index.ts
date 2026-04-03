@@ -128,6 +128,33 @@ export interface ReviewedTransaction {
   reviewedAt?: string;
 }
 
+export type AiAdvisoryType = 'transaction_case_summary';
+
+export type AiAdvisoryResourceType = 'transaction_case';
+
+export interface AiAdvisoryRecord {
+  id: string;
+  advisoryType: AiAdvisoryType;
+  resourceType: AiAdvisoryResourceType;
+  resourceId: string;
+  summary: string;
+  recommendation?: string;
+  riskFactors: string[];
+  checklist: string[];
+  confidence?: number;
+  model: string;
+  redactionProfile: string;
+  sourceHash: string;
+  generatedAt: string;
+  updatedAt: string;
+}
+
+export interface AiAdvisoryEnvelope {
+  enabled: boolean;
+  advisory: AiAdvisoryRecord | null;
+  reason?: string;
+}
+
 export type KycProvider = 'sumsub' | 'jumio' | 'sumsub-with-jumio-fallback';
 
 export interface AuthenticatedUser {
@@ -236,6 +263,7 @@ export interface PilotStore {
   entities: EntityRecord[];
   wallets: WalletRecord[];
   transactionCases: ReviewedTransaction[];
+  aiAdvisories?: AiAdvisoryRecord[];
   auditEvents: AuditEventRecord[];
   reports: ReportRecord[];
   kycWebhooks: KycWebhookRecord[];

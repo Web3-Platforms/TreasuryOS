@@ -45,7 +45,11 @@ PORT=3001                                      # Used by Railway only
 API_GATEWAY_PORT=3001                          # Local fallback
 
 # ── CORS ─────────────────────────────────────────────────
-FRONTEND_URL=https://app.example.com           # For CORS headers
+FRONTEND_URL=https://app.example.com           # Required in production for CORS; no trailing slash
+
+# ── AI Advisories ───────────────────────────────────────
+AI_ADVISORY_ENABLED=false                      # Enables read-only transaction-case AI advisories
+AI_ADVISORY_MODEL=deterministic-case-advisor-v1
 
 # ── Solana RPC ───────────────────────────────────────────
 SOLANA_RPC_URL=https://api.devnet.solana.com   # Local default; use testnet for beta launch
@@ -58,14 +62,14 @@ SQUADS_MULTISIG_ENABLED=false                  # Enable multisig
 SQUADS_MULTISIG_ADDRESS=YourSquadsAddress      # If multisig enabled
 
 # ── Redis / Upstash ─────────────────────────────────────
-REDIS_URL=redis://localhost:6379               # Local Redis
+REDIS_URL=redis://localhost:6379               # Local Redis only; production queueing needs Upstash or another non-loopback Redis URL
 REDIS_QUEUE_ENABLED=true
 REDIS_QUEUE_NAME=treasuryos:events
 UPSTASH_REDIS_REST_URL=https://your-upstash.upstash.io
-UPSTASH_REDIS_REST_TOKEN=your-token            # For cloud deployments
+UPSTASH_REDIS_REST_TOKEN=your-token            # For cloud deployments; set both UPSTASH vars together
 
 # ── Database SSL ─────────────────────────────────────────
-DATABASE_SSL=false                             # Enable for managed databases
+DATABASE_SSL=false                             # Local default; must be true in production
 
 # ── Seed bootstrap hardening ─────────────────────────────
 SEED_DEFAULT_USERS=true                        # Optional hardening switch; disable after intentional bootstrap in stricter envs
@@ -155,6 +159,7 @@ NEXT_PUBLIC_SENTRY_DSN=https://key@sentry.io/project-id
 ### Notes
 
 - The dashboard uses `API_BASE_URL`, not `NEXT_PUBLIC_API_BASE_URL`.
+- AI advisories are served by the API gateway and rendered on the dashboard transaction-case detail page when enabled.
 - `KYC_SUMSUB_ENABLED` and `PILOT_ALLOW_MANUAL_KYC_BYPASS` are read by both the dashboard and the API so the launch posture stays consistent.
 - Leave demo access disabled unless you explicitly want a public demo login path.
 - For stricter environments, set `SEED_DEFAULT_USERS=false` after a deliberate `npm run seed:users` bootstrap so logins no longer mutate default-user password hashes implicitly.

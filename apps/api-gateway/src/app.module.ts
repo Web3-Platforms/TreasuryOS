@@ -2,6 +2,7 @@ import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/c
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 
+import { AiModule } from './modules/ai/ai.module.js';
 import { AuditModule } from './modules/audit/audit.module.js';
 import { AuthModule } from './modules/auth/auth.module.js';
 import { EntitiesModule } from './modules/entities/entities.module.js';
@@ -21,6 +22,7 @@ import { StructuredLoggingMiddleware } from './modules/platform/structured-loggi
   imports: [
     PlatformModule,
     DatabaseModule,
+    AiModule,
     AuditModule,
     AuthModule,
     EntitiesModule,
