@@ -41,4 +41,8 @@ maintained locally and are intentionally excluded from this Git repository.
 
 ## License
 
-Proprietary and confidential. All rights reserved.
+Business Source License 1.1 (`BUSL-1.1`).
+
+TreasuryOS version `1.0` was first publicly distributed under this license on
+`2026-03-28`. Production use requires a commercial license from
+`Web3-Platforms` until the Change Date of `2030-03-28`. See [`LICENSE`](LICENSE).
