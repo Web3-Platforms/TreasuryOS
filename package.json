@@ -30,7 +30,8 @@
     "seed:users": "node ./node_modules/tsx/dist/cli.mjs scripts/seed-default-users.ts",
     "solana:keypair:export": "node ./node_modules/tsx/dist/cli.mjs scripts/solana-keypair-to-env.ts",
     "test": "node ./node_modules/tsx/dist/cli.mjs --tsconfig tsconfig.test.json --test tests/**/*.test.ts",
-    "format": "node ./node_modules/prettier/bin/prettier.cjs --write ."
+    "format": "node ./node_modules/prettier/bin/prettier.cjs --write .",
+    "agent:doctor": "node ./scripts/agent-stack-doctor.mjs"
   },
   "dependencies": {
     "@tailwindcss/postcss": "^4.0.0-alpha.16",

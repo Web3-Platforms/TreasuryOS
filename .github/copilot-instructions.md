@@ -17,6 +17,20 @@ Current baseline caveats:
 - The full monorepo build is validated with `API_BASE_URL=http://localhost:3001/api npm run build`; the dashboard build requires `API_BASE_URL`, and Next.js 16 route protection now lives in `apps/dashboard/proxy.ts`.
 - `npm test` includes an API integration test that expects the local database/runtime prerequisites to be available. The two CI unit tests above are the reliable quick smoke tests.
 
+## Agent operations references
+
+- The canonical multi-agent operating docs live in `docs/agents/`.
+- Start with `docs/agents/README.md` for architecture, role cards, setup, and
+  MCP connector guidance.
+- Run `npm run agent:doctor` to verify the current machine or runner has the
+  minimum TreasuryOS agent prerequisites.
+- Reuse `docs/agents/templates/treasuryos-mcp-servers.example.json` when
+  configuring MCP-capable clients such as Copilot CLI, Claude Code/Desktop,
+  Cline, or similar tools.
+- GitHub Copilot cloud agent bootstrapping is repo-owned in
+  `.github/workflows/copilot-setup-steps.yml`; secrets and client-local auth
+  remain user-owned and should never be committed.
+
 ## High-level architecture
 
 - This is an npm workspaces monorepo (`apps/*`, `packages/*`) targeting Node 22 and npm 10. The root `README.md` points people to `docs/reports/COMPREHENSIVE_REPORT.md`, `docs/architecture/`, and `docs/deployment/` for system-level context.

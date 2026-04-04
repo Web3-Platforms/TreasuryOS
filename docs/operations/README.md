@@ -19,4 +19,5 @@ This folder holds the living operating documents for the project.
 
 - [`../reports/PROJECT_STATUS_REPORT.md`](../reports/PROJECT_STATUS_REPORT.md)
 - [`../guides/README.md`](../guides/README.md)
+- [`../agents/README.md`](../agents/README.md)
 - [`../deployment/README.md`](../deployment/README.md)

@@ -5,6 +5,25 @@
 This is the current prioritized execution list after the OpenRouter rollout and
 manual AI advisory UX change.
 
+## Priority 0 — Operationalize the new agent stack
+
+- [ ] Add your personal and team secrets to the target MCP clients and the
+  GitHub `copilot` environment as needed.
+- [ ] Pilot the first three business agents:
+  - Chief of Staff
+  - Engineering Delivery
+  - Revenue Ops / CRM
+- [ ] Add the minimum MCP stack on at least one daily-driver client:
+  - GitHub MCP
+  - filesystem MCP
+  - git MCP
+  - read-only Postgres access
+- [ ] Decide which optional business connectors should be enabled first:
+  - Slack
+  - Notion
+  - CRM
+  - analytics / Sentry
+
 ## Priority 1 — Close the live AI rollout loop
 
 - [ ] Run a live `/transactions/[id]` canary and confirm:

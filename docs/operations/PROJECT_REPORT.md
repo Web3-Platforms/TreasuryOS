@@ -9,12 +9,15 @@ TreasuryOS is operating as a controlled pilot treasury and compliance platform
 with the core dashboard, API gateway, reporting, governance, and audit-log
 surfaces in place.
 
-Recent delivery work closed two important program lanes:
+Recent delivery work closed three important program lanes:
 
 1. **AI advisory rollout** now supports deterministic, OpenAI-compatible, and
    OpenRouter provider modes for transaction-case analysis.
 2. **Operations and audit preparation** now include explicit operator guides,
    rollout documentation, and external protocol audit handoff materials.
+3. **Agent operations foundation** now provides a repo-owned Copilot setup
+   workflow, portable MCP templates, reusable role cards, and cross-client
+   setup guidance for TreasuryOS business agents.
 
 The current production AI posture is:
 

@@ -1,0 +1,46 @@
+name: Copilot Setup Steps
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+      - .github/copilot-instructions.md
+      - scripts/agent-stack-doctor.mjs
+  pull_request:
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+      - .github/copilot-instructions.md
+      - scripts/agent-stack-doctor.mjs
+
+jobs:
+  copilot-setup-steps:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install repo dependencies
+        run: npm ci --include=dev
+
+      - name: Install CLI helpers
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq postgresql-client sqlite3
+
+      - name: Install uv for MCP stdio servers
+        run: |
+          python3 -m pip install --user uv
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Validate agent environment
+        run: npm run agent:doctor

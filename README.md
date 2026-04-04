@@ -21,6 +21,7 @@ npm run dev:dashboard
 - **Start here:** [docs/README.md](docs/README.md)
 - **Current status:** [docs/reports/PROJECT_STATUS_REPORT.md](docs/reports/PROJECT_STATUS_REPORT.md)
 - **Operations source of truth:** [docs/operations/README.md](docs/operations/README.md)
+- **Agent operations:** [docs/agents/README.md](docs/agents/README.md)
 - **Operator guides:** [docs/guides/README.md](docs/guides/README.md)
 - **Environment configuration:** [docs/ENVIRONMENT_VARIABLES.md](docs/ENVIRONMENT_VARIABLES.md)
 
@@ -31,6 +32,8 @@ npm run dev:dashboard
 - OpenRouter is the current live provider path for transaction-case advisories.
 - The dashboard AI panel now generates and regenerates analysis on explicit
   user action instead of auto-running on page load.
+- A reusable TreasuryOS agent operating system and MCP setup pack now live in
+  `docs/agents/`.
 
 ## Tech stack
 
