@@ -49,6 +49,14 @@ pilot-store.json
 *.pkg
 *.zip
 *.tar.gz
+# Allow public/ static assets in Next.js apps
+!apps/*/public/*.png
+!apps/*/public/*.jpg
+!apps/*/public/*.jpeg
+!apps/*/public/*.svg
+!apps/*/public/*.ico
+!apps/*/public/*.gif
+!apps/*/public/*.webp
 
 # --- Custom ---
 temp/

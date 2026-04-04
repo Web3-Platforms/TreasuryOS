@@ -4,6 +4,7 @@ import { ArrowUpRight, CheckCircle2 } from 'lucide-react';
 
 import { ContactForm } from '@/components/marketing/contact-form';
 import { CtaBand } from '@/components/marketing/cta-band';
+import { FloatingAccessCta } from '@/components/marketing/floating-access-cta';
 import { SectionHeader } from '@/components/marketing/section-header';
 import { SiteShell } from '@/components/marketing/site-shell';
 import { FadeIn } from '@/components/marketing/fade-in';
@@ -258,46 +259,54 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Trust & Engagement Footer */}
-      <section id="request-access" className="shell-container pb-24 sm:pb-32 lg:pb-40">
-        <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
+      {/* Request Access — form-first, full-width */}
+      <section id="request-access" className="relative overflow-hidden">
+        {/* Accent gradient backdrop */}
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent via-primary/5 to-transparent" />
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+
+        <div className="shell-container pb-24 pt-20 sm:pb-32 sm:pt-28 lg:pb-40 lg:pt-36">
           <FadeIn>
-            <div className="surface-panel p-10 h-full flex flex-col justify-between">
-              <div className="space-y-8">
-                <span className="eyebrow">Engagement</span>
-                <h2 className="text-4xl font-bold text-white tracking-tight leading-tight">Built for institutional discipline.</h2>
-                <p className="text-base leading-relaxed text-slate-400 font-medium">
-                  We help institutional teams shape their transition to digital asset rails without compromising on regulatory integrity or internal controls.
-                </p>
-                <ul className="space-y-5">
-                  {[
-                    'MiCA & EU Regulatory Frameworks',
-                    'ISO20022 Interoperability',
-                    'Squads V4 Governance Integration',
-                  ].map((item) => (
-                    <li key={item} className="flex gap-4 items-center p-4 rounded-xl bg-white/5 border border-white/5">
-                      <CheckCircle2 className="h-5 w-5 text-primary" />
-                      <span className="text-sm font-bold text-slate-200 tracking-wide">{item}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              
-              <div className="mt-12 p-8 rounded-3xl bg-primary shadow-xl shadow-primary/20">
-                <p className="text-sm font-bold leading-relaxed text-white tracking-wide">
-                  Direct platform tours available for verified institutional teams. Open our pilot portal to explore the current interface.
-                </p>
-                <Link href={portalUrl} className="mt-6 inline-flex items-center gap-3 text-white font-bold uppercase tracking-widest text-xs">
-                  Launch Platform
-                  <ArrowUpRight className="h-4 w-4" />
-                </Link>
-              </div>
+            <div className="mx-auto max-w-2xl text-center mb-14">
+              <span className="eyebrow">Early Access Pilot</span>
+              <h2 className="mt-6 text-balance text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl">
+                Ready to govern your assets?
+              </h2>
+              <p className="mt-5 text-lg leading-relaxed text-slate-400">
+                Tell us how your team operates today. We&apos;ll set up a tailored session to show exactly how TreasuryOS fits your workflow.
+              </p>
             </div>
           </FadeIn>
-          
-          <FadeIn delay={0.2}>
-            <div className="h-full">
-              <ContactForm />
+
+          <FadeIn delay={0.15}>
+            <div className="mx-auto max-w-2xl">
+              <ContactForm
+                title=""
+                description=""
+                buttonLabel="Request a working session"
+              />
+            </div>
+          </FadeIn>
+
+          {/* Supporting trust signals below the form */}
+          <FadeIn delay={0.3}>
+            <div className="mx-auto mt-14 max-w-3xl">
+              <div className="grid gap-4 sm:grid-cols-3">
+                {[
+                  { label: 'MiCA & EU Frameworks', sub: 'Regulatory-ready from day one' },
+                  { label: 'Squads V4 Multisig', sub: 'On-chain governance built in' },
+                  { label: 'ISO20022 Rails', sub: 'Institutional interoperability' },
+                ].map((item) => (
+                  <div key={item.label} className="flex items-start gap-3 rounded-2xl border border-white/5 bg-white/[0.02] p-5">
+                    <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-widest text-white">{item.label}</p>
+                      <p className="mt-1 text-xs text-slate-500">{item.sub}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </FadeIn>
         </div>
@@ -312,6 +321,8 @@ export default function LandingPage() {
           { label: 'Platform Story', href: '/company', variant: 'secondary' },
         ]}
       />
+
+      <FloatingAccessCta />
     </SiteShell>
   );
 }

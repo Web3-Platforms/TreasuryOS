@@ -41,11 +41,13 @@ export function ContactForm({
 
   return (
     <div className="surface-panel p-6 sm:p-8">
-      <div className="max-w-xl">
-        <span className="eyebrow">Engage TreasuryOS</span>
-        <h2 className="mt-6 text-balance text-3xl font-semibold tracking-tight text-white sm:text-4xl">{title}</h2>
-        <p className="mt-4 text-base leading-8 text-muted-foreground sm:text-lg">{description}</p>
-      </div>
+      {(title || description) ? (
+        <div className="max-w-xl">
+          <span className="eyebrow">Engage TreasuryOS</span>
+          {title ? <h2 className="mt-6 text-balance text-3xl font-semibold tracking-tight text-white sm:text-4xl">{title}</h2> : null}
+          {description ? <p className="mt-4 text-base leading-8 text-muted-foreground sm:text-lg">{description}</p> : null}
+        </div>
+      ) : null}
 
       <div className="mt-8">
         {status === 'success' ? (

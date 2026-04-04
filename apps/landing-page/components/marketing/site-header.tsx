@@ -35,8 +35,8 @@ export function SiteHeader() {
         }`}
       >
         <Link href="/" className="flex flex-row items-center gap-3 shrink-0 ml-2">
-          <div className="relative h-9 w-9 shrink-0 flex items-center justify-center overflow-hidden rounded-xl border border-white/10 bg-white/5 shadow-inner">
-            <Image src="/logo.png" alt="TreasuryOS" width={36} height={36} className="object-contain p-1" priority />
+          <div className="relative h-9 w-[66px] shrink-0 flex items-center justify-center overflow-hidden rounded-xl border border-white/10 bg-white/5 shadow-inner">
+            <Image src="/logo.png" alt="TreasuryOS" width={140} height={49} className="object-contain p-1" priority />
           </div>
           <p className="text-sm font-bold tracking-tight text-white m-0">TreasuryOS</p>
         </Link>
@@ -51,6 +51,9 @@ export function SiteHeader() {
         </nav>
 
         <div className="hidden lg:flex flex-row items-center gap-3 mr-2">
+          <a href="#request-access" className="button-secondary px-6 py-2.5 !text-[10px] uppercase tracking-[0.2em] font-bold">
+            Request Access
+          </a>
           <Link href="/company/contact" className="button-secondary px-6 py-2.5 !text-[10px] uppercase tracking-[0.2em] font-bold">
             Book intro
           </Link>
@@ -90,12 +93,15 @@ export function SiteHeader() {
             ))}
           </nav>
           <div className="mt-4 grid gap-3">
+            <a href="#request-access" onClick={() => setIsMenuOpen(false)} className="button-primary justify-center py-3">
+              Request Access
+            </a>
             <Link href="/company/contact" onClick={() => setIsMenuOpen(false)} className="button-secondary justify-center py-3">
               Book intro
             </Link>
             <Link
               href={portalUrl}
-              className="button-primary justify-center py-3"
+              className="button-secondary justify-center py-3"
               target="_blank"
               rel="noreferrer"
               onClick={() => setIsMenuOpen(false)}
