@@ -104,42 +104,23 @@ jobs:
     permissions:
       contents: read
     steps:
-      - name: Validate Vercel landing-page secrets
+      - name: Validate deploy hook secret
         env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_LANDING_PROJECT_ID: ${{ secrets.VERCEL_LANDING_PROJECT_ID }}
+          VERCEL_LANDING_DEPLOY_HOOK: ${{ secrets.VERCEL_LANDING_DEPLOY_HOOK }}
         run: |
           set -euo pipefail
-          if [ -z "${VERCEL_TOKEN:-}" ] || [ -z "${VERCEL_ORG_ID:-}" ] || [ -z "${VERCEL_LANDING_PROJECT_ID:-}" ]; then
-            echo "Missing one or more Vercel secrets (VERCEL_TOKEN, VERCEL_ORG_ID, VERCEL_LANDING_PROJECT_ID)." >&2
-            echo "Add them in repository Settings -> Secrets and variables -> Actions." >&2
+          if [ -z "${VERCEL_LANDING_DEPLOY_HOOK:-}" ]; then
+            echo "Missing VERCEL_LANDING_DEPLOY_HOOK GitHub Actions secret." >&2
+            echo "Create a Deploy Hook in the Vercel landing-page project:" >&2
+            echo "  Project Settings → Git → Deploy Hooks → Add Hook (branch: main)" >&2
+            echo "Then add the hook URL as VERCEL_LANDING_DEPLOY_HOOK in repository Secrets." >&2
             exit 1
           fi
 
-      - name: Trigger Vercel production deployment via API
+      - name: Trigger Vercel landing-page deployment
         env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_LANDING_PROJECT_ID: ${{ secrets.VERCEL_LANDING_PROJECT_ID }}
+          VERCEL_LANDING_DEPLOY_HOOK: ${{ secrets.VERCEL_LANDING_DEPLOY_HOOK }}
         run: |
           set -euo pipefail
-          # Trigger Vercel to deploy from the current git SHA.
-          # Vercel clones the full monorepo on their servers so installCommand
-          # ("cd ../.. && npm ci") works correctly — no local build needed.
-          RESPONSE=$(curl -fsS -X POST \
-            "https://api.vercel.com/v13/deployments?teamId=${VERCEL_ORG_ID}&forceNew=1" \
-            -H "Authorization: Bearer ${VERCEL_TOKEN}" \
-            -H "Content-Type: application/json" \
-            -d "{
-              \"name\": \"landing-page\",
-              \"target\": \"production\",
-              \"projectId\": \"${VERCEL_LANDING_PROJECT_ID}\",
-              \"gitSource\": {
-                \"type\": \"github\",
-                \"repoId\": ${{ github.repository_id }},
-                \"ref\": \"main\",
-                \"sha\": \"${{ github.sha }}\"
-              }
-            }")
-          echo "$RESPONSE" | jq -e 'if .error then error("Vercel API error: \(.error.message)") else "Deployment triggered: \(.url) (id: \(.id))" end'
+          RESPONSE=$(curl -fsS -X POST "${VERCEL_LANDING_DEPLOY_HOOK}")
+          echo "Deploy triggered: $(echo "$RESPONSE" | jq -r '.job.id // "ok"')"
