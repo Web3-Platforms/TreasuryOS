@@ -24,10 +24,10 @@ const recommendedCommands = [
 ];
 
 const repoArtifacts = [
+  'README.md',
   '.github/copilot-instructions.md',
   '.github/workflows/copilot-setup-steps.yml',
-  'docs/agents/README.md',
-  'docs/agents/templates/treasuryos-mcp-servers.example.json',
+  'scripts/agent-stack-doctor.mjs',
 ];
 
 const envChecks = [

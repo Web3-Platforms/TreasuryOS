@@ -16,15 +16,10 @@ npm run dev:api
 npm run dev:dashboard
 ```
 
-## Documentation
+## Private documentation
 
-- **Start here:** [docs/README.md](docs/README.md)
-- **Current status:** [docs/reports/PROJECT_STATUS_REPORT.md](docs/reports/PROJECT_STATUS_REPORT.md)
-- **Operations source of truth:** [docs/operations/README.md](docs/operations/README.md)
-- **Agent operations:** [docs/agents/README.md](docs/agents/README.md)
-- **Business strategy:** [docs/business/README.md](docs/business/README.md)
-- **Operator guides:** [docs/guides/README.md](docs/guides/README.md)
-- **Environment configuration:** [docs/ENVIRONMENT_VARIABLES.md](docs/ENVIRONMENT_VARIABLES.md)
+Formal strategy, operations, investor, business, and agent documentation are
+maintained locally and are intentionally excluded from this Git repository.
 
 ## Current highlights
 
@@ -33,9 +28,6 @@ npm run dev:dashboard
 - OpenRouter is the current live provider path for transaction-case advisories.
 - The dashboard AI panel now generates and regenerates analysis on explicit
   user action instead of auto-running on page load.
-- A reusable TreasuryOS agent operating system and MCP setup pack now live in
-  `docs/agents/`.
-- Business model, pricing, and GTM docs now live in `docs/business/`.
 
 ## Tech stack
 

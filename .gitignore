@@ -70,3 +70,4 @@ tsconfig.tsbuildinfo
 docs/Videos/
 .vercel
 .env*.local
+docs/
