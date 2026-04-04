@@ -127,6 +127,9 @@ jobs:
       - name: Install Vercel CLI
         run: npm install -g vercel@latest
 
+      - name: Install monorepo dependencies
+        run: npm ci --include=dev
+
       - name: Pull Vercel environment
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
@@ -141,7 +144,16 @@ jobs:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_LANDING_PROJECT_ID }}
         working-directory: apps/landing-page
-        run: vercel build --prod --token=$VERCEL_TOKEN
+        run: |
+          # Deps already installed at monorepo root above.
+          # Override installCommand to a no-op so vercel build skips re-installation.
+          node -e "
+            const fs = require('fs');
+            const cfg = JSON.parse(fs.readFileSync('vercel.json', 'utf8'));
+            cfg.installCommand = 'echo deps-preinstalled';
+            fs.writeFileSync('vercel.json', JSON.stringify(cfg, null, 2));
+          "
+          vercel build --prod --token=$VERCEL_TOKEN
 
       - name: Deploy to Vercel production
         env:
