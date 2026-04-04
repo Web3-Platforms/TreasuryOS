@@ -24,6 +24,17 @@ manual AI advisory UX change.
   - CRM
   - analytics / Sentry
 
+## Commercial lane — Turn the pilot into revenue
+
+- [ ] Finalize the first commercial offer using `docs/business/`:
+  - paid design-partner pilot
+  - conversion path to annual subscription
+  - add-on and services boundaries
+- [ ] Choose the first ICP wave and build a target list of 25-50 accounts.
+- [ ] Stand up a real CRM workflow for landing-page leads, outreach, pipeline,
+  and follow-up ownership.
+- [ ] Close the first 1-2 paid pilots before expanding scope or public claims.
+
 ## Priority 1 — Close the live AI rollout loop
 
 - [ ] Run a live `/transactions/[id]` canary and confirm:

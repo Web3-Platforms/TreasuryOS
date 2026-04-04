@@ -22,6 +22,7 @@ npm run dev:dashboard
 - **Current status:** [docs/reports/PROJECT_STATUS_REPORT.md](docs/reports/PROJECT_STATUS_REPORT.md)
 - **Operations source of truth:** [docs/operations/README.md](docs/operations/README.md)
 - **Agent operations:** [docs/agents/README.md](docs/agents/README.md)
+- **Business strategy:** [docs/business/README.md](docs/business/README.md)
 - **Operator guides:** [docs/guides/README.md](docs/guides/README.md)
 - **Environment configuration:** [docs/ENVIRONMENT_VARIABLES.md](docs/ENVIRONMENT_VARIABLES.md)
 
@@ -34,6 +35,7 @@ npm run dev:dashboard
   user action instead of auto-running on page load.
 - A reusable TreasuryOS agent operating system and MCP setup pack now live in
   `docs/agents/`.
+- Business model, pricing, and GTM docs now live in `docs/business/`.
 
 ## Tech stack
 

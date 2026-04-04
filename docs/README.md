@@ -26,6 +26,8 @@ operations, and audit work have a clear source of truth.
   auto-running on page load.
 - External protocol audit preparation guides are ready in `docs/guides/`.
 - A portable TreasuryOS agent operating system now lives in `docs/agents/`.
+- Canonical commercialization and monetization docs now live in
+  `docs/business/`.
 
 ## Folder map
 
@@ -33,6 +35,7 @@ operations, and audit work have a clear source of truth.
 | --- | --- | --- |
 | `architecture/` | System structure, technical design, and architecture narratives | [`architecture/README.md`](architecture/README.md), [`architecture/ARCHITECTURE.md`](architecture/ARCHITECTURE.md) |
 | `agents/` | Reusable multi-agent operating model, setup, prompts, and connector guidance | [`agents/README.md`](agents/README.md) |
+| `business/` | Commercial status, monetization, pricing, and go-to-market docs | [`business/README.md`](business/README.md) |
 | `deployment/` | Deployment posture, runtime setup, cutover, and environment docs | [`deployment/README.md`](deployment/README.md), [`ENVIRONMENT_VARIABLES.md`](ENVIRONMENT_VARIABLES.md) |
 | `operations/` | Living project-management and operational source-of-truth docs | [`operations/README.md`](operations/README.md) |
 | `guides/` | Manual operator workflows that cannot be completed purely in code | [`guides/README.md`](guides/README.md) |
