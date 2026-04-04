@@ -104,13 +104,6 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-
       - name: Validate Vercel landing-page secrets
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
@@ -124,41 +117,35 @@ jobs:
             exit 1
           fi
 
-      - name: Install Vercel CLI
-        run: npm install -g vercel@latest
-
-      - name: Install monorepo dependencies
-        run: npm ci --include=dev
-
-      - name: Pull Vercel environment
+      - name: Trigger Vercel production deployment via API
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_LANDING_PROJECT_ID }}
-        working-directory: apps/landing-page
-        run: vercel pull --yes --environment=production --token=$VERCEL_TOKEN
-
-      - name: Build landing page
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_LANDING_PROJECT_ID }}
-        working-directory: apps/landing-page
+          VERCEL_LANDING_PROJECT_ID: ${{ secrets.VERCEL_LANDING_PROJECT_ID }}
         run: |
-          # Deps already installed at monorepo root above.
-          # Override installCommand to a no-op so vercel build skips re-installation.
-          node -e "
-            const fs = require('fs');
-            const cfg = JSON.parse(fs.readFileSync('vercel.json', 'utf8'));
-            cfg.installCommand = 'echo deps-preinstalled';
-            fs.writeFileSync('vercel.json', JSON.stringify(cfg, null, 2));
-          "
-          vercel build --prod --token=$VERCEL_TOKEN
-
-      - name: Deploy to Vercel production
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_LANDING_PROJECT_ID }}
-        working-directory: apps/landing-page
-        run: vercel deploy --prebuilt --prod --token=$VERCEL_TOKEN
+          set -euo pipefail
+          # Trigger Vercel to deploy from the current git SHA.
+          # Vercel clones the full monorepo on their servers so installCommand
+          # ("cd ../.. && npm ci") works correctly — no local build needed.
+          curl -fsS -X POST \
+            "https://api.vercel.com/v13/deployments?teamId=${VERCEL_ORG_ID}&forceNew=1" \
+            -H "Authorization: Bearer ${VERCEL_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"name\": \"landing-page\",
+              \"target\": \"production\",
+              \"projectId\": \"${VERCEL_LANDING_PROJECT_ID}\",
+              \"gitSource\": {
+                \"type\": \"github\",
+                \"repoId\": ${{ github.repository_id }},
+                \"ref\": \"main\",
+                \"sha\": \"${{ github.sha }}\"
+              }
+            }" | python3 -c "
+import json, sys
+d = json.load(sys.stdin)
+if 'error' in d:
+    print('Vercel error:', d['error'].get('message', d['error']), file=sys.stderr)
+    sys.exit(1)
+print('Deployment triggered:', d.get('url', 'no url'), '| id:', d.get('id', 'no id'))
+"
