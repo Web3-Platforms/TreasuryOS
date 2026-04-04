@@ -127,7 +127,7 @@ jobs:
           # Trigger Vercel to deploy from the current git SHA.
           # Vercel clones the full monorepo on their servers so installCommand
           # ("cd ../.. && npm ci") works correctly — no local build needed.
-          curl -fsS -X POST \
+          RESPONSE=$(curl -fsS -X POST \
             "https://api.vercel.com/v13/deployments?teamId=${VERCEL_ORG_ID}&forceNew=1" \
             -H "Authorization: Bearer ${VERCEL_TOKEN}" \
             -H "Content-Type: application/json" \
@@ -141,11 +141,5 @@ jobs:
                 \"ref\": \"main\",
                 \"sha\": \"${{ github.sha }}\"
               }
-            }" | python3 -c "
-import json, sys
-d = json.load(sys.stdin)
-if 'error' in d:
-    print('Vercel error:', d['error'].get('message', d['error']), file=sys.stderr)
-    sys.exit(1)
-print('Deployment triggered:', d.get('url', 'no url'), '| id:', d.get('id', 'no id'))
-"
+            }")
+          echo "$RESPONSE" | jq -e 'if .error then error("Vercel API error: \(.error.message)") else "Deployment triggered: \(.url) (id: \(.id))" end'
