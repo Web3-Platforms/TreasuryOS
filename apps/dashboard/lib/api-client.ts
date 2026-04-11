@@ -1,4 +1,5 @@
-import { cookies } from 'next/headers';
+import { cookies } from "next/headers";
+import { ACCESS_TOKEN_COOKIE } from "@/lib/auth";
 
 /**
  * Server-side API client for the dashboard.
@@ -16,28 +17,28 @@ const API_BASE_URL = process.env.API_BASE_URL;
 
 if (!API_BASE_URL) {
   throw new Error(
-    'Missing required environment variable: API_BASE_URL\n' +
-    'Set it to your Railway API URL (e.g. https://api.treasuryos.aicustombot.net/api) ' +
-    'in Vercel project settings, or to http://localhost:3001/api in .env.local for local development.'
+    "Missing required environment variable: API_BASE_URL\n" +
+      "Set it to your Railway API URL (e.g. https://api.treasuryos.aicustombot.net/api) " +
+      "in Vercel project settings, or to http://localhost:3001/api in .env.local for local development.",
   );
 }
 
 export async function fetchApi<T = unknown>(
   endpoint: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
 ): Promise<T> {
   const cookieStore = await cookies();
-  const token = cookieStore.get('treasuryos_access_token')?.value;
+  const token = cookieStore.get(ACCESS_TOKEN_COOKIE)?.value;
 
   const headers = new Headers(options.headers || {});
-  headers.set('Content-Type', 'application/json');
+  headers.set("Content-Type", "application/json");
 
   if (token) {
-    headers.set('Authorization', `Bearer ${token}`);
+    headers.set("Authorization", `Bearer ${token}`);
   }
 
-  const url = `${API_BASE_URL}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
-  
+  const url = `${API_BASE_URL}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
+
   const response = await fetch(url, {
     ...options,
     headers,
@@ -45,14 +46,14 @@ export async function fetchApi<T = unknown>(
 
   if (!response.ok) {
     if (response.status === 401) {
-      throw new Error('Unauthorized');
+      throw new Error("Unauthorized");
     }
-    const errorBody = await response.text().catch(() => 'Unknown Error');
+    const errorBody = await response.text().catch(() => "Unknown Error");
     throw new Error(`API Error ${response.status}: ${errorBody}`);
   }
 
-  const contentType = response.headers.get('content-type');
-  if (contentType && contentType.includes('application/json')) {
+  const contentType = response.headers.get("content-type");
+  if (contentType && contentType.includes("application/json")) {
     return response.json() as Promise<T>;
   }
 

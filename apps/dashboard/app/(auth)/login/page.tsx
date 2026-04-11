@@ -1,11 +1,44 @@
-import { LoginForm } from '@/components/login-form';
-import { AppShell } from '@/components/app-shell';
-import { isDemoAccessAvailable } from '@/lib/feature-flags';
+import { LoginForm } from "@/components/login-form";
+import { AppShell } from "@/components/app-shell";
+import {
+  isRecoverableSessionProbeError,
+  isUnauthorizedError,
+  resolvePostLoginRedirectPath,
+} from "@/lib/auth";
+import { isDemoAccessAvailable } from "@/lib/feature-flags";
+import { getCurrentUser } from "@/lib/current-user";
+import { redirect } from "next/navigation";
 
-export default function LoginPage() {
+type LoginPageSearchParams = Promise<{
+  callbackUrl?: string | string[];
+}>;
+
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: LoginPageSearchParams;
+}) {
+  const { callbackUrl } = await searchParams;
+
+  try {
+    await getCurrentUser();
+    redirect(resolvePostLoginRedirectPath(callbackUrl));
+  } catch (error) {
+    if (!isUnauthorizedError(error) && !isRecoverableSessionProbeError(error)) {
+      throw error;
+    }
+  }
+
   return (
-    <AppShell>
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+    <AppShell showAuthenticatedNav={false}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          minHeight: "60vh",
+        }}
+      >
         <LoginForm showDemoAccess={isDemoAccessAvailable()} />
       </div>
     </AppShell>

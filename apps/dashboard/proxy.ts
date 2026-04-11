@@ -1,27 +1,45 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import {
+  ACCESS_TOKEN_COOKIE,
+  REAUTH_SEARCH_PARAM,
+  buildLoginUrl,
+} from "./lib/auth";
 
-const publicRoutes = ['/login', '/_next', '/favicon.ico'];
+const PUBLIC_EXACT_PATHS = new Set(["/login", "/favicon.ico"]);
+const PUBLIC_PATH_PREFIXES = ["/_next"];
+
+function isPublicPath(pathname: string) {
+  return (
+    PUBLIC_EXACT_PATHS.has(pathname) ||
+    PUBLIC_PATH_PREFIXES.some((pathPrefix) =>
+      pathname.startsWith(pathPrefix),
+    ) ||
+    /\.(png|jpg|jpeg|svg|css|js)$/.test(pathname)
+  );
+}
 
 export default function proxy(request: NextRequest) {
-  const { pathname } = request.nextUrl;
+  const { pathname, search } = request.nextUrl;
+  const token = request.cookies.get(ACCESS_TOKEN_COOKIE)?.value;
 
-  if (
-    publicRoutes.some((p) => pathname.startsWith(p)) ||
-    pathname.match(/\.(png|jpg|jpeg|svg|css|js)$/)
-  ) {
-    const token = request.cookies.get('treasuryos_access_token')?.value;
-    if (pathname === '/login' && token) {
-      return NextResponse.redirect(new URL('/', request.url));
+  if (isPublicPath(pathname)) {
+    if (pathname === "/login") {
+      if (request.nextUrl.searchParams.get(REAUTH_SEARCH_PARAM) === "1") {
+        const response = NextResponse.next();
+        response.cookies.delete(ACCESS_TOKEN_COOKIE);
+        return response;
+      }
     }
+
     return NextResponse.next();
   }
 
-  const token = request.cookies.get('treasuryos_access_token')?.value;
-
   if (!token) {
-    const loginUrl = new URL('/login', request.url);
-    loginUrl.searchParams.set('callbackUrl', pathname);
+    const loginUrl = new URL(
+      buildLoginUrl({ callbackUrl: `${pathname}${search}` }),
+      request.url,
+    );
     return NextResponse.redirect(loginUrl);
   }
 
@@ -30,6 +48,6 @@ export default function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!api|_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt).*)',
+    "/((?!api|_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt).*)",
   ],
 };

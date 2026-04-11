@@ -13,7 +13,6 @@ import {
   TransactionCaseStatus,
   WalletStatus,
   type AuthenticatedUser,
-  type PilotStore,
   type ReportRecord,
 } from '@treasuryos/types';
 import { z } from 'zod';
