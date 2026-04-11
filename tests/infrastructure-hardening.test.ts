@@ -15,6 +15,7 @@ test('Railway deploy config keeps production health checks and restart hardening
       buildCommand?: string;
     };
     deploy?: {
+      startCommand?: string;
       environment?: string;
       healthcheckPath?: string;
       restartPolicyType?: string;
@@ -22,12 +23,33 @@ test('Railway deploy config keeps production health checks and restart hardening
     };
   };
 
+  const railwayDispatcher = fs.readFileSync(
+    path.join(repoRoot, 'scripts/railway-service-command.mjs'),
+    'utf8',
+  );
+
   assert.equal(config.build?.builder, 'RAILPACK');
-  assert.equal(config.build?.buildCommand, 'npm ci --include=dev && npm run build --workspace=@treasuryos/api-gateway');
+  assert.equal(
+    config.build?.buildCommand,
+    'npm ci --include=dev && node ./scripts/railway-service-command.mjs build',
+  );
+  assert.equal(
+    config.deploy?.startCommand,
+    'node ./scripts/railway-service-command.mjs start',
+  );
   assert.equal(config.deploy?.environment, 'production');
   assert.equal(config.deploy?.healthcheckPath, '/api/health');
   assert.equal(config.deploy?.restartPolicyType, 'ON_FAILURE');
   assert.ok((config.deploy?.restartPolicyMaxRetries ?? 0) >= 3);
+  assert.match(railwayDispatcher, /\["api-gateway", "@treasuryos\/api-gateway"\]/);
+  assert.match(railwayDispatcher, /\["@treasuryos\/api-gateway", "@treasuryos\/api-gateway"\]/);
+  assert.match(railwayDispatcher, /\["kyc-service", "@treasuryos\/kyc-service"\]/);
+  assert.match(railwayDispatcher, /\["@treasuryos\/kyc-service", "@treasuryos\/kyc-service"\]/);
+  assert.match(railwayDispatcher, /\["bank-adapter", "@treasuryos\/bank-adapter"\]/);
+  assert.match(railwayDispatcher, /\["@treasuryos\/bank-adapter", "@treasuryos\/bank-adapter"\]/);
+  assert.match(railwayDispatcher, /\["reporter", "@treasuryos\/reporter"\]/);
+  assert.match(railwayDispatcher, /\["@treasuryos\/reporter", "@treasuryos\/reporter"\]/);
+  assert.match(railwayDispatcher, /Unsupported RAILWAY_SERVICE_NAME/);
 });
 
 test('CI workflow runs dedicated hardening checks with npm ci', () => {
@@ -40,6 +62,26 @@ test('CI workflow runs dedicated hardening checks with npm ci', () => {
   assert.match(workflow, /tests\/infrastructure-hardening\.test\.ts/);
   assert.match(workflow, /\bnpm ci\b/);
   assert.doesNotMatch(workflow, /\bnpm install\b/);
+});
+
+test('secondary Railway service packages keep valid production start commands', () => {
+  const apiGateway = JSON.parse(
+    fs.readFileSync(path.join(repoRoot, 'apps/api-gateway/package.json'), 'utf8'),
+  ) as { scripts?: { ['start:prod']?: string } };
+  const bankAdapter = JSON.parse(
+    fs.readFileSync(path.join(repoRoot, 'apps/bank-adapter/package.json'), 'utf8'),
+  ) as { scripts?: { ['start:prod']?: string } };
+  const kycService = JSON.parse(
+    fs.readFileSync(path.join(repoRoot, 'apps/kyc-service/package.json'), 'utf8'),
+  ) as { scripts?: { ['start:prod']?: string } };
+  const reporter = JSON.parse(
+    fs.readFileSync(path.join(repoRoot, 'apps/reporter/package.json'), 'utf8'),
+  ) as { scripts?: { ['start:prod']?: string } };
+
+  assert.equal(apiGateway.scripts?.['start:prod'], 'node dist/apps/api-gateway/src/main.js');
+  assert.equal(bankAdapter.scripts?.['start:prod'], 'node dist/main.js');
+  assert.equal(kycService.scripts?.['start:prod'], 'node dist/apps/kyc-service/src/main.js');
+  assert.equal(reporter.scripts?.['start:prod'], 'node dist/apps/reporter/src/main.js');
 });
 
 test('CD workflow keeps guarded Neon migration steps and Railway comment', () => {
