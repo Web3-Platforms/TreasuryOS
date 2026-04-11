@@ -4,14 +4,80 @@ const mode = process.argv[2];
 const railwayServiceName = process.env.RAILWAY_SERVICE_NAME;
 
 const serviceWorkspaceMap = new Map([
-  ["api-gateway", "@treasuryos/api-gateway"],
-  ["@treasuryos/api-gateway", "@treasuryos/api-gateway"],
-  ["kyc-service", "@treasuryos/kyc-service"],
-  ["@treasuryos/kyc-service", "@treasuryos/kyc-service"],
-  ["bank-adapter", "@treasuryos/bank-adapter"],
-  ["@treasuryos/bank-adapter", "@treasuryos/bank-adapter"],
-  ["reporter", "@treasuryos/reporter"],
-  ["@treasuryos/reporter", "@treasuryos/reporter"],
+  [
+    "api-gateway",
+    {
+      startWorkspace: "@treasuryos/api-gateway",
+      buildWorkspaces: [
+        "@treasuryos/types",
+        "@treasuryos/compliance-rules",
+        "@treasuryos/sdk",
+        "@treasuryos/api-gateway",
+      ],
+    },
+  ],
+  [
+    "@treasuryos/api-gateway",
+    {
+      startWorkspace: "@treasuryos/api-gateway",
+      buildWorkspaces: [
+        "@treasuryos/types",
+        "@treasuryos/compliance-rules",
+        "@treasuryos/sdk",
+        "@treasuryos/api-gateway",
+      ],
+    },
+  ],
+  [
+    "kyc-service",
+    {
+      startWorkspace: "@treasuryos/kyc-service",
+      buildWorkspaces: [
+        "@treasuryos/types",
+        "@treasuryos/sdk",
+        "@treasuryos/kyc-service",
+      ],
+    },
+  ],
+  [
+    "@treasuryos/kyc-service",
+    {
+      startWorkspace: "@treasuryos/kyc-service",
+      buildWorkspaces: [
+        "@treasuryos/types",
+        "@treasuryos/sdk",
+        "@treasuryos/kyc-service",
+      ],
+    },
+  ],
+  [
+    "bank-adapter",
+    {
+      startWorkspace: "@treasuryos/bank-adapter",
+      buildWorkspaces: ["@treasuryos/bank-adapter"],
+    },
+  ],
+  [
+    "@treasuryos/bank-adapter",
+    {
+      startWorkspace: "@treasuryos/bank-adapter",
+      buildWorkspaces: ["@treasuryos/bank-adapter"],
+    },
+  ],
+  [
+    "reporter",
+    {
+      startWorkspace: "@treasuryos/reporter",
+      buildWorkspaces: ["@treasuryos/types", "@treasuryos/reporter"],
+    },
+  ],
+  [
+    "@treasuryos/reporter",
+    {
+      startWorkspace: "@treasuryos/reporter",
+      buildWorkspaces: ["@treasuryos/types", "@treasuryos/reporter"],
+    },
+  ],
 ]);
 
 if (mode !== "build" && mode !== "start") {
@@ -28,9 +94,9 @@ if (!railwayServiceName) {
   process.exit(1);
 }
 
-const workspace = serviceWorkspaceMap.get(railwayServiceName);
+const serviceConfig = serviceWorkspaceMap.get(railwayServiceName);
 
-if (!workspace) {
+if (!serviceConfig) {
   console.error(
     `Unsupported RAILWAY_SERVICE_NAME "${railwayServiceName}". Supported services: ${Array.from(serviceWorkspaceMap.keys()).join(", ")}`,
   );
@@ -38,19 +104,27 @@ if (!workspace) {
 }
 
 const npmCommand = process.platform === "win32" ? "npm.cmd" : "npm";
-const args =
+const commands =
   mode === "build"
-    ? ["run", "build", `--workspace=${workspace}`]
-    : ["run", "start:prod", `--workspace=${workspace}`];
+    ? serviceConfig.buildWorkspaces.map((workspace) => [
+        "run",
+        "build",
+        `--workspace=${workspace}`,
+      ])
+    : [["run", "start:prod", `--workspace=${serviceConfig.startWorkspace}`]];
 
-const result = spawnSync(npmCommand, args, {
-  stdio: "inherit",
-  env: process.env,
-});
+for (const args of commands) {
+  const result = spawnSync(npmCommand, args, {
+    stdio: "inherit",
+    env: process.env,
+  });
 
-if (result.error) {
-  console.error(result.error.message);
-  process.exit(1);
+  if (result.error) {
+    console.error(result.error.message);
+    process.exit(1);
+  }
+
+  if ((result.status ?? 1) !== 0) {
+    process.exit(result.status ?? 1);
+  }
 }
-
-process.exit(result.status ?? 1);

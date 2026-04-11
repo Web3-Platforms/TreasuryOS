@@ -41,14 +41,38 @@ test('Railway deploy config keeps production health checks and restart hardening
   assert.equal(config.deploy?.healthcheckPath, '/api/health');
   assert.equal(config.deploy?.restartPolicyType, 'ON_FAILURE');
   assert.ok((config.deploy?.restartPolicyMaxRetries ?? 0) >= 3);
-  assert.match(railwayDispatcher, /\["api-gateway", "@treasuryos\/api-gateway"\]/);
-  assert.match(railwayDispatcher, /\["@treasuryos\/api-gateway", "@treasuryos\/api-gateway"\]/);
-  assert.match(railwayDispatcher, /\["kyc-service", "@treasuryos\/kyc-service"\]/);
-  assert.match(railwayDispatcher, /\["@treasuryos\/kyc-service", "@treasuryos\/kyc-service"\]/);
-  assert.match(railwayDispatcher, /\["bank-adapter", "@treasuryos\/bank-adapter"\]/);
-  assert.match(railwayDispatcher, /\["@treasuryos\/bank-adapter", "@treasuryos\/bank-adapter"\]/);
-  assert.match(railwayDispatcher, /\["reporter", "@treasuryos\/reporter"\]/);
-  assert.match(railwayDispatcher, /\["@treasuryos\/reporter", "@treasuryos\/reporter"\]/);
+  assert.match(
+    railwayDispatcher,
+    /"api-gateway",[\s\S]*?startWorkspace: "@treasuryos\/api-gateway",[\s\S]*?buildWorkspaces: \[[\s\S]*?"@treasuryos\/types",[\s\S]*?"@treasuryos\/compliance-rules",[\s\S]*?"@treasuryos\/sdk",[\s\S]*?"@treasuryos\/api-gateway"/,
+  );
+  assert.match(
+    railwayDispatcher,
+    /"@treasuryos\/api-gateway",[\s\S]*?startWorkspace: "@treasuryos\/api-gateway",[\s\S]*?buildWorkspaces: \[[\s\S]*?"@treasuryos\/types",[\s\S]*?"@treasuryos\/compliance-rules",[\s\S]*?"@treasuryos\/sdk",[\s\S]*?"@treasuryos\/api-gateway"/,
+  );
+  assert.match(
+    railwayDispatcher,
+    /"kyc-service",[\s\S]*?startWorkspace: "@treasuryos\/kyc-service",[\s\S]*?buildWorkspaces: \[[\s\S]*?"@treasuryos\/types",[\s\S]*?"@treasuryos\/sdk",[\s\S]*?"@treasuryos\/kyc-service"/,
+  );
+  assert.match(
+    railwayDispatcher,
+    /"@treasuryos\/kyc-service",[\s\S]*?startWorkspace: "@treasuryos\/kyc-service",[\s\S]*?buildWorkspaces: \[[\s\S]*?"@treasuryos\/types",[\s\S]*?"@treasuryos\/sdk",[\s\S]*?"@treasuryos\/kyc-service"/,
+  );
+  assert.match(
+    railwayDispatcher,
+    /"bank-adapter",[\s\S]*?startWorkspace: "@treasuryos\/bank-adapter",[\s\S]*?buildWorkspaces: \[[\s\S]*?"@treasuryos\/bank-adapter"/,
+  );
+  assert.match(
+    railwayDispatcher,
+    /"@treasuryos\/bank-adapter",[\s\S]*?startWorkspace: "@treasuryos\/bank-adapter",[\s\S]*?buildWorkspaces: \[[\s\S]*?"@treasuryos\/bank-adapter"/,
+  );
+  assert.match(
+    railwayDispatcher,
+    /"reporter",[\s\S]*?startWorkspace: "@treasuryos\/reporter",[\s\S]*?buildWorkspaces: \[[\s\S]*?"@treasuryos\/types",[\s\S]*?"@treasuryos\/reporter"/,
+  );
+  assert.match(
+    railwayDispatcher,
+    /"@treasuryos\/reporter",[\s\S]*?startWorkspace: "@treasuryos\/reporter",[\s\S]*?buildWorkspaces: \[[\s\S]*?"@treasuryos\/types",[\s\S]*?"@treasuryos\/reporter"/,
+  );
   assert.match(railwayDispatcher, /Unsupported RAILWAY_SERVICE_NAME/);
 });
 
@@ -82,6 +106,31 @@ test('secondary Railway service packages keep valid production start commands', 
   assert.equal(bankAdapter.scripts?.['start:prod'], 'node dist/main.js');
   assert.equal(kycService.scripts?.['start:prod'], 'node dist/apps/kyc-service/src/main.js');
   assert.equal(reporter.scripts?.['start:prod'], 'node dist/apps/reporter/src/main.js');
+});
+
+test('service-local Railway configs build shared workspace dependencies', () => {
+  const bankAdapterConfig = JSON.parse(
+    fs.readFileSync(path.join(repoRoot, 'apps/bank-adapter/railway.json'), 'utf8'),
+  ) as { build?: { buildCommand?: string } };
+  const kycConfig = JSON.parse(
+    fs.readFileSync(path.join(repoRoot, 'apps/kyc-service/railway.json'), 'utf8'),
+  ) as { build?: { buildCommand?: string } };
+  const reporterConfig = JSON.parse(
+    fs.readFileSync(path.join(repoRoot, 'apps/reporter/railway.json'), 'utf8'),
+  ) as { build?: { buildCommand?: string } };
+
+  assert.equal(
+    bankAdapterConfig.build?.buildCommand,
+    'npm ci --include=dev && npm run build --workspace=@treasuryos/bank-adapter',
+  );
+  assert.equal(
+    kycConfig.build?.buildCommand,
+    'npm ci --include=dev && npm run build --workspace=@treasuryos/types && npm run build --workspace=@treasuryos/sdk && npm run build --workspace=@treasuryos/kyc-service',
+  );
+  assert.equal(
+    reporterConfig.build?.buildCommand,
+    'npm ci --include=dev && npm run build --workspace=@treasuryos/types && npm run build --workspace=@treasuryos/reporter',
+  );
 });
 
 test('CD workflow keeps guarded Neon migration steps and Railway comment', () => {
