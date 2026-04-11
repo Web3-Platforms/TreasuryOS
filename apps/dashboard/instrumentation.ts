@@ -4,7 +4,7 @@
  * Next.js before the application starts on both Node.js and Edge runtimes.
  *
  * Sentry client-side initialization is handled separately in
- * sentry.client.config.ts via the withSentryConfig webpack plugin.
+ * instrumentation-client.ts so it also works in Turbopack builds.
  *
  * @see https://nextjs.org/docs/app/building-your-application/optimizing/instrumentation
  * @see https://docs.sentry.io/platforms/javascript/guides/nextjs/

@@ -37,15 +37,7 @@ const nextConfig = {
 export default withSentryConfig(nextConfig, {
   // Suppress Sentry CLI output during builds unless both server and client DSNs are set
   silent: !process.env.SENTRY_DSN && !process.env.NEXT_PUBLIC_SENTRY_DSN,
-  // Don't inject Sentry config when there is no client DSN
-  disableClientWebpackPlugin: !process.env.NEXT_PUBLIC_SENTRY_DSN,
-  // Don't inject Sentry config when there is no server DSN
-  disableServerWebpackPlugin: !process.env.SENTRY_DSN,
   // Tunnel requests through the Next.js server to avoid ad-blocker issues
   // This prevents ad-blockers from blocking Sentry event uploads
   tunnelRoute: '/monitoring',
-  // Automatically instrument Next.js API routes and server components
-  autoInstrumentServerFunctions: true,
-  autoInstrumentAppDirectory: true,
-  autoInstrumentMiddleware: true,
 });
