@@ -42,13 +42,20 @@ test('CI workflow runs dedicated hardening checks with npm ci', () => {
   assert.doesNotMatch(workflow, /\bnpm install\b/);
 });
 
-test('CD workflow keeps guarded Railway deploy and Neon migration steps', () => {
+test('CD workflow keeps guarded Neon migration steps and Railway comment', () => {
   const workflow = fs.readFileSync(path.join(repoRoot, '.github/workflows/cd.yml'), 'utf8');
 
-  assert.match(workflow, /Validate Railway deploy secret/);
+  // Railway deployment is handled by Railway's "Wait for CI" Git integration.
+  // The explicit railway up step was intentionally removed to prevent double deploys.
+  // Verify the explanatory comment is present so future engineers don't re-add it.
+  assert.match(workflow, /Railway.*Wait for CI/);
+
+  // Neon migration safety guards must remain intact.
   assert.match(workflow, /Validate Neon migration secret/);
-  assert.match(workflow, /railway up --service '@treasuryos\/api-gateway' --detach/);
   assert.match(workflow, /npm run db:migrate:check/);
+
+  // Landing page Vercel deploy hook must still be present.
+  assert.match(workflow, /VERCEL_LANDING_DEPLOY_HOOK/);
 });
 
 test('uptime workflow monitors the branded API and opens issues on failure', () => {
