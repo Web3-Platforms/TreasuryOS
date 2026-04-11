@@ -3,7 +3,16 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu, X, LayoutDashboard, Building2, Wallet, ArrowLeftRight, FileText } from 'lucide-react';
+import {
+  Menu,
+  X,
+  LayoutDashboard,
+  Building2,
+  Wallet,
+  ArrowLeftRight,
+  FileText,
+  Activity,
+} from 'lucide-react';
 
 const navLinks = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
@@ -11,6 +20,7 @@ const navLinks = [
   { href: '/wallets', label: 'Wallets', icon: Wallet },
   { href: '/transactions', label: 'Transactions', icon: ArrowLeftRight },
   { href: '/reports', label: 'Reports', icon: FileText },
+  { href: '/observability', label: 'Observability', icon: Activity },
 ];
 
 type NavSidebarProps = {

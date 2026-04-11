@@ -18,7 +18,7 @@
     "@nestjs/platform-express": "^11.1.17",
     "@treasuryos/sdk": "0.1.0",
     "@treasuryos/types": "0.1.0",
-    "axios": "^1.13.6",
+    "axios": "^1.15.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
     "zod": "^4.3.6"
