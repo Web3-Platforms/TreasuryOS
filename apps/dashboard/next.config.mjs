@@ -42,5 +42,10 @@ export default withSentryConfig(nextConfig, {
   // Don't inject Sentry config when there is no server DSN
   disableServerWebpackPlugin: !process.env.SENTRY_DSN,
   // Tunnel requests through the Next.js server to avoid ad-blocker issues
+  // This prevents ad-blockers from blocking Sentry event uploads
   tunnelRoute: '/monitoring',
+  // Automatically instrument Next.js API routes and server components
+  autoInstrumentServerFunctions: true,
+  autoInstrumentAppDirectory: true,
+  autoInstrumentMiddleware: true,
 });
