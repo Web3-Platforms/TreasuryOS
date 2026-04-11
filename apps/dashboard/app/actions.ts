@@ -7,9 +7,12 @@ import { fetchApi } from "@/lib/api-client";
 import {
   ACCESS_TOKEN_COOKIE,
   getAccessTokenMaxAgeSeconds,
+  getApiErrorStatus,
   isUnauthorizedError,
 } from "@/lib/auth";
 import { isDemoAccessAvailable, isSumsubKycEnabled } from "@/lib/feature-flags";
+import { getCurrentUser } from "@/lib/current-user";
+import { canAccessObservability } from "@/lib/rbac";
 import {
   type AiAdvisoryEnvelope,
   Jurisdiction,
@@ -35,6 +38,14 @@ type ScreenTransactionActionResult =
       triggeredRules: string[];
     }
   | { error: string };
+type ObservabilitySmokeActionResult =
+  | {
+      success: true;
+      eventId: string;
+      requestId: string | null;
+      message: string;
+    }
+  | { error: string };
 export type GenerateReportActionResult = {
   error: string | null;
   notice: string | null;
@@ -57,6 +68,29 @@ async function getActionErrorMessage(error: unknown, fallback: string) {
   }
 
   return error instanceof Error ? error.message : fallback;
+}
+
+function getApiErrorPayload(error: unknown): Record<string, unknown> | null {
+  const message =
+    error instanceof Error
+      ? error.message
+      : typeof error === "string"
+        ? error
+        : "";
+  const match = message.match(/^API Error \d+:\s*([\s\S]+)$/);
+
+  if (!match) {
+    return null;
+  }
+
+  try {
+    const parsed = JSON.parse(match[1]) as unknown;
+    return typeof parsed === "object" && parsed !== null
+      ? (parsed as Record<string, unknown>)
+      : null;
+  } catch {
+    return null;
+  }
 }
 
 async function persistAccessToken(accessToken: string) {
@@ -289,6 +323,69 @@ export async function demoLoginAction(): Promise<ActionResult> {
 export async function logoutAction() {
   await clearAccessTokenCookie();
   redirect("/login");
+}
+
+export async function sendApiObservabilitySmokeTestAction(): Promise<ObservabilitySmokeActionResult> {
+  try {
+    const user = await getCurrentUser();
+
+    if (!canAccessObservability(user)) {
+      return {
+        error: "You do not have permission to send API smoke-test events.",
+      };
+    }
+
+    const result = await fetchApi<{
+      eventId: string;
+      requestId: string | null;
+      message: string;
+    }>("observability/smoke", {
+      method: "POST",
+    });
+
+    return {
+      success: true,
+      eventId: result.eventId,
+      requestId: result.requestId,
+      message: result.message,
+    };
+  } catch (error) {
+    const statusCode = getApiErrorStatus(error);
+    const payload = getApiErrorPayload(error);
+    const message = await getActionErrorMessage(
+      error,
+      "API smoke test failed.",
+    );
+
+    if (statusCode === 403) {
+      return {
+        error: "You do not have permission to send API smoke-test events.",
+      };
+    }
+
+    if (statusCode === 503 && payload) {
+      const details: string[] = [];
+
+      if (typeof payload.eventId === "string" && payload.eventId.length > 0) {
+        details.push(`Event ID: ${payload.eventId}`);
+      }
+
+      if (typeof payload.requestId === "string" && payload.requestId.length > 0) {
+        details.push(`Request ID: ${payload.requestId}`);
+      }
+
+      return {
+        error:
+          typeof payload.message === "string"
+            ? details.length > 0
+              ? `${payload.message} ${details.join(" · ")}`
+              : payload.message
+            : message,
+      };
+    }
+
+    return { error: message };
+  }
 }
 
 export async function submitEntityAction(entityId: string) {

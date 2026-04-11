@@ -1,4 +1,5 @@
 import { AppShell } from "@/components/app-shell";
+import { ApiSentrySmokeTestCard } from "@/components/api-sentry-smoke-test-card";
 import { SentrySmokeTestCard } from "@/components/sentry-smoke-test-card";
 import { redirectToReauth } from "@/lib/auth-redirect";
 import { isUnauthorizedError } from "@/lib/auth";
@@ -63,11 +64,14 @@ export default async function ObservabilityPage() {
             lineHeight: 1.6,
           }}
         >
-          Use this operator-only page to send a deterministic frontend Sentry
-          event from the live dashboard.
+          Use this admin-only page to send deterministic frontend and backend
+          Sentry events from the live platform.
         </p>
 
-        <SentrySmokeTestCard />
+        <div style={{ display: "grid", gap: "1rem" }}>
+          <SentrySmokeTestCard />
+          <ApiSentrySmokeTestCard />
+        </div>
       </div>
     </AppShell>
   );
