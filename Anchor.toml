@@ -10,6 +10,15 @@ compliance_registry = "ASG5VS1jFQSsLfyuACNvfK2oFsoBd4TQjJBK1uvznorm"
 wallet_whitelist = "3ZaNXXp99xnWYYcaCJMJWnBfMxj2K4QpHkADV8D7321c"
 tx_monitor = "4cfb2JR1aEHziz1rGfWAvDry2hj2kScqGLQSbU9VrfWx"
 
+# These IDs are the canonical deployed addresses on Solana testnet.
+# The localnet section above is kept for `anchor test` workflows.
+# When deploying to mainnet-beta, add a [programs.mainnet] section with the
+# new mainnet addresses and update PROGRAM_ID_* Railway env vars accordingly.
+[programs.testnet]
+compliance_registry = "ASG5VS1jFQSsLfyuACNvfK2oFsoBd4TQjJBK1uvznorm"
+wallet_whitelist = "3ZaNXXp99xnWYYcaCJMJWnBfMxj2K4QpHkADV8D7321c"
+tx_monitor = "4cfb2JR1aEHziz1rGfWAvDry2hj2kScqGLQSbU9VrfWx"
+
 [provider]
 cluster = "Localnet"
 wallet = "~/.config/solana/id.json"
