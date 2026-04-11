@@ -5,43 +5,14 @@ on:
     branches:
       - main
 
+# Railway API deployment is handled automatically by Railway's "Wait for CI"
+# Git integration. Railway watches the TreasuryOS CI workflow and deploys once
+# all jobs pass. No explicit deploy-api job is needed here — adding one would
+# cause a double deploy.
+
 jobs:
-  # ── Deploy API gateway to Railway ────────────────────────────────────────
-  deploy-api:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-
-      - run: npm ci --include=dev
-
-      - name: Validate Railway deploy secret
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-        run: |
-          set -euo pipefail
-          if [ -z "${RAILWAY_TOKEN:-}" ]; then
-            echo "Missing RAILWAY_TOKEN GitHub Actions secret. Add a Railway Project Token in repository Settings -> Secrets and variables -> Actions." >&2
-            exit 1
-          fi
-
-      - name: Install Railway CLI
-        run: npm install -g @railway/cli
-
-      - name: Deploy to Railway
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-        run: railway up --service '@treasuryos/api-gateway' --detach
-
-  # ── Run migrations against Neon after code deploy ────────────────────────
+  # ── Run migrations against Neon (only when migration files changed) ───────
   migrate-neon:
-    needs: deploy-api
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -99,7 +70,6 @@ jobs:
 
   # ── Deploy landing page to Vercel ─────────────────────────────────────────
   deploy-landing:
-    needs: deploy-api
     runs-on: ubuntu-latest
     permissions:
       contents: read

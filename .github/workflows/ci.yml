@@ -123,15 +123,7 @@ jobs:
   # Railway API deployment is handled automatically by Railway's "Wait for CI"
   # Git integration — Railway watches this workflow and deploys once all jobs pass.
   # No explicit deploy job needed here.
-
-  deploy-landing:
-    name: Deploy Landing → Vercel
-    runs-on: ubuntu-latest
-    needs: [typecheck, build, hardening-tests, unit-tests]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    steps:
-      - name: Trigger Vercel landing page deployment
-        run: |
-          curl -sS -f -X POST "${{ secrets.VERCEL_LANDING_DEPLOY_HOOK }}" \
-            --retry 3 --retry-delay 5
-          echo "Vercel landing deploy triggered"
+  #
+  # Vercel landing-page deployment is handled by the TreasuryOS CD workflow
+  # (cd.yml) which runs on push to main. Keeping it there avoids a double
+  # deploy that would otherwise occur if both workflows trigger the hook.
